@@ -1,10 +1,46 @@
 import { useState } from 'react'
 import { PROVIDERS, PROVIDER_KEYS } from '../config/providers.js'
 
+function IconSearch() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+  )
+}
+
+function IconGlobe() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="2" y1="12" x2="22" y2="12"/>
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+    </svg>
+  )
+}
+
+function IconZap() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </svg>
+  )
+}
+
+function IconForge() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+      <path d="M2 17l10 5 10-5"/>
+      <path d="M2 12l10 5 10-5"/>
+    </svg>
+  )
+}
+
 const STACK = [
-  { icon: '🔍', name: 'local-client-prospector', desc: 'Business discovery layer' },
-  { icon: '🕷️', name: 'ScrapeGraphAI',           desc: 'Website enrichment (LLM)' },
-  { icon: '⚡', name: 'free-llm-api-resources',   desc: 'Zero-cost inference routing' },
+  { Icon: IconSearch, name: 'local-client-prospector', desc: 'Business discovery layer' },
+  { Icon: IconGlobe,  name: 'ScrapeGraphAI',           desc: 'Website enrichment (LLM)' },
+  { Icon: IconZap,    name: 'free-llm-api-resources',  desc: 'Zero-cost inference routing' },
 ]
 
 export default function Sidebar({ providerKey, setProviderKey, model, setModel, apiKey, setApiKey }) {
@@ -23,11 +59,9 @@ export default function Sidebar({ providerKey, setProviderKey, model, setModel, 
       {/* Brand */}
       <div className="brand">
         <div className="brand-row">
-          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-            <path d="M7 14C7 9.582 10.134 6 14 6" stroke="#F5F2ED" strokeWidth="1.4" strokeLinecap="round"/>
-            <path d="M21 14C21 18.418 17.866 22 14 22" stroke="#F5F2ED" strokeWidth="1.4" strokeLinecap="round"/>
-            <circle cx="14" cy="14" r="1.8" fill="#C8460A"/>
-          </svg>
+          <div className="brand-logo">
+            <IconForge />
+          </div>
           <span className="brand-wordmark">Crucible</span>
         </div>
         <div className="brand-sub">Lead Intelligence Engine</div>
@@ -35,7 +69,10 @@ export default function Sidebar({ providerKey, setProviderKey, model, setModel, 
 
       {/* LLM Provider config */}
       <div className="s-section">
-        <div className="s-label">LLM Provider</div>
+        <div className="s-label">
+          <span className="s-label-dot" />
+          LLM Provider
+        </div>
 
         <div className="field">
           <label>Provider</label>
@@ -89,14 +126,19 @@ export default function Sidebar({ providerKey, setProviderKey, model, setModel, 
 
       {/* Powered By stack */}
       <div className="s-section">
-        <div className="s-label">Powered By</div>
+        <div className="s-label">
+          <span className="s-label-dot" />
+          Powered By
+        </div>
         <div className="stack-list">
-          {STACK.map(s => (
-            <div className="stack-item" key={s.name}>
-              <span className="si-icon">{s.icon}</span>
+          {STACK.map(({ Icon, name, desc }) => (
+            <div className="stack-item" key={name}>
+              <div className="si-icon">
+                <Icon />
+              </div>
               <div className="si-body">
-                <div className="si-name">{s.name}</div>
-                <div className="si-desc">{s.desc}</div>
+                <div className="si-name">{name}</div>
+                <div className="si-desc">{desc}</div>
               </div>
             </div>
           ))}
