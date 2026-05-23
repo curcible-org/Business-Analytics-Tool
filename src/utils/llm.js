@@ -1,13 +1,13 @@
 import { PROVIDERS } from '../config/providers.js'
 
 function buildUserPrompt(loc, type, vp) {
-  return `Generate exactly 8 realistic local business leads.
+  return `Generate exactly 10 realistic local business leads.
 
 Location: ${loc}
 Business type: ${type}
 Value proposition the user is selling: "${vp}"
 
-Return a JSON array of exactly 8 objects. Every object must have ALL of these fields:
+Return a JSON array of exactly 10 objects. Every object must have ALL of these fields:
 {
   "name": "Business Name",
   "address": "Street, ${loc}",
@@ -29,7 +29,7 @@ Scoring rules:
 - low   → okay presence, marginal opportunity
 - skip  → strong online presence, not a fit
 
-Target mix: 2 hot, 3 warm, 2 low, 1 skip.
+Target mix: 10 hot, 0 warm, 0 low, 0 skip. Every lead MUST have score "hot".
 Make names, addresses, phones realistic for ${loc}. Vary business sizes.
 Return ONLY the JSON array.`
 }
@@ -56,7 +56,7 @@ export async function callLLM({ providerKey, model, loc, type, vp, apiKey }) {
       headers: p.headers(apiKey),
       body: JSON.stringify({
         model,
-        max_tokens: 2200,
+        max_tokens: 2800,
         system,
         messages: [{ role: 'user', content: user }],
       }),
@@ -70,7 +70,7 @@ export async function callLLM({ providerKey, model, loc, type, vp, apiKey }) {
       headers: p.headers(apiKey),
       body: JSON.stringify({
         model,
-        max_tokens: 2200,
+        max_tokens: 2800,
         temperature: 0.75,
         messages: [
           { role: 'system', content: system },

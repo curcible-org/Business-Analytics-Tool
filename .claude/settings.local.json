@@ -5,7 +5,8 @@
       "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"B2B SaaS lead intelligence analytics dashboard dark professional\" --design-system -p \"Forge Lead Intelligence\")",
       "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"analytics dashboard dark SaaS data\" --domain chart)",
       "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"dashboard analytics professional\" --stack react)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(xargs grep -l \"mock\\\\|seed\\\\|fixture\\\\|sample\\\\|example\")"
     ]
   }
 }

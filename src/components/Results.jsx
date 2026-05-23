@@ -67,9 +67,9 @@ function CopyButton({ text }) {
   )
 }
 
-function LeadRow({ lead, hidden }) {
+function LeadRow({ lead }) {
   return (
-    <tr style={{ display: hidden ? 'none' : '' }}>
+    <tr>
       <td>
         <div className="ln">{lead.name}</div>
         <div className="la">{lead.address}</div>
@@ -105,20 +105,7 @@ function LeadRow({ lead, hidden }) {
   )
 }
 
-const FILTERS = [
-  { key: 'all',  label: 'All' },
-  { key: 'hot',  label: 'Hot' },
-  { key: 'warm', label: 'Warm' },
-  { key: 'low',  label: 'Low' },
-]
-
 export default function Results({ leads, meta }) {
-  const [activeFilter, setActiveFilter] = useState('all')
-
-  const hot  = leads.filter(l => l.score === 'hot').length
-  const warm = leads.filter(l => l.score === 'warm').length
-  const low  = leads.filter(l => l.score === 'low').length
-
   const title = meta ? `${meta.businessType} — ${meta.location}` : 'Lead Sheet'
 
   return (
@@ -128,26 +115,9 @@ export default function Results({ leads, meta }) {
           <h2>{title}</h2>
           <div className="res-meta">
             <span>{leads.length} leads</span>
-            <span className="meta-dot" />
-            <span style={{ color: 'var(--hot)' }}>{hot} hot</span>
-            <span className="meta-dot" />
-            <span style={{ color: 'var(--warm)' }}>{warm} warm</span>
-            <span className="meta-dot" />
-            <span>{low} low</span>
           </div>
         </div>
         <div className="res-controls">
-          <div className="filters">
-            {FILTERS.map(f => (
-              <button
-                key={f.key}
-                className={`ftab${activeFilter === f.key ? ' on' : ''}`}
-                onClick={() => setActiveFilter(f.key)}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
           <button className="export-btn" onClick={() => exportCSV(leads)}>
             <IconDownload />
             Export CSV
@@ -169,11 +139,7 @@ export default function Results({ leads, meta }) {
           </thead>
           <tbody>
             {leads.map((lead, i) => (
-              <LeadRow
-                key={i}
-                lead={lead}
-                hidden={activeFilter !== 'all' && lead.score !== activeFilter}
-              />
+              <LeadRow key={i} lead={lead} />
             ))}
           </tbody>
         </table>
