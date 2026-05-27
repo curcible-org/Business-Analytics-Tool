@@ -55,7 +55,7 @@ export default function App() {
     () => localStorage.getItem('forge_key') || ''
   )
 
-  // Enrichment keys — stored separately
+  // Enrichment keys — persisted in localStorage
   const [abstractEmailKey, setAbstractEmailKeyState] = useState(
     () => localStorage.getItem('forge_abstract_email_key') || ''
   )
@@ -81,7 +81,7 @@ export default function App() {
   const [usageToday, setUsageToday] = useState(() => loadUsage(providerKey))
   const [enrichUsage, setEnrichUsage] = useState(() => loadEnrichUsage())
 
-  // Key setters — persist to localStorage on change
+
   function setAbstractEmailKey(v) { setAbstractEmailKeyState(v); localStorage.setItem('forge_abstract_email_key', v) }
   function setAbstractPhoneKey(v) { setAbstractPhoneKeyState(v); localStorage.setItem('forge_abstract_phone_key', v) }
   function setHunterApiKey(v)     { setHunterApiKeyState(v);     localStorage.setItem('forge_hunter_key', v) }
@@ -97,9 +97,9 @@ export default function App() {
   }, [])
 
   async function run() {
-    if (!locationState.trim()) { alert('Please enter a state or province.'); return }
+    if (!locationState.trim())   { alert('Please enter a state or province.'); return }
     if (!locationCountry.trim()) { alert('Please enter a country.'); return }
-    if (!apiKey.trim()) { alert('Please enter your API key in the sidebar.'); return }
+    if (!apiKey.trim())          { alert('Please enter your LLM API key in the sidebar.'); return }
 
     const product = BLUEPRINT_PRODUCTS.find(p => p.id === blueprintProduct)
 

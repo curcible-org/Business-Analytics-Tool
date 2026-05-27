@@ -1,0 +1,26 @@
+[build]
+  command   = "npm run build"
+  publish   = "dist"
+
+[functions]
+  directory    = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Clean API URL rewrites
+[[redirects]]
+  from   = "/api/v1/leads"
+  to     = "/.netlify/functions/forge-leads"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from   = "/api/v1/health"
+  to     = "/.netlify/functions/forge-health"
+  status = 200
+  force  = true
+
+# SPA fallback — keep last
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200

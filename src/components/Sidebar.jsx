@@ -261,7 +261,6 @@ export default function Sidebar({
               <span style={{ marginLeft: 'auto', fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--ghost)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>optional</span>
             </div>
 
-            {/* AbstractAPI Email */}
             <div className="field">
               <label style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>AbstractAPI · Email</span>
@@ -282,7 +281,6 @@ export default function Sidebar({
               </div>
             </div>
 
-            {/* AbstractAPI Phone */}
             <div className="field">
               <label style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>AbstractAPI · Phone</span>
@@ -303,7 +301,6 @@ export default function Sidebar({
               </div>
             </div>
 
-            {/* Hunter.io */}
             <div className="field">
               <label style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Hunter.io</span>
