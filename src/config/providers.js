@@ -4,6 +4,7 @@ export const PROVIDERS = {
     pill: 'Free · 1,000 req/day',
     url: 'https://api.groq.com/openai/v1/chat/completions',
     fmt: 'openai',
+    dailyReqLimit: 1000,
     models: [
       { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B Versatile' },
       { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B (instant)' },
@@ -16,6 +17,7 @@ export const PROVIDERS = {
     pill: 'Free · 500 req/day',
     url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
     fmt: 'openai',
+    dailyReqLimit: 500,
     models: [
       { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash' },
       { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash' },
@@ -28,6 +30,7 @@ export const PROVIDERS = {
     pill: 'Free · 50 req/day',
     url: 'https://openrouter.ai/api/v1/chat/completions',
     fmt: 'openai',
+    dailyReqLimit: 50,
     models: [
       { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B (free)' },
       { id: 'meta-llama/llama-3.2-3b-instruct:free', name: 'Llama 3.2 3B (free)' },
@@ -45,6 +48,7 @@ export const PROVIDERS = {
     pill: 'Free · 14,400 req/day',
     url: 'https://api.cerebras.ai/v1/chat/completions',
     fmt: 'openai',
+    dailyReqLimit: 14400,
     models: [
       { id: 'llama3.1-8b', name: 'Llama 3.1 8B (ultra-fast)' },
       { id: 'llama3.3-70b', name: 'Llama 3.3 70B' },
@@ -57,6 +61,7 @@ export const PROVIDERS = {
     pill: 'Paid · plan-based',
     url: 'https://api.anthropic.com/v1/messages',
     fmt: 'anthropic',
+    dailyReqLimit: null,
     models: [
       { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5 (fast)' },
       { id: 'claude-sonnet-4-5', name: 'Claude Sonnet 4.5' },

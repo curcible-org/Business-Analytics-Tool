@@ -1,10 +1,24 @@
 import Pipeline from '../components/Pipeline.jsx'
 import Results from '../components/Results.jsx'
+import { BLUEPRINT_PRODUCTS } from '../config/products.js'
+
+const selectStyle = {
+  height: '36px',
+  padding: '0 10px',
+  background: 'var(--warm-paper)',
+  border: '1px solid var(--border)',
+  borderRadius: '3px',
+  color: 'var(--ink)',
+  fontSize: '13px',
+  fontFamily: 'inherit',
+  cursor: 'pointer',
+  width: '100%',
+}
 
 export default function ForgeView({
-  location, setLocation,
-  businessType, setBusinessType,
-  valueProp, setValueProp,
+  locationState, setLocationState,
+  locationCountry, setLocationCountry,
+  blueprintProduct, setBlueprintProduct,
   phase, nodes, logs, leads, error, runMeta,
   run,
 }) {
@@ -17,41 +31,45 @@ export default function ForgeView({
       <div className="main-head">
         <h1>Forge<em> — Lead Intelligence</em></h1>
         <p>
-          Discovers local businesses, enriches each with AI-scraped data, and scores
-          them Hot / Warm / Low / Skip. Runs on free LLM tiers.
+          Finds businesses in your target market that need your Blueprint product, scores
+          them Hot / Warm / Low, and estimates buy probability. Runs on free LLM tiers.
         </p>
       </div>
 
       <div className="search-bar">
         <div className="sf">
-          <label>Location</label>
+          <label>State / Province</label>
           <input
             type="text"
-            value={location}
-            onChange={e => setLocation(e.target.value)}
+            value={locationState}
+            onChange={e => setLocationState(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && run()}
-            placeholder="Dallas, TX"
+            placeholder="Texas"
           />
         </div>
         <div className="sf">
-          <label>Business Type</label>
+          <label>Country</label>
           <input
             type="text"
-            value={businessType}
-            onChange={e => setBusinessType(e.target.value)}
+            value={locationCountry}
+            onChange={e => setLocationCountry(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && run()}
-            placeholder="gyms, salons, clinics…"
+            placeholder="United States"
           />
         </div>
-        <div className="sf">
-          <label>Your Value Proposition</label>
-          <input
-            type="text"
-            value={valueProp}
-            onChange={e => setValueProp(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && run()}
-            placeholder="Modern website that converts visitors into paying clients"
-          />
+        <div className="sf" style={{ minWidth: 260 }}>
+          <label>Blueprint Product to Sell</label>
+          <select
+            value={blueprintProduct}
+            onChange={e => setBlueprintProduct(e.target.value)}
+            style={selectStyle}
+          >
+            {BLUEPRINT_PRODUCTS.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.id} — {p.name}: {p.desc}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="sf">
           <label>&nbsp;</label>
@@ -88,7 +106,7 @@ export default function ForgeView({
               </div>
             </div>
             <h3>No runs yet</h3>
-            <p>Enter a location, business type, and value prop above — then run the pipeline.</p>
+            <p>Enter a state, country, and Blueprint product — then run the pipeline.</p>
           </div>
         )}
 

@@ -7,7 +7,11 @@
       "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"dashboard analytics professional\" --stack react)",
       "Bash(npm run *)",
       "Bash(xargs grep -l \"mock\\\\|seed\\\\|fixture\\\\|sample\\\\|example\")",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(xargs wc -l)",
+      "WebSearch",
+      "Bash(npm install *)",
+      "Bash(node -e \"require\\('libphonenumber-js'\\); require\\('validator'\\); console.log\\('OK'\\)\")"
     ]
   }
 }
