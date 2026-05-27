@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curcible — 8 Products · Sequential Implementation Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:#F9F7F8; --warm-paper:#FDFBFC; --parchment:#F2EEF0;
+  --ink:#1C1618; --ink-mid:#36262C; --stone:#847278; --ghost:#CCBEC2;
+  --plum:#6A4858; --plum-pale:rgba(106,72,88,0.07); --plum-pale2:rgba(106,72,88,0.13);
+  --border:rgba(28,22,24,0.10); --border-strong:rgba(28,22,24,0.22); --rule:rgba(28,22,24,0.06);
+  --ok:#2D6A4F; --ok-dim:rgba(45,106,79,0.08); --ok-border:rgba(45,106,79,0.18);
+  --warn:#7A5C1E; --warn-dim:rgba(122,92,30,0.09); --warn-border:rgba(122,92,30,0.22);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
+
+/* COVER */
+.cover{background:var(--ink);padding:60px 64px 52px;display:grid;grid-template-columns:1fr auto;gap:48px;align-items:end}
+.cover-eyebrow{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);margin-bottom:14px}
+.cover-title{font-family:'DM Serif Display',serif;font-size:clamp(38px,5vw,68px);line-height:1.0;letter-spacing:-.025em;color:var(--paper);font-weight:400}
+.cover-title em{font-style:italic;color:var(--ghost)}
+.cover-sub{font-size:13.5px;color:var(--stone);margin-top:16px;max-width:500px;line-height:1.7;font-weight:300}
+.cover-nums{display:flex;flex-direction:column;gap:1px;background:rgba(249,247,248,.08);flex-shrink:0}
+.cnum{background:rgba(249,247,248,.03);padding:16px 24px;display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:baseline;min-width:180px}
+.cnum-n{font-family:'DM Serif Display',serif;font-size:30px;color:var(--paper);line-height:1}
+.cnum-l{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:rgba(249,247,248,.28);line-height:1.4}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(249,247,248,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 64px;display:flex;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav-wm{font-family:'DM Serif Display',serif;font-size:15px;color:var(--ink);padding:11px 18px 11px 0;border-right:1px solid var(--border);margin-right:4px;flex-shrink:0}
+.nav-wm .pl{color:var(--plum)}
+.nav a{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.10em;text-transform:uppercase;color:var(--stone);text-decoration:none;padding:13px 12px;white-space:nowrap;flex-shrink:0;transition:color .15s}
+.nav a:hover{color:var(--ink)}
+
+/* CRITICAL BANNER */
+.critical-banner{background:var(--warn-dim);border-bottom:1px solid var(--warn-border);padding:14px 64px;display:flex;align-items:flex-start;gap:12px}
+.cb-icon{font-family:'DM Mono',monospace;font-size:10px;color:var(--warn);flex-shrink:0;margin-top:2px;letter-spacing:.08em;font-weight:500}
+.cb-text{font-size:13px;color:var(--warn);line-height:1.6}
+.cb-text strong{font-weight:600}
+
+/* OVERVIEW */
+.overview{padding:48px 64px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 340px;gap:48px}
+.ov-title{font-family:'DM Serif Display',serif;font-size:26px;letter-spacing:-.02em;font-weight:400;margin-bottom:14px}
+.ov-body{font-size:13.5px;color:var(--ink-mid);line-height:1.7}
+.ov-body p{margin-bottom:10px}.ov-body p:last-child{margin-bottom:0}
+.ov-body strong{color:var(--ink)}
+
+/* SEQUENCE TABLE */
+.seq-table{width:100%;border-collapse:collapse;font-size:12px}
+.seq-table th{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);padding:8px 12px;text-align:left;background:var(--parchment);border-bottom:1px solid var(--border)}
+.seq-table td{padding:9px 12px;border-bottom:1px solid var(--rule);vertical-align:middle}
+.seq-table tr:last-child td{border-bottom:none}
+.seq-pid{font-family:'DM Mono',monospace;font-size:9px;color:var(--plum);background:var(--plum-pale);border:1px solid var(--plum-pale2);padding:2px 7px;border-radius:2px;white-space:nowrap}
+.seq-name{font-weight:500;color:var(--ink);font-size:12.5px}
+.seq-week{font-family:'DM Mono',monospace;font-size:10px;color:var(--stone)}
+.seq-dur{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink-mid);white-space:nowrap}
+.seq-status{display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:2px}
+.ss-ok{background:var(--ok-dim);color:var(--ok);border:1px solid var(--ok-border)}
+.ss-warn{background:var(--warn-dim);color:var(--warn);border:1px solid var(--warn-border)}
+.seq-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.ss-ok .seq-dot{background:var(--ok)}.ss-warn .seq-dot{background:var(--warn)}
+
+/* WEEK 0 PREFLIGHT */
+.preflight{margin:40px 64px 0;border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.pf-hd{background:var(--ink);padding:20px 26px;display:flex;justify-content:space-between;align-items:center}
+.pf-hd-left{}
+.pf-tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);margin-bottom:4px}
+.pf-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--paper);font-weight:400;letter-spacing:-.015em}
+.pf-badge{font-family:'DM Mono',monospace;font-size:9px;color:rgba(249,247,248,.35);letter-spacing:.10em;text-transform:uppercase}
+.pf-body{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.pf-col{background:var(--warm-paper);padding:20px 26px}
+.pf-col-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--stone);margin-bottom:12px;display:block}
+.task-list{display:flex;flex-direction:column;gap:7px}
+.task{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;line-height:1.5;color:var(--ink-mid)}
+.task-num{font-family:'DM Mono',monospace;font-size:9px;color:var(--ghost);flex-shrink:0;margin-top:2px;width:18px}
+.task strong{color:var(--ink);font-weight:600}
+.pf-warn{background:var(--warn-dim);border-top:1px solid var(--warn-border);padding:14px 26px;display:flex;gap:10px;font-size:12.5px;color:var(--warn);line-height:1.5}
+.pf-warn-icon{font-family:'DM Mono',monospace;font-size:9px;flex-shrink:0;margin-top:2px;font-weight:500}
+
+/* PRODUCT CARD */
+.products-wrap{padding:0 64px 80px}
+
+.prod{margin-top:28px;border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.prod.clean{border-left:3px solid var(--ok)}
+.prod.flag{border-left:3px solid var(--warn)}
+
+/* Product header */
+.phd{display:flex;justify-content:space-between;align-items:center;padding:20px 26px;border-bottom:1px solid var(--border);background:var(--warm-paper);gap:12px;flex-wrap:wrap}
+.phd-left{display:flex;align-items:center;gap:14px}
+.p-pid{font-family:'DM Mono',monospace;font-size:10px;color:var(--plum);background:var(--plum-pale);border:1px solid var(--plum-pale2);padding:3px 9px;border-radius:2px;font-weight:500;flex-shrink:0}
+.p-meta{}
+.p-order{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--stone);margin-bottom:3px}
+.p-name{font-family:'DM Serif Display',serif;font-size:19px;letter-spacing:-.015em;line-height:1.1;color:var(--ink)}
+.phd-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:2px;font-family:'DM Mono',monospace;font-size:8.5px;font-weight:500;letter-spacing:.10em;text-transform:uppercase;white-space:nowrap}
+.b-ok{background:var(--ok-dim);color:var(--ok);border:1px solid var(--ok-border)}
+.b-warn{background:var(--warn-dim);color:var(--warn);border:1px solid var(--warn-border)}
+.b-dot{width:5px;height:5px;border-radius:50%}
+.b-ok .b-dot{background:var(--ok)}.b-warn .b-dot{background:var(--warn)}
+.week-tag{font-family:'DM Mono',monospace;font-size:9px;color:var(--stone);background:var(--parchment);border:1px solid var(--border);padding:3px 9px;border-radius:2px}
+
+/* Product body */
+.p-desc-row{padding:16px 26px;border-bottom:1px solid var(--border);background:var(--parchment)}
+.p-desc{font-size:13px;color:var(--ink-mid);line-height:1.65}
+.p-desc strong{color:var(--ink)}
+
+/* Prereq row */
+.prereq-row{padding:12px 26px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;background:var(--warm-paper)}
+.prereq-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);flex-shrink:0;margin-top:2px}
+.prereq-items{display:flex;flex-wrap:wrap;gap:6px}
+.prereq-chip{font-family:'DM Mono',monospace;font-size:9px;color:var(--ink-mid);background:var(--parchment);border:1px solid var(--border);padding:2px 8px;border-radius:2px}
+
+/* Weeks grid */
+.weeks-grid{display:grid;gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.weeks-grid.w2{grid-template-columns:1fr 1fr}
+.weeks-grid.w3{grid-template-columns:1fr 1fr 1fr}
+.week-col{background:var(--warm-paper);padding:18px 22px}
+.week-col.shade{background:var(--parchment)}
+.wc-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.wc-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone)}
+.wc-days{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--ghost)}
+.wc-tasks{display:flex;flex-direction:column;gap:8px}
+.wt{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.5;color:var(--ink-mid)}
+.wt-d{font-family:'DM Mono',monospace;font-size:9px;color:var(--stone);flex-shrink:0;margin-top:2px;min-width:16px}
+.wt strong{color:var(--ink);font-weight:600;display:block;font-size:11.5px;margin-bottom:1px}
+
+/* Done criteria */
+.done-row{padding:14px 26px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:12px;background:var(--ok-dim)}
+.done-row.warn-done{background:var(--warn-dim);border-bottom-color:var(--warn-border)}
+.done-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);flex-shrink:0;margin-top:2px}
+.done-lbl.w{color:var(--warn)}
+.done-items{display:flex;flex-direction:column;gap:4px}
+.done-item{font-size:12px;color:var(--ok);line-height:1.5;display:flex;align-items:flex-start;gap:7px}
+.done-item.w{color:var(--warn)}
+.di-icon{font-family:'DM Mono',monospace;font-size:9px;flex-shrink:0;margin-top:2px}
+
+/* Credentials row */
+.creds-row{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.creds-col{background:var(--warm-paper);padding:16px 22px}
+.creds-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--stone);margin-bottom:10px;display:block}
+.cred-list{display:flex;flex-direction:column;gap:5px}
+.cred-item{display:flex;gap:8px;font-size:12px;color:var(--ink-mid);line-height:1.4}
+.cred-key{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--stone);flex-shrink:0;margin-top:2px;width:28px}
+
+/* Flag row */
+.flag-row{display:flex;gap:10px;padding:12px 26px;border-bottom:1px solid var(--warn-border);background:var(--warn-dim);font-size:12.5px;color:var(--warn);line-height:1.5}
+.flag-icon{font-family:'DM Mono',monospace;font-size:9px;flex-shrink:0;margin-top:2px;font-weight:500}
+
+/* TIMELINE STRIP */
+.timeline-strip{margin:40px 64px 0;overflow-x:auto}
+.timeline-inner{display:flex;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px;overflow:hidden;min-width:700px}
+.tl-cell{flex:1;min-width:0;padding:10px 8px;background:var(--warm-paper);text-align:center}
+.tl-cell.active{background:var(--plum-pale2)}
+.tl-week{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.10em;color:var(--ghost);text-transform:uppercase;margin-bottom:4px}
+.tl-pid{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--plum);font-weight:500}
+.tl-pid.ok{color:var(--ok)}
+.tl-label{font-size:9px;color:var(--stone);margin-top:2px}
+
+/* SECTION HDR */
+.section-hd{padding:48px 64px 0;display:flex;align-items:center;gap:14px}
+.sh-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--stone)}
+.sh-rule{flex:1;height:1px;background:var(--border)}
+.sh-note{font-family:'DM Mono',monospace;font-size:9px;color:var(--ghost)}
+
+/* LEGEND + FOOTER */
+.legend{padding:36px 64px;border-top:1px solid var(--border);background:var(--parchment)}
+.legend-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--stone);margin-bottom:12px}
+.legend-row{display:flex;gap:28px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--stone)}
+.ldot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+footer{background:var(--ink);padding:36px 64px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}
+.ft-wm{font-family:'DM Serif Display',serif;font-size:22px;letter-spacing:-.02em;color:var(--paper)}
+.ft-wm .pl{color:var(--plum)}
+.ft-meta{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:rgba(249,247,248,.28);text-align:right;line-height:2.2}
+
+@media(max-width:900px){
+  .cover,.overview,.preflight,.products-wrap,.timeline-strip,.section-hd,.legend,footer{padding-left:32px;padding-right:32px}
+  .nav{padding:0 32px}
+  .cover{grid-template-columns:1fr}
+  .overview{grid-template-columns:1fr}
+  .weeks-grid.w2,.weeks-grid.w3,.pf-body,.creds-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div>
+    <div class="cover-eyebrow">Curcible · n8n Suite · Sequential Build Plan</div>
+    <h1 class="cover-title">One Product<br>at a Time.<br><em>Done Right.</em></h1>
+    <p class="cover-sub">A realistic, sequential implementation plan for all 8 n8n products — built one by one, in dependency order. Each product is fully live and stable before the next one starts.</p>
+  </div>
+  <div class="cover-nums">
+    <div class="cnum"><div class="cnum-n">8</div><div class="cnum-l">Products<br>Total</div></div>
+    <div class="cnum"><div class="cnum-n">19</div><div class="cnum-l">Weeks to<br>All Live</div></div>
+    <div class="cnum"><div class="cnum-n">2–3</div><div class="cnum-l">Weeks per<br>Product</div></div>
+    <div class="cnum"><div class="cnum-n">~5</div><div class="cnum-l">Months<br>Total</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-wm">C<span class="pl">ur</span>cible</div>
+  <a href="#overview">Overview</a>
+  <a href="#week0">Pre-flight</a>
+  <a href="#p07">P07</a><a href="#p01">P01</a><a href="#p04">P04</a>
+  <a href="#p02">P02</a><a href="#p06">P06</a><a href="#p05">P05</a>
+  <a href="#p08">P08</a><a href="#p03">P03</a>
+</nav>
+
+<!-- CRITICAL BANNER -->
+<div class="critical-banner">
+  <span class="cb-icon">⚠ DAY 1</span>
+  <div class="cb-text"><strong>Before anything else — submit your Meta Developer App today.</strong> P06 (WhatsApp chatbot) requires Meta's review and approval, which takes 7–14 days. You won't build P06 until Week 10, but if you miss this submission now, you'll hit a 2-week delay when you get there. Takes 30 minutes. Do it before reading the rest of this document.</div>
+</div>
+
+<!-- OVERVIEW -->
+<div class="overview" id="overview">
+  <div>
+    <div class="ov-title">How This Plan Works</div>
+    <div class="ov-body">
+      <p>Each product is built <strong>start to finish before the next one begins.</strong> No context switching, no half-built workflows sitting idle. When a product is live and the client has signed off, you move to the next one.</p>
+      <p>The sequence is ordered by <strong>setup complexity and dependency chain</strong> — easiest products first. This means you're generating client revenue and building confidence early, while the more complex products (WhatsApp, LinkedIn) come after your process is solid.</p>
+      <p><strong>Definition of "done" matters.</strong> Each product has a clear exit criteria — specific metrics you hit before moving forward. Don't skip this. A half-deployed workflow that breaks in Week 8 is harder to fix than one you stabilised properly in Week 2.</p>
+      <p>Infrastructure setup happens in <strong>Week 1 as a standalone task</strong> before any product build. It serves all 8 products and only needs to be done once.</p>
+    </div>
+  </div>
+  <div>
+    <table class="seq-table">
+      <thead><tr><th>PID</th><th>Product</th><th>Weeks</th><th>Duration</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td><span class="seq-pid">W1</span></td><td><span class="seq-name">Infrastructure</span></td><td class="seq-week">Wk 1</td><td class="seq-dur">1 wk</td><td><span class="seq-status ss-ok"><span class="seq-dot"></span>Required</span></td></tr>
+        <tr><td><span class="seq-pid">P07</span></td><td><span class="seq-name">MeetCore™</span></td><td class="seq-week">Wk 2–3</td><td class="seq-dur">2 wks</td><td><span class="seq-status ss-ok"><span class="seq-dot"></span>Clean</span></td></tr>
+        <tr><td><span class="seq-pid">P01</span></td><td><span class="seq-name">InboxCore™</span></td><td class="seq-week">Wk 4–6</td><td class="seq-dur">3 wks</td><td><span class="seq-status ss-ok"><span class="seq-dot"></span>Clean</span></td></tr>
+        <tr><td><span class="seq-pid">P04</span></td><td><span class="seq-name">SocialCore™</span></td><td class="seq-week">Wk 7–8</td><td class="seq-dur">2 wks</td><td><span class="seq-status ss-warn"><span class="seq-dot"></span>Flag</span></td></tr>
+        <tr><td><span class="seq-pid">P02</span></td><td><span class="seq-name">ContentCore™</span></td><td class="seq-week">Wk 9–10</td><td class="seq-dur">2 wks</td><td><span class="seq-status ss-ok"><span class="seq-dot"></span>Clean</span></td></tr>
+        <tr><td><span class="seq-pid">P06</span></td><td><span class="seq-name">KnowCore™</span></td><td class="seq-week">Wk 11–13</td><td class="seq-dur">3 wks</td><td><span class="seq-status ss-ok"><span class="seq-dot"></span>Clean</span></td></tr>
+        <tr><td><span class="seq-pid">P05</span></td><td><span class="seq-name">TalentCore™</span></td><td class="seq-week">Wk 14–15</td><td class="seq-dur">2 wks</td><td><span class="seq-status ss-ok"><span class="seq-dot"></span>Clean</span></td></tr>
+        <tr><td><span class="seq-pid">P08</span></td><td><span class="seq-name">TubeCore™</span></td><td class="seq-week">Wk 16–17</td><td class="seq-dur">2 wks</td><td><span class="seq-status ss-ok"><span class="seq-dot"></span>Clean</span></td></tr>
+        <tr><td><span class="seq-pid">P03</span></td><td><span class="seq-name">LeadCore™</span></td><td class="seq-week">Wk 18–19</td><td class="seq-dur">2 wks</td><td><span class="seq-status ss-warn"><span class="seq-dot"></span>Flag</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TIMELINE STRIP -->
+<div class="section-hd">
+  <span class="sh-label">19-Week Timeline</span>
+  <div class="sh-rule"></div>
+  <span class="sh-note">One product at a time</span>
+</div>
+<div class="timeline-strip">
+  <div class="timeline-inner">
+    <div class="tl-cell"><div class="tl-week">Wk 1</div><div class="tl-pid" style="color:var(--stone)">INFRA</div><div class="tl-label">Setup</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 2</div><div class="tl-pid">P07</div><div class="tl-label">Setup</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 3</div><div class="tl-pid">P07</div><div class="tl-label">Live ✓</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 4</div><div class="tl-pid">P01</div><div class="tl-label">Setup</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 5</div><div class="tl-pid">P01</div><div class="tl-label">Build</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 6</div><div class="tl-pid">P01</div><div class="tl-label">Live ✓</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 7</div><div class="tl-pid">P04</div><div class="tl-label">Setup</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 8</div><div class="tl-pid">P04</div><div class="tl-label">Live ✓</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 9</div><div class="tl-pid">P02</div><div class="tl-label">Setup</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 10</div><div class="tl-pid">P02</div><div class="tl-label">Live ✓</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 11</div><div class="tl-pid">P06</div><div class="tl-label">Build</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 12</div><div class="tl-pid">P06</div><div class="tl-label">Test</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 13</div><div class="tl-pid">P06</div><div class="tl-label">Live ✓</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 14</div><div class="tl-pid">P05</div><div class="tl-label">Setup</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 15</div><div class="tl-pid">P05</div><div class="tl-label">Live ✓</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 16</div><div class="tl-pid">P08</div><div class="tl-label">Setup</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 17</div><div class="tl-pid">P08</div><div class="tl-label">Live ✓</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 18</div><div class="tl-pid">P03</div><div class="tl-label">Setup</div></div>
+    <div class="tl-cell active"><div class="tl-week">Wk 19</div><div class="tl-pid">P03</div><div class="tl-label">Live ✓</div></div>
+  </div>
+</div>
+
+<!-- PRE-FLIGHT -->
+<div class="section-hd" id="week0" style="margin-top:28px">
+  <span class="sh-label">Week 1 — Infrastructure Pre-flight</span>
+  <div class="sh-rule"></div>
+  <span class="sh-note">Do this before touching any product</span>
+</div>
+
+<div class="preflight">
+  <div class="pf-hd">
+    <div>
+      <div class="pf-tag">Week 1 · Foundation</div>
+      <div class="pf-title">Infrastructure Setup</div>
+    </div>
+    <div class="pf-badge">~8–12 hours · One time · Serves all 8 products</div>
+  </div>
+  <div class="pf-body">
+    <div class="pf-col">
+      <span class="pf-col-lbl">n8n Setup</span>
+      <div class="task-list">
+        <div class="task"><span class="task-num">1</span><div><strong>Decide: Cloud vs Self-hosted.</strong> If you'll use P04 (SocialCore with Blotato community node), self-hosted is required. Railway or Render are easiest to deploy — free tiers available. n8n Cloud works for all other 7 products.</div></div>
+        <div class="task"><span class="task-num">2</span><div><strong>Provision your n8n instance.</strong> If self-hosted: deploy on Railway (5-minute deploy), set up SSL, configure your webhook base URL. If Cloud: confirm community nodes are enabled under Settings.</div></div>
+        <div class="task"><span class="task-num">3</span><div><strong>Install community nodes.</strong> In Admin Panel → Community Nodes → install <code style="font-family:'DM Mono',monospace;font-size:10px;background:var(--parchment);padding:1px 5px;border-radius:2px">n8n-nodes-blotato</code>. Do this now even though P04 is Week 7.</div></div>
+        <div class="task"><span class="task-num">4</span><div><strong>Test a simple webhook.</strong> Create a test workflow with a webhook trigger. Confirm your n8n instance is publicly reachable (required for Zoom, WhatsApp, and email triggers).</div></div>
+      </div>
+    </div>
+    <div class="pf-col">
+      <span class="pf-col-lbl">Credentials &amp; Accounts</span>
+      <div class="task-list">
+        <div class="task"><span class="task-num">5</span><div><strong>OpenAI account + billing.</strong> Set a monthly spend limit ($50–100 to start). Every product except P04 uses OpenAI. One account, multiple workflows.</div></div>
+        <div class="task"><span class="task-num">6</span><div><strong>Google Workspace OAuth2.</strong> Create a Google Cloud project. Enable: Gmail API, Google Drive API, Google Calendar API, Sheets API, YouTube Data API v3. Create OAuth2 credentials. Store Client ID and Secret.</div></div>
+        <div class="task"><span class="task-num">7</span><div><strong>Qdrant cloud account.</strong> Sign up at qdrant.tech — free tier is enough to start. You'll use this for P01 (email KB) and P06 (WhatsApp KB). Create one cluster, note the URL and API key.</div></div>
+        <div class="task"><span class="task-num">8</span><div><strong>Credentials document.</strong> Create a private doc (Notion or 1Password) with all API keys, OAuth tokens, and account links. You will reference this constantly over 19 weeks.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="pf-warn">
+    <span class="pf-warn-icon">⚠</span>
+    <div><strong>Meta Developer App — submit today.</strong> Go to developers.facebook.com → Create App → Business → Add WhatsApp product → Submit for review. You won't use this until Week 11. But approval takes 7–14 days, and if you submit it in Week 10, you'll wait 2 weeks before you can touch P06. 30 minutes now saves 2 weeks later.</div>
+  </div>
+</div>
+
+<!-- SECTION HDR PRODUCTS -->
+<div class="section-hd" style="margin-top:40px" id="products">
+  <span class="sh-label">Products — One by One</span>
+  <div class="sh-rule"></div>
+  <span class="sh-note">Complete each before starting the next</span>
+</div>
+
+<div class="products-wrap">
+
+<!-- ══════════════ P07 MeetCore ══════════════ -->
+<div class="prod clean" id="p07">
+  <div class="phd">
+    <div class="phd-left">
+      <span class="p-pid">P07</span>
+      <div class="p-meta">
+        <div class="p-order">Product 1 of 8 · Start here</div>
+        <div class="p-name">MeetCore™ — AI Meeting Summary &amp; Follow-Up</div>
+      </div>
+    </div>
+    <div class="phd-right">
+      <span class="badge b-ok"><span class="b-dot"></span>Working Clean</span>
+      <span class="week-tag">Weeks 2–3</span>
+    </div>
+  </div>
+  <div class="p-desc-row">
+    <div class="p-desc">Triggers after a Zoom meeting (scheduled or webhook), pulls the recording transcript, generates a structured summary — <strong>decisions, action items, owners, follow-up dates</strong> — pushes tasks to ClickUp or Airtable, creates Calendar invites, emails all attendees + posts to Slack. <strong>Why start here:</strong> lowest complexity, all native nodes, no external approval cycles. First demo closes clients same day.</div>
+  </div>
+  <div class="prereq-row">
+    <span class="prereq-lbl">Needs</span>
+    <div class="prereq-items">
+      <span class="prereq-chip">n8n live ✓</span>
+      <span class="prereq-chip">Google OAuth2 ✓</span>
+      <span class="prereq-chip">OpenAI key ✓</span>
+      <span class="prereq-chip">Zoom account (paid for cloud recording)</span>
+    </div>
+  </div>
+  <div class="creds-row">
+    <div class="creds-col">
+      <span class="creds-lbl">Credentials to configure</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">KEY</span>Zoom OAuth2 — create app at marketplace.zoom.us, enable Cloud Recording scope</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>OpenAI API key — GPT-4o or Claude via Anthropic API</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Google Calendar + Gmail OAuth2 (from Week 1 Google Cloud project)</div>
+        <div class="cred-item"><span class="cred-key">OPT</span>Slack Bot Token — create at api.slack.com/apps</div>
+        <div class="cred-item"><span class="cred-key">OPT</span>ClickUp API key or Airtable PAT for task creation</div>
+      </div>
+    </div>
+    <div class="creds-col">
+      <span class="creds-lbl">Time estimate</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">2h</span>Zoom OAuth app setup + credential config in n8n</div>
+        <div class="cred-item"><span class="cred-key">3h</span>Import workflow, map nodes, configure trigger</div>
+        <div class="cred-item"><span class="cred-key">3h</span>Prompt engineering — tune summary format to client's preferred style</div>
+        <div class="cred-item"><span class="cred-key">2h</span>Test with 5 recorded meetings, validate output quality</div>
+        <div class="cred-item"><span class="cred-key">2h</span>Client setup + handoff documentation</div>
+      </div>
+    </div>
+  </div>
+  <div class="weeks-grid w2">
+    <div class="week-col">
+      <div class="wc-hd"><span class="wc-label">Week 2 — Build</span><span class="wc-days">Days 8–14</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D8</span><div><strong>Zoom OAuth2 setup</strong> Create Zoom Marketplace app. Set redirect URL to your n8n instance. Enable cloud recording scope. Connect in n8n credentials.</div></div>
+        <div class="wt"><span class="wt-d">D9</span><div><strong>Import + configure workflow</strong> Load JSON from Google Drive. Map Zoom recording node → transcript fetch → GPT-4o → Calendar + Gmail + Slack.</div></div>
+        <div class="wt"><span class="wt-d">D10–11</span><div><strong>Prompt engineering</strong> Build the summary prompt. Required output sections: Meeting date/attendees, Key decisions (numbered), Action items (owner + deadline), Follow-up meeting date. Test with 3 old recordings.</div></div>
+        <div class="wt"><span class="wt-d">D12–13</span><div><strong>End-to-end test</strong> Run 5 real meetings through. Validate: summary accuracy, Calendar invite created, email delivered, Slack message formatted correctly. Fix any node errors.</div></div>
+        <div class="wt"><span class="wt-d">D14</span><div><strong>First client conversation</strong> Demo the output from a real meeting. If they like it — configure their Zoom account and move to deploy in Week 3.</div></div>
+      </div>
+    </div>
+    <div class="week-col shade">
+      <div class="wc-hd"><span class="wc-label">Week 3 — Deploy &amp; Stabilise</span><span class="wc-days">Days 15–21</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D15–16</span><div><strong>Client Zoom + Google auth</strong> Connect client's Zoom account, their Google Calendar and Gmail. Set up their Slack channel webhook.</div></div>
+        <div class="wt"><span class="wt-d">D17–18</span><div><strong>Live with client meetings</strong> Run their next 5 real meetings through the workflow. Client reviews each summary and gives feedback.</div></div>
+        <div class="wt"><span class="wt-d">D19</span><div><strong>Prompt adjustments</strong> Based on feedback: adjust tone (formal/informal), change summary section order, add/remove fields. One prompt revision only — don't over-iterate.</div></div>
+        <div class="wt"><span class="wt-d">D20</span><div><strong>Handoff document</strong> Write a 1-page doc: how the trigger works, what to do if a summary doesn't generate, how to add new Slack channels. Give to client.</div></div>
+        <div class="wt"><span class="wt-d">D21</span><div><strong>Confirm retainer</strong> Product is stable. Invoice setup fee. Agree monthly retainer rate. Move to P01.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="done-row">
+    <span class="done-lbl">Done when</span>
+    <div class="done-items">
+      <div class="done-item"><span class="di-icon">✓</span>10+ real meetings processed with no workflow errors</div>
+      <div class="done-item"><span class="di-icon">✓</span>Client confirms summary quality is accurate and useful</div>
+      <div class="done-item"><span class="di-icon">✓</span>Calendar invites and email notifications working reliably</div>
+      <div class="done-item"><span class="di-icon">✓</span>Setup fee invoiced. Move to P01.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ P01 InboxCore ══════════════ -->
+<div class="prod clean" id="p01">
+  <div class="phd">
+    <div class="phd-left">
+      <span class="p-pid">P01</span>
+      <div class="p-meta">
+        <div class="p-order">Product 2 of 8</div>
+        <div class="p-name">InboxCore™ — AI Email Autoresponder with Approval</div>
+      </div>
+    </div>
+    <div class="phd-right">
+      <span class="badge b-ok"><span class="b-dot"></span>Working Clean</span>
+      <span class="week-tag">Weeks 4–6</span>
+    </div>
+  </div>
+  <div class="p-desc-row">
+    <div class="p-desc">Monitors an IMAP inbox, summarises incoming emails, queries a <strong>Qdrant vector knowledge base</strong> (loaded with company FAQs and service docs), drafts a context-aware reply, then routes to a human for one-click approval before sending. No email goes out without sign-off. <strong>3 weeks because</strong> Qdrant setup and knowledge base population is the complexity — you're teaching it the client's business.</div>
+  </div>
+  <div class="prereq-row">
+    <span class="prereq-lbl">Needs</span>
+    <div class="prereq-items">
+      <span class="prereq-chip">P07 done ✓</span>
+      <span class="prereq-chip">Qdrant account (Week 1) ✓</span>
+      <span class="prereq-chip">Client's IMAP credentials</span>
+      <span class="prereq-chip">Client's FAQ docs + service info</span>
+    </div>
+  </div>
+  <div class="creds-row">
+    <div class="creds-col">
+      <span class="creds-lbl">Credentials to configure</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">KEY</span>IMAP credentials — host, port, username, password for client's inbox</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Gmail OAuth2 — for sending approval requests to human reviewer</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>OpenAI API key — summarization chain + draft generation</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Qdrant URL + API key — from your Week 1 setup</div>
+      </div>
+    </div>
+    <div class="creds-col">
+      <span class="creds-lbl">Time estimate</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">2h</span>IMAP + Qdrant credential setup in n8n</div>
+        <div class="cred-item"><span class="cred-key">4h</span>Knowledge base: chunk client docs, ingest into Qdrant, test retrieval</div>
+        <div class="cred-item"><span class="cred-key">3h</span>Configure workflow + approval flow routing</div>
+        <div class="cred-item"><span class="cred-key">3h</span>Test with 20+ email types, tune prompt</div>
+        <div class="cred-item"><span class="cred-key">2h</span>Client deploy + monitor first week</div>
+      </div>
+    </div>
+  </div>
+  <div class="weeks-grid w3">
+    <div class="week-col">
+      <div class="wc-hd"><span class="wc-label">Week 4 — Foundation</span><span class="wc-days">Days 22–28</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D22</span><div><strong>IMAP setup</strong> Configure client inbox IMAP credentials. Test connection in n8n. Confirm email trigger fires on new message.</div></div>
+        <div class="wt"><span class="wt-d">D23–24</span><div><strong>Qdrant knowledge base</strong> Create a new collection. Gather client documents: FAQ page, service descriptions, pricing, common questions. Split into ~200-word chunks. Ingest all via OpenAI embeddings.</div></div>
+        <div class="wt"><span class="wt-d">D25–26</span><div><strong>Retrieval test</strong> Run 15 test queries against the vector store. Confirm relevant chunks are returned for typical email topics. If retrieval is poor — rechunk the docs (smaller or larger chunks).</div></div>
+        <div class="wt"><span class="wt-d">D27–28</span><div><strong>Import + connect workflow</strong> Load workflow JSON. Connect IMAP → Markdown → Summarization Chain → Qdrant → GPT draft → Gmail approval loop.</div></div>
+      </div>
+    </div>
+    <div class="week-col shade">
+      <div class="wc-hd"><span class="wc-label">Week 5 — Test &amp; Tune</span><span class="wc-days">Days 29–35</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D29–30</span><div><strong>First email tests</strong> Send 20 test emails covering: service inquiry, pricing question, complaint, meeting request, general hello. Review each draft. Note what's wrong.</div></div>
+        <div class="wt"><span class="wt-d">D31–32</span><div><strong>Prompt revision #1</strong> Improve the system prompt based on test results. Focus on: tone, length, what info to include, how to handle questions the KB doesn't cover.</div></div>
+        <div class="wt"><span class="wt-d">D33–34</span><div><strong>Approval flow test</strong> Confirm the human approval email arrives, the Yes/No links work, and the approved reply sends correctly. Test edge case: what happens if approver clicks No.</div></div>
+        <div class="wt"><span class="wt-d">D35</span><div><strong>Target quality check</strong> Review all 20 test drafts again. Are 70%+ ready to send with no edits? If yes, proceed to deploy. If not, spend another day on the prompt.</div></div>
+      </div>
+    </div>
+    <div class="week-col">
+      <div class="wc-hd"><span class="wc-label">Week 6 — Deploy &amp; Stabilise</span><span class="wc-days">Days 36–42</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D36–37</span><div><strong>Go live on client inbox</strong> Switch to client's real inbox. Client receives approval requests for every incoming email. Monitor closely for first 48 hours.</div></div>
+        <div class="wt"><span class="wt-d">D38–39</span><div><strong>First 20 real emails</strong> Client reviews and approves/rejects each draft. Collect feedback on quality. Note patterns in rejections — these go back into the prompt.</div></div>
+        <div class="wt"><span class="wt-d">D40</span><div><strong>Prompt revision #2 (final)</strong> One last prompt update based on real email feedback. After this, the prompt is locked unless something material changes.</div></div>
+        <div class="wt"><span class="wt-d">D41–42</span><div><strong>Stabilisation + handoff</strong> Confirm workflow is running without errors. Document: how to add new docs to knowledge base, how to update the prompt, what to do if workflow stops. Invoice client.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="done-row">
+    <span class="done-lbl">Done when</span>
+    <div class="done-items">
+      <div class="done-item"><span class="di-icon">✓</span>50+ real emails processed, approval loop working without errors</div>
+      <div class="done-item"><span class="di-icon">✓</span>75%+ of drafts sent by client without editing</div>
+      <div class="done-item"><span class="di-icon">✓</span>Knowledge base covers all common inquiry types</div>
+      <div class="done-item"><span class="di-icon">✓</span>Setup fee invoiced. Move to P04.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ P04 SocialCore ══════════════ -->
+<div class="prod flag" id="p04">
+  <div class="phd">
+    <div class="phd-left">
+      <span class="p-pid">P04</span>
+      <div class="p-meta">
+        <div class="p-order">Product 3 of 8</div>
+        <div class="p-name">SocialCore™ — Auto-Post to 9 Social Platforms</div>
+      </div>
+    </div>
+    <div class="phd-right">
+      <span class="badge b-warn"><span class="b-dot"></span>Working w/ Flag</span>
+      <span class="week-tag">Weeks 7–8</span>
+    </div>
+  </div>
+  <div class="p-desc-row">
+    <div class="p-desc">Reads a content calendar from Airtable, generates platform-optimised captions per channel with GPT, fetches media from Google Drive, and posts to up to 9 platforms via <strong>Blotato's unified API</strong> (Instagram, LinkedIn, X, TikTok, YouTube, Facebook, Pinterest, Threads, Mastodon). <strong>Flag:</strong> Blotato is a community node — requires self-hosted n8n, which you set up in Week 1. If you're on n8n Cloud, enable community nodes before this week.</div>
+  </div>
+  <div class="flag-row">
+    <span class="flag-icon">⚠</span>
+    <div><strong>Verify this before Week 7:</strong> Open your n8n Admin Panel → Community Nodes. Confirm <code style="font-family:'DM Mono',monospace;font-size:10px;background:var(--warn-dim);padding:1px 5px;border-radius:2px">n8n-nodes-blotato</code> is installed. If it's not, install it now — it takes 5 minutes but requires a restart.</div>
+  </div>
+  <div class="prereq-row">
+    <span class="prereq-lbl">Needs</span>
+    <div class="prereq-items">
+      <span class="prereq-chip">P01 done ✓</span>
+      <span class="prereq-chip">Self-hosted n8n with community nodes ✓</span>
+      <span class="prereq-chip">Blotato account + social accounts connected</span>
+      <span class="prereq-chip">Airtable account</span>
+      <span class="prereq-chip">Google Drive OAuth2 ✓</span>
+    </div>
+  </div>
+  <div class="creds-row">
+    <div class="creds-col">
+      <span class="creds-lbl">Credentials to configure</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">KEY</span>Blotato API key — create account at blotato.com (free), connect all social accounts, generate key</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Airtable Personal Access Token — airtable.com/create/tokens</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>OpenAI API key (already configured)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Google Drive OAuth2 (already configured)</div>
+      </div>
+    </div>
+    <div class="creds-col">
+      <span class="creds-lbl">Time estimate</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">2h</span>Blotato account setup + connect all 9 social platforms</div>
+        <div class="cred-item"><span class="cred-key">2h</span>Build Airtable content calendar base (name, caption brief, media link, platforms, schedule date)</div>
+        <div class="cred-item"><span class="cred-key">3h</span>Import workflow, configure nodes, map Airtable fields</div>
+        <div class="cred-item"><span class="cred-key">3h</span>Test all platforms, caption quality per channel</div>
+      </div>
+    </div>
+  </div>
+  <div class="weeks-grid w2">
+    <div class="week-col">
+      <div class="wc-hd"><span class="wc-label">Week 7 — Build</span><span class="wc-days">Days 43–49</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D43</span><div><strong>Blotato setup</strong> Create account, connect all client social profiles. Test posting manually from Blotato dashboard before touching n8n — confirms platform auth is working.</div></div>
+        <div class="wt"><span class="wt-d">D44</span><div><strong>Airtable content calendar</strong> Create the base. Required fields: Topic, Caption Brief, Media File URL (Google Drive), Target Platforms (multi-select), Scheduled Date, Status (Draft/Approved/Posted).</div></div>
+        <div class="wt"><span class="wt-d">D45–46</span><div><strong>Import + map workflow</strong> Load JSON, connect Airtable trigger, configure Blotato node with API key, map media field to Google Drive fetch. Set schedule trigger to run daily at a consistent time.</div></div>
+        <div class="wt"><span class="wt-d">D47–49</span><div><strong>Platform-by-platform test</strong> Run one post to each platform. Check: character limit compliance (X = 280, LinkedIn = 3,000), image dimensions, hashtag formatting. Fix each one before moving on. Don't test all 9 at once — test 2–3 at a time.</div></div>
+      </div>
+    </div>
+    <div class="week-col shade">
+      <div class="wc-hd"><span class="wc-label">Week 8 — Caption Quality &amp; Deploy</span><span class="wc-days">Days 50–56</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D50–51</span><div><strong>Caption prompt per platform</strong> Write a separate system prompt section for each platform's tone: LinkedIn = professional, Instagram = conversational, X = punchy under 200 chars, TikTok = casual/hook-led. Test 3 posts per platform.</div></div>
+        <div class="wt"><span class="wt-d">D52–53</span><div><strong>Populate first month calendar</strong> Work with client to fill Airtable with 30 days of content briefs. Run full calendar through workflow in staging. Client reviews all generated captions before anything posts.</div></div>
+        <div class="wt"><span class="wt-d">D54</span><div><strong>Client approval gate</strong> Add a "Status = Approved" filter — workflow only posts rows the client has marked approved. This keeps control in their hands during the first month.</div></div>
+        <div class="wt"><span class="wt-d">D55–56</span><div><strong>Go live + first week monitored</strong> First 7 posts go live. Monitor for errors. Check that Airtable status updates to "Posted" after each successful post. Handoff + invoice.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="done-row">
+    <span class="done-lbl">Done when</span>
+    <div class="done-items">
+      <div class="done-item"><span class="di-icon">✓</span>7 posts published successfully across at least 5 platforms with no errors</div>
+      <div class="done-item"><span class="di-icon">✓</span>Client has reviewed and approved content calendar workflow</div>
+      <div class="done-item"><span class="di-icon">✓</span>Airtable status updates reliably after each post</div>
+      <div class="done-item"><span class="di-icon">✓</span>Setup fee invoiced. Move to P02.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ P02 ContentCore ══════════════ -->
+<div class="prod clean" id="p02">
+  <div class="phd">
+    <div class="phd-left">
+      <span class="p-pid">P02</span>
+      <div class="p-meta">
+        <div class="p-order">Product 4 of 8</div>
+        <div class="p-name">ContentCore™ — Auto SEO Blog Writer</div>
+      </div>
+    </div>
+    <div class="phd-right">
+      <span class="badge b-ok"><span class="b-dot"></span>Working Clean</span>
+      <span class="week-tag">Weeks 9–10</span>
+    </div>
+  </div>
+  <div class="p-desc-row">
+    <div class="p-desc">Takes a keyword or topic input, queries <strong>Perplexity AI for real-time research</strong> (current data, competitor context, citations), passes the researched brief to GPT-4o to write a structured SEO article (H1/H2, meta description, internal link placeholders), then publishes directly to WordPress, logs in Google Sheets, and sends a completion email. <strong>Fastest ROI product for content-heavy clients</strong> — each article costs under $2 in API credits.</div>
+  </div>
+  <div class="prereq-row">
+    <span class="prereq-lbl">Needs</span>
+    <div class="prereq-items">
+      <span class="prereq-chip">P04 done ✓</span>
+      <span class="prereq-chip">Perplexity API key</span>
+      <span class="prereq-chip">WordPress site with Application Password enabled</span>
+      <span class="prereq-chip">Google Sheets OAuth2 ✓</span>
+    </div>
+  </div>
+  <div class="creds-row">
+    <div class="creds-col">
+      <span class="creds-lbl">Credentials to configure</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">KEY</span>Perplexity API key — pplx-api.com, paid plan required ($20/mo for sonar-pro)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>WordPress Application Password — WP Admin → Users → Profile → Application Passwords</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>OpenAI API key (already configured)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Google Sheets OAuth2 (already configured)</div>
+        <div class="cred-item"><span class="cred-key">OPT</span>Gmail OAuth2 for completion notification (already configured)</div>
+      </div>
+    </div>
+    <div class="creds-col">
+      <span class="creds-lbl">Time estimate</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">1h</span>Perplexity API + WordPress App Password setup</div>
+        <div class="cred-item"><span class="cred-key">2h</span>Import workflow, configure Perplexity HTTP request, WordPress node</div>
+        <div class="cred-item"><span class="cred-key">4h</span>Prompt engineering — brand voice, SEO structure, heading hierarchy</div>
+        <div class="cred-item"><span class="cred-key">3h</span>Test 10 articles, client review, prompt refinement</div>
+      </div>
+    </div>
+  </div>
+  <div class="weeks-grid w2">
+    <div class="week-col">
+      <div class="wc-hd"><span class="wc-label">Week 9 — Build &amp; Prompt</span><span class="wc-days">Days 57–63</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D57</span><div><strong>API credentials + workflow import</strong> Activate Perplexity API key. Configure WordPress REST endpoint (yoursite.com/wp-json/wp/v2/posts). Import JSON and map all nodes.</div></div>
+        <div class="wt"><span class="wt-d">D58–59</span><div><strong>Prompt engineering (the critical step)</strong> Build a detailed system prompt: brand voice, article structure (intro → 3–5 H2 sections → conclusion), SEO requirements (keyword in H1, first 100 words, meta description format), word count target, internal link placeholders. This is where quality is determined — take your time.</div></div>
+        <div class="wt"><span class="wt-d">D60–62</span><div><strong>Write 10 test articles</strong> Pick 10 of the client's target keywords. Run each through the workflow. Read every article. Score each: structure ✓/✗, tone ✓/✗, accuracy ✓/✗, length ✓/✗. Note what needs fixing.</div></div>
+        <div class="wt"><span class="wt-d">D63</span><div><strong>Client review session</strong> Share all 10 articles with client. Collect specific feedback on tone, structure, and any factual issues. Adjust prompt accordingly.</div></div>
+      </div>
+    </div>
+    <div class="week-col shade">
+      <div class="wc-hd"><span class="wc-label">Week 10 — Refine &amp; Deploy</span><span class="wc-days">Days 64–70</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D64</span><div><strong>Prompt revision + retest</strong> Apply client feedback to the prompt. Rerun 5 of the weakest articles from Week 9. Quality should be noticeably better. If not, identify what's still wrong specifically.</div></div>
+        <div class="wt"><span class="wt-d">D65–66</span><div><strong>WordPress publish test</strong> Run 3 articles through full pipeline: Perplexity research → GPT write → WordPress publish as draft. Check: formatting in WP editor, categories assigned, featured image placeholder, meta description field populated.</div></div>
+        <div class="wt"><span class="wt-d">D67–68</span><div><strong>Go live — first 5 articles</strong> Publish first 5 client articles. Set WordPress to publish as "Draft" initially — client reviews and hits Publish manually for the first month. Builds confidence before full automation.</div></div>
+        <div class="wt"><span class="wt-d">D69–70</span><div><strong>Publishing cadence + handoff</strong> Set up the form or webhook that triggers new articles. Agree a publishing schedule with client (3–5/week is typical). Invoice. Move to P06.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="done-row">
+    <span class="done-lbl">Done when</span>
+    <div class="done-items">
+      <div class="done-item"><span class="di-icon">✓</span>10 articles written and reviewed, client happy with quality</div>
+      <div class="done-item"><span class="di-icon">✓</span>WordPress publish pipeline working — articles appearing as drafts</div>
+      <div class="done-item"><span class="di-icon">✓</span>Publishing cadence agreed and first 5 live</div>
+      <div class="done-item"><span class="di-icon">✓</span>Setup fee invoiced. Move to P06.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ P06 KnowCore ══════════════ -->
+<div class="prod clean" id="p06">
+  <div class="phd">
+    <div class="phd-left">
+      <span class="p-pid">P06</span>
+      <div class="p-meta">
+        <div class="p-order">Product 5 of 8 · Verify Meta approval before starting</div>
+        <div class="p-name">KnowCore™ — WhatsApp AI Chatbot with RAG</div>
+      </div>
+    </div>
+    <div class="phd-right">
+      <span class="badge b-ok"><span class="b-dot"></span>Working Clean</span>
+      <span class="week-tag">Weeks 11–13</span>
+    </div>
+  </div>
+  <div class="p-desc-row">
+    <div class="p-desc">Receives WhatsApp messages via Meta webhook, filters non-message events, runs a <strong>RAG pipeline</strong>: embeds the query with OpenAI, searches a Qdrant vector store loaded with company docs, passes context + message to GPT Chat Model, replies via WhatsApp API within 2–5 seconds. High-visibility product — clients can see it working in their customers' phones in real time.</div>
+  </div>
+  <div class="flag-row">
+    <span class="flag-icon">⚠</span>
+    <div><strong>Before starting Week 11:</strong> Confirm your Meta Developer App is approved. Log in to developers.facebook.com and check app status. If still pending after 14 days — submit a review appeal with more business detail. If approved: note your Phone Number ID, WhatsApp Business Account ID, and generate a permanent System User Access Token (not a temporary test token).</div>
+  </div>
+  <div class="prereq-row">
+    <span class="prereq-lbl">Needs</span>
+    <div class="prereq-items">
+      <span class="prereq-chip">P02 done ✓</span>
+      <span class="prereq-chip">Meta app approved ✓</span>
+      <span class="prereq-chip">WhatsApp Business Account + Phone Number</span>
+      <span class="prereq-chip">Qdrant account (Week 1) ✓</span>
+      <span class="prereq-chip">Client documents for knowledge base</span>
+    </div>
+  </div>
+  <div class="creds-row">
+    <div class="creds-col">
+      <span class="creds-lbl">Credentials to configure</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">KEY</span>Meta System User Access Token (permanent — not temporary test token)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>WhatsApp Phone Number ID (from Meta developer dashboard)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>WhatsApp Business Account ID</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>OpenAI API key — chat model + embeddings (already configured)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Qdrant URL + API key (already configured, create new collection)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Google Drive OAuth2 for document source (already configured)</div>
+      </div>
+    </div>
+    <div class="creds-col">
+      <span class="creds-lbl">Time estimate</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">3h</span>Meta webhook registration + token setup</div>
+        <div class="cred-item"><span class="cred-key">4h</span>Qdrant collection + document ingestion for WhatsApp KB</div>
+        <div class="cred-item"><span class="cred-key">3h</span>Import workflow, configure AI agent, test RAG pipeline</div>
+        <div class="cred-item"><span class="cred-key">4h</span>Message quality testing (100 test messages)</div>
+        <div class="cred-item"><span class="cred-key">3h</span>Client WhatsApp number setup + go-live monitoring</div>
+      </div>
+    </div>
+  </div>
+  <div class="weeks-grid w3">
+    <div class="week-col">
+      <div class="wc-hd"><span class="wc-label">Week 11 — Meta + Knowledge Base</span><span class="wc-days">Days 71–77</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D71</span><div><strong>Meta webhook registration</strong> In developer dashboard: add webhook URL (your n8n public webhook endpoint), set verify token, subscribe to messages events. Send a test message and confirm n8n receives the webhook payload.</div></div>
+        <div class="wt"><span class="wt-d">D72–73</span><div><strong>System User token</strong> Create a System User in Meta Business Manager. Assign it to your WhatsApp app. Generate a never-expiring token. Store this — it's your permanent access credential.</div></div>
+        <div class="wt"><span class="wt-d">D74–75</span><div><strong>Qdrant knowledge base (new collection)</strong> Don't reuse the P01 collection. Create a fresh collection for this client's WhatsApp KB. Ingest all support docs, product info, FAQs, policies.</div></div>
+        <div class="wt"><span class="wt-d">D76–77</span><div><strong>RAG retrieval test</strong> Run 20 queries directly against the Qdrant collection. Confirm relevant chunks return. Poor retrieval at this stage = bad chatbot responses. Fix chunking before proceeding.</div></div>
+      </div>
+    </div>
+    <div class="week-col shade">
+      <div class="wc-hd"><span class="wc-label">Week 12 — Build &amp; Test</span><span class="wc-days">Days 78–84</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D78–79</span><div><strong>Import + configure full workflow</strong> Connect webhook → message filter → embeddings → Qdrant search → GPT Chat Model → WhatsApp reply. Test end-to-end with your own WhatsApp number.</div></div>
+        <div class="wt"><span class="wt-d">D80–81</span><div><strong>100 test messages</strong> Send 100 messages covering: common questions, out-of-scope questions, greetings, complaints, multi-part questions. Grade each response (Good/OK/Bad). Target: 80%+ Good or OK.</div></div>
+        <div class="wt"><span class="wt-d">D82–83</span><div><strong>System prompt refinement</strong> Based on test results: add clear instructions for what to do when the KB doesn't have the answer (e.g. "I'll connect you with a team member — please leave your email"). Never let it hallucinate.</div></div>
+        <div class="wt"><span class="wt-d">D84</span><div><strong>Latency check</strong> Measure response time. Should be under 5 seconds. If slower: check Qdrant query time, check OpenAI latency, consider reducing context window size.</div></div>
+      </div>
+    </div>
+    <div class="week-col">
+      <div class="wc-hd"><span class="wc-label">Week 13 — Deploy &amp; Stabilise</span><span class="wc-days">Days 85–91</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D85–86</span><div><strong>Client WhatsApp number</strong> Transfer setup to client's WhatsApp Business number. Register their number in Meta Business Manager, connect to the workflow. Test with 10 messages.</div></div>
+        <div class="wt"><span class="wt-d">D87–88</span><div><strong>Soft launch</strong> Go live with a small group — client shares the WhatsApp number with 10–20 real customers. Monitor every response for 48 hours. Fix any issues immediately.</div></div>
+        <div class="wt"><span class="wt-d">D89–90</span><div><strong>Escalation path</strong> Add a human handoff trigger: if the bot doesn't know the answer, it sends an alert to the client (email or Slack) with the original question. Client responds manually. Document this process.</div></div>
+        <div class="wt"><span class="wt-d">D91</span><div><strong>Full launch + handoff</strong> Share number publicly. Document: how to add new docs to the knowledge base, how to monitor conversations. Invoice (highest setup fee in the suite). Move to P05.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="done-row">
+    <span class="done-lbl">Done when</span>
+    <div class="done-items">
+      <div class="done-item"><span class="di-icon">✓</span>100 test messages processed with 80%+ accurate responses</div>
+      <div class="done-item"><span class="di-icon">✓</span>Response latency under 5 seconds consistently</div>
+      <div class="done-item"><span class="di-icon">✓</span>Escalation path working — unknown questions route to human</div>
+      <div class="done-item"><span class="di-icon">✓</span>Client's real number live, first 20 real customer messages handled. Invoice sent. Move to P05.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ P05 TalentCore ══════════════ -->
+<div class="prod clean" id="p05">
+  <div class="phd">
+    <div class="phd-left">
+      <span class="p-pid">P05</span>
+      <div class="p-meta">
+        <div class="p-order">Product 6 of 8</div>
+        <div class="p-name">TalentCore™ — AI HR Job Application Screener</div>
+      </div>
+    </div>
+    <div class="phd-right">
+      <span class="badge b-ok"><span class="b-dot"></span>Working Clean</span>
+      <span class="week-tag">Weeks 14–15</span>
+    </div>
+  </div>
+  <div class="p-desc-row">
+    <div class="p-desc">Receives CV uploads via n8n form, extracts text via OCR, scores each candidate against a <strong>configurable job description rubric</strong> (0–100 across experience, skills, seniority, location match) using GPT-4o, logs all results in a Google Sheets ATS, auto-schedules interviews for above-threshold candidates, sends status emails to every applicant. All native Google nodes — no external dependencies.</div>
+  </div>
+  <div class="prereq-row">
+    <span class="prereq-lbl">Needs</span>
+    <div class="prereq-items">
+      <span class="prereq-chip">P06 done ✓</span>
+      <span class="prereq-chip">Google Drive + Sheets + Calendar + Gmail OAuth2 ✓</span>
+      <span class="prereq-chip">Client's job description and scoring criteria</span>
+    </div>
+  </div>
+  <div class="creds-row">
+    <div class="creds-col">
+      <span class="creds-lbl">Credentials to configure</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">KEY</span>Google Drive OAuth2 (already configured)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Google Sheets OAuth2 (already configured)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Google Calendar OAuth2 (already configured)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Gmail OAuth2 (already configured)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>OpenAI API key (already configured)</div>
+      </div>
+    </div>
+    <div class="creds-col">
+      <span class="creds-lbl">Time estimate</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">1h</span>No new credentials — all from existing setup</div>
+        <div class="cred-item"><span class="cred-key">3h</span>Build scoring rubric with client (most important step)</div>
+        <div class="cred-item"><span class="cred-key">2h</span>Import workflow, configure nodes, create Sheets ATS template</div>
+        <div class="cred-item"><span class="cred-key">4h</span>Test with 50 real or anonymised CVs, calibrate threshold</div>
+        <div class="cred-item"><span class="cred-key">2h</span>Client deploy + compliance check</div>
+      </div>
+    </div>
+  </div>
+  <div class="weeks-grid w2">
+    <div class="week-col">
+      <div class="wc-hd"><span class="wc-label">Week 14 — Build &amp; Calibrate</span><span class="wc-days">Days 92–98</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D92</span><div><strong>Import + configure workflow</strong> Load JSON. All credentials are already in n8n — just assign them to the nodes. Create Google Sheets ATS template: Candidate name, email, role, score, status, interview date.</div></div>
+        <div class="wt"><span class="wt-d">D93–94</span><div><strong>Build the scoring rubric (critical)</strong> Sit with the client. Define 5–8 scoring criteria for this role. Example for a Sales Manager: Years of sales experience (0–20pts), SaaS background (0–15pts), team management (0–15pts), location/timezone fit (0–10pts), relevant tools (0–10pts), communication in CV (0–10pts). Write this into the GPT prompt explicitly.</div></div>
+        <div class="wt"><span class="wt-d">D95–96</span><div><strong>Test with 20 CVs</strong> Use real past applications or anonymised test CVs. Run each through. Check: is the scoring making sense? Is GPT explaining its scoring clearly? Are strong candidates scoring high and weak ones scoring low?</div></div>
+        <div class="wt"><span class="wt-d">D97–98</span><div><strong>Calibrate the threshold</strong> Look at score distribution. Where would you naturally draw the line for interview? Set that as the auto-schedule threshold. Test: above threshold → Calendar invite created. Below → polite decline email drafted for client review.</div></div>
+      </div>
+    </div>
+    <div class="week-col shade">
+      <div class="wc-hd"><span class="wc-label">Week 15 — Deploy</span><span class="wc-days">Days 99–105</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D99–100</span><div><strong>Test with 30 more CVs</strong> Run a second batch. Compare AI shortlist to what the hiring manager would have shortlisted manually. If agreement is 80%+, the rubric is working. If not — go back and refine the scoring weights.</div></div>
+        <div class="wt"><span class="wt-d">D101</span><div><strong>Go live — first real job posting</strong> Share the n8n form URL with the client to add to their job listings. First real applications start coming in.</div></div>
+        <div class="wt"><span class="wt-d">D102–103</span><div><strong>Monitor first 20 applications</strong> Review each AI score with the hiring manager. Are interview invites going to the right people? Are decline emails appropriate? Adjust rubric if needed.</div></div>
+        <div class="wt"><span class="wt-d">D104–105</span><div><strong>Compliance note + handoff</strong> Important: document that AI scoring is a screening assist tool, not the final decision. Hiring manager reviews shortlist before interviews are confirmed. Invoice. Move to P08.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="done-row">
+    <span class="done-lbl">Done when</span>
+    <div class="done-items">
+      <div class="done-item"><span class="di-icon">✓</span>50+ CVs scored, hiring manager agrees with 80%+ of shortlist</div>
+      <div class="done-item"><span class="di-icon">✓</span>Calendar invites and applicant emails working correctly</div>
+      <div class="done-item"><span class="di-icon">✓</span>Compliance: human review step in place before final interview confirmation</div>
+      <div class="done-item"><span class="di-icon">✓</span>Setup fee invoiced. Move to P08.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ P08 TubeCore ══════════════ -->
+<div class="prod clean" id="p08">
+  <div class="phd">
+    <div class="phd-left">
+      <span class="p-pid">P08</span>
+      <div class="p-meta">
+        <div class="p-order">Product 7 of 8</div>
+        <div class="p-name">TubeCore™ — YouTube Video Summaries via Gemini</div>
+      </div>
+    </div>
+    <div class="phd-right">
+      <span class="badge b-ok"><span class="b-dot"></span>Working Clean</span>
+      <span class="week-tag">Weeks 16–17</span>
+    </div>
+  </div>
+  <div class="p-desc-row">
+    <div class="p-desc">Takes a YouTube URL or monitors a channel for new uploads, fetches the video transcript, passes to <strong>Google Gemini</strong> (generous free tier — 1M tokens/day) for structured summarisation: key takeaways, action items, notable quotes, SEO metadata. Publishes as a blog post to WordPress, logs in Google Sheets, sends email digest. <strong>Natural bundle with P02 ContentCore</strong> — same WordPress + Sheets setup, reuse existing config.</div>
+  </div>
+  <div class="prereq-row">
+    <span class="prereq-lbl">Needs</span>
+    <div class="prereq-items">
+      <span class="prereq-chip">P05 done ✓</span>
+      <span class="prereq-chip">YouTube Data API v3 (from Google Cloud project)</span>
+      <span class="prereq-chip">Google Gemini API key</span>
+      <span class="prereq-chip">WordPress App Password ✓ (from P02)</span>
+      <span class="prereq-chip">Google Sheets OAuth2 ✓</span>
+    </div>
+  </div>
+  <div class="creds-row">
+    <div class="creds-col">
+      <span class="creds-lbl">Credentials to configure</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">KEY</span>YouTube Data API v3 — enable in Google Cloud Console (same project as Week 1)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Google Gemini API key — aistudio.google.com → Get API key (free)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>WordPress App Password (already from P02 setup)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Google Sheets OAuth2 (already configured)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Gmail OAuth2 for digest email (already configured)</div>
+      </div>
+    </div>
+    <div class="creds-col">
+      <span class="creds-lbl">Time estimate</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">1h</span>YouTube API v3 enable + Gemini key (quick — same Google Cloud project)</div>
+        <div class="cred-item"><span class="cred-key">2h</span>Import workflow, connect nodes (most config reused from P02)</div>
+        <div class="cred-item"><span class="cred-key">3h</span>Summarisation prompt for blog post format</div>
+        <div class="cred-item"><span class="cred-key">3h</span>Test 10 videos, review blog post quality</div>
+        <div class="cred-item"><span class="cred-key">2h</span>Channel monitoring trigger setup + client deploy</div>
+      </div>
+    </div>
+  </div>
+  <div class="weeks-grid w2">
+    <div class="week-col">
+      <div class="wc-hd"><span class="wc-label">Week 16 — Build</span><span class="wc-days">Days 106–112</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D106</span><div><strong>Enable APIs + import workflow</strong> Enable YouTube Data API v3 in Google Cloud Console. Get Gemini API key from aistudio.google.com. Import workflow JSON. Most node configs will reference already-stored credentials.</div></div>
+        <div class="wt"><span class="wt-d">D107–108</span><div><strong>Transcript fetch test</strong> Run the YouTube Data API node on 5 videos. Confirm transcripts are returned (note: auto-generated captions must be enabled on the YouTube channel — some creators disable this). Handle the error case where no transcript exists.</div></div>
+        <div class="wt"><span class="wt-d">D109–110</span><div><strong>Gemini summarisation prompt</strong> Build the blog post prompt: include sections for intro, key points (H2 format), action items, notable quotes, SEO meta description. Test on 5 videos of varying length (5 min, 15 min, 45 min). Check quality scales with video length.</div></div>
+        <div class="wt"><span class="wt-d">D111–112</span><div><strong>WordPress publish test</strong> Run 3 videos end-to-end through to WordPress. Check post format matches P02 article format (consistent structure is good for SEO). Client reviews 3 published drafts.</div></div>
+      </div>
+    </div>
+    <div class="week-col shade">
+      <div class="wc-hd"><span class="wc-label">Week 17 — Automate &amp; Deploy</span><span class="wc-days">Days 113–119</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D113–114</span><div><strong>Channel monitoring</strong> Configure schedule trigger to check client's YouTube channel daily for new uploads. When new video detected → process automatically within 1 hour of upload. Test with a new video upload.</div></div>
+        <div class="wt"><span class="wt-d">D115–116</span><div><strong>10-video quality review</strong> Process 10 videos from the client's actual channel. Review blog post quality for each. Make final prompt adjustments. After this point, the prompt is locked.</div></div>
+        <div class="wt"><span class="wt-d">D117</span><div><strong>Social repurposing add-on (optional)</strong> If client also has P04 SocialCore: extend the Gemini prompt to also produce a LinkedIn post and 3 tweet drafts per video. Feed these into the Airtable content calendar automatically. This turns TubeCore into a content multiplier.</div></div>
+        <div class="wt"><span class="wt-d">D118–119</span><div><strong>Go live + handoff</strong> Activate channel monitoring. Next video the client uploads → automatically produces a blog post within the hour. Client sees it and approves. Invoice. Move to P03.</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="done-row">
+    <span class="done-lbl">Done when</span>
+    <div class="done-items">
+      <div class="done-item"><span class="di-icon">✓</span>10+ videos processed end-to-end with quality blog posts</div>
+      <div class="done-item"><span class="di-icon">✓</span>Channel monitoring live — new video triggers automatic processing</div>
+      <div class="done-item"><span class="di-icon">✓</span>Client confirms blog post quality meets their standard</div>
+      <div class="done-item"><span class="di-icon">✓</span>Setup fee invoiced. Move to P03 (last one).</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ P03 LeadCore ══════════════ -->
+<div class="prod flag" id="p03">
+  <div class="phd">
+    <div class="phd-left">
+      <span class="p-pid">P03</span>
+      <div class="p-meta">
+        <div class="p-order">Product 8 of 8 · Last — complexity requires prior experience</div>
+        <div class="p-name">LeadCore™ — LinkedIn Leads Scraper &amp; Enrichment</div>
+      </div>
+    </div>
+    <div class="phd-right">
+      <span class="badge b-warn"><span class="b-dot"></span>Working w/ Flag</span>
+      <span class="week-tag">Weeks 18–19</span>
+    </div>
+  </div>
+  <div class="p-desc-row">
+    <div class="p-desc">Takes a target persona definition, pulls enriched lead records via <strong>Apollo.io API</strong> (recommended: compliant, GDPR-safe, $49/mo+ for production), uses GPT-4o to write personalised icebreaker messages per lead using their company and role context, exports a clean enriched list to Google Sheets, and optionally pushes contacts to HubSpot or Pipedrive. <strong>Saved for last</strong> because it requires 3rd-party API procurement, compliance planning, and is the highest-risk product to demo without experience.</div>
+  </div>
+  <div class="flag-row">
+    <span class="flag-icon">⚠</span>
+    <div><strong>Two requirements before starting Week 18:</strong> (1) Apollo.io or Proxycurl account active — sign up at Week 16 at the latest, free tier for testing. (2) Compliance approach confirmed with client — LinkedIn ToS prohibits direct scraping. Apollo sources data via public records and user opt-ins, which is compliant. Document this in your client contract and get written acknowledgement before running any campaigns.</div>
+  </div>
+  <div class="prereq-row">
+    <span class="prereq-lbl">Needs</span>
+    <div class="prereq-items">
+      <span class="prereq-chip">P08 done ✓</span>
+      <span class="prereq-chip">Apollo.io API key (paid tier for production)</span>
+      <span class="prereq-chip">Client compliance sign-off in writing</span>
+      <span class="prereq-chip">Google Sheets OAuth2 ✓</span>
+      <span class="prereq-chip">OpenAI API key ✓</span>
+    </div>
+  </div>
+  <div class="creds-row">
+    <div class="creds-col">
+      <span class="creds-lbl">Credentials to configure</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">KEY</span>Apollo.io API key — app.apollo.io → Settings → API Keys (paid tier: $49/mo for 200 credits)</div>
+        <div class="cred-item"><span class="cred-key">OPT</span>Proxycurl API key — proxycurl.com, alternative LinkedIn data provider, pay-per-request</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>OpenAI API key (already configured)</div>
+        <div class="cred-item"><span class="cred-key">KEY</span>Google Sheets OAuth2 (already configured)</div>
+        <div class="cred-item"><span class="cred-key">OPT</span>HubSpot or Pipedrive API key if CRM sync needed</div>
+      </div>
+    </div>
+    <div class="creds-col">
+      <span class="creds-lbl">Time estimate</span>
+      <div class="cred-list">
+        <div class="cred-item"><span class="cred-key">2h</span>Apollo.io setup + API key configuration in n8n</div>
+        <div class="cred-item"><span class="cred-key">2h</span>Import workflow, map Apollo fields to Sheets columns</div>
+        <div class="cred-item"><span class="cred-key">4h</span>Icebreaker prompt engineering + test with 50 leads</div>
+        <div class="cred-item"><span class="cred-key">2h</span>CRM integration (optional)</div>
+        <div class="cred-item"><span class="cred-key">2h</span>First 200-lead campaign + client review</div>
+      </div>
+    </div>
+  </div>
+  <div class="weeks-grid w2">
+    <div class="week-col">
+      <div class="wc-hd"><span class="wc-label">Week 18 — Build &amp; Test</span><span class="wc-days">Days 120–126</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D120</span><div><strong>Apollo API setup</strong> Activate API key in n8n. Test a basic people search via HTTP Request node. Confirm data fields returned: name, title, company, LinkedIn URL, email (where available), location.</div></div>
+        <div class="wt"><span class="wt-d">D121–122</span><div><strong>Import + configure workflow</strong> Load JSON. Map Apollo search parameters to client's persona definition (title, industry, company size, location). Connect output to Google Sheets with all enrichment fields. Run test with 10 leads.</div></div>
+        <div class="wt"><span class="wt-d">D123–124</span><div><strong>Icebreaker prompt engineering</strong> This is the product differentiator. Build a GPT-4o prompt that takes name, title, company, and recent news (via Perplexity if available) and writes a 2–3 sentence personalised opener. Test with 50 leads. Read every icebreaker. Flag generic outputs — they kill response rates.</div></div>
+        <div class="wt"><span class="wt-d">D125–126</span><div><strong>Quality benchmark</strong> Target: fewer than 10% of icebreakers should feel generic. If it says something like "I noticed you work at [Company] in [Industry]" — that's generic. Refine the prompt until it references specific, meaningful details.</div></div>
+      </div>
+    </div>
+    <div class="week-col shade">
+      <div class="wc-hd"><span class="wc-label">Week 19 — First Campaign &amp; Live</span><span class="wc-days">Days 127–133</span></div>
+      <div class="wc-tasks">
+        <div class="wt"><span class="wt-d">D127–128</span><div><strong>First 200-lead campaign</strong> Define persona with client. Run the workflow. Deliver enriched Google Sheet with all 200 leads + icebreakers. Client reviews the list before any outreach begins.</div></div>
+        <div class="wt"><span class="wt-d">D129</span><div><strong>CRM sync (if applicable)</strong> If client uses HubSpot or Pipedrive: connect API, map fields, test contact creation. Confirm deduplication is working — don't create duplicate contacts for existing records.</div></div>
+        <div class="wt"><span class="wt-d">D130–131</span><div><strong>Client outreach launch</strong> Client begins outreach using the icebreakers. Track reply rates in a simple Sheets column. This data is your proof point for the next client pitch.</div></div>
+        <div class="wt"><span class="wt-d">D132–133</span><div><strong>Handoff + retainer close</strong> Document: how to define a new persona, how to run a campaign, Apollo credit costs per campaign. Agree monthly retainer (campaign management + ongoing enrichment). Invoice full setup fee. <strong>All 8 products live.</strong></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="done-row warn-done">
+    <span class="done-lbl w">Done when</span>
+    <div class="done-items">
+      <div class="done-item w"><span class="di-icon">✓</span>200 leads enriched and delivered in Google Sheets</div>
+      <div class="done-item w"><span class="di-icon">✓</span>Icebreakers: fewer than 10% generic outputs</div>
+      <div class="done-item w"><span class="di-icon">✓</span>Client compliance acknowledgement on file</div>
+      <div class="done-item w"><span class="di-icon">✓</span>Setup fee invoiced. All 8 products live. Week 19 complete.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /products-wrap -->
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-lbl">Status Key</div>
+  <div class="legend-row">
+    <div class="li"><div class="ldot" style="background:var(--ok)"></div>Working Clean — native nodes only, no external dependencies</div>
+    <div class="li"><div class="ldot" style="background:var(--warn)"></div>Working w/ Flag — 3rd-party API or community node required</div>
+    <div class="li"><div class="ldot" style="background:var(--plum)"></div>External action — requires submission/approval before build (Meta app, Apollo procurement)</div>
+  </div>
+</div>
+
+<footer>
+  <div class="ft-wm">C<span class="pl">ur</span>cible<span class="pl">.</span></div>
+  <div class="ft-meta">
+    <div>8 Products · Sequential Build Plan · 19 Weeks</div>
+    <div>One product done before the next one starts</div>
+  </div>
+</footer>
+
+</body>
+</html>

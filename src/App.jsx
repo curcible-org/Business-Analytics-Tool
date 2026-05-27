@@ -1,7 +1,7 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import Sidebar from './components/Sidebar.jsx'
-import Pipeline from './components/Pipeline.jsx'
-import Results from './components/Results.jsx'
+import Hub from './views/Hub.jsx'
+import ForgeView from './views/ForgeView.jsx'
 import { PROVIDERS } from './config/providers.js'
 import { callLLM } from './utils/llm.js'
 
@@ -15,6 +15,9 @@ const INIT_NODES = [
 ]
 
 export default function App() {
+  const [currentView, setCurrentView] = useState('home')
+
+  // Forge state
   const [providerKey, setProviderKey] = useState(
     () => localStorage.getItem('forge_provider') || 'groq'
   )
@@ -25,20 +28,15 @@ export default function App() {
   const [apiKey, setApiKey] = useState(
     () => localStorage.getItem('forge_key') || ''
   )
-
   const [location, setLocation]         = useState('')
   const [businessType, setBusinessType] = useState('')
   const [valueProp, setValueProp]       = useState('')
-
   const [phase, setPhase]   = useState('idle')
   const [nodes, setNodes]   = useState(INIT_NODES)
-  const [logs,  setLogs]    = useState([])
+  const [logs, setLogs]     = useState([])
   const [leads, setLeads]   = useState([])
   const [error, setError]   = useState('')
   const [runMeta, setRunMeta] = useState(null)
-
-  useEffect(() => { localStorage.setItem('forge_provider', providerKey) }, [providerKey])
-  useEffect(() => { localStorage.setItem('forge_key', apiKey) }, [apiKey])
 
   const addLog = useCallback((msg, ok = false) => {
     const now = new Date()
@@ -83,7 +81,6 @@ export default function App() {
         `Checking domain registration for each result…`,
         `14 businesses found. 8 qualify for deep enrichment.`,
       ])
-
       await runStage(1, [
         `Initializing SmartScraperMultiGraph — model: ${model}…`,
         `Extracting structured data: services, team, contact, tech stack…`,
@@ -108,14 +105,11 @@ export default function App() {
     }
   }
 
-  const doneCount = nodes.filter(n => n.status === 'done').length
-  const progressPct = phase === 'running' || phase === 'done'
-    ? Math.round((doneCount / nodes.length) * 100)
-    : 0
-
   return (
     <div className="app">
       <Sidebar
+        currentView={currentView}
+        setCurrentView={setCurrentView}
         providerKey={providerKey}
         setProviderKey={setProviderKey}
         model={model}
@@ -125,104 +119,25 @@ export default function App() {
       />
 
       <main className="main">
-        {/* Header */}
-        <div className="main-head">
-          <h1>Find leads.<em> Score them.</em> Close faster.</h1>
-          <p>
-            Discover local businesses that need your product — enriched with AI intelligence
-            and scored Hot / Warm / Low / Skip. Runs entirely on free LLM tiers.
-          </p>
-        </div>
+        {currentView === 'home' && <Hub setCurrentView={setCurrentView} />}
 
-        {/* Search bar */}
-        <div className="search-bar">
-          <div className="sf">
-            <label>Location</label>
-            <input
-              type="text"
-              value={location}
-              onChange={e => setLocation(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && run()}
-              placeholder="Dallas, TX"
-            />
-          </div>
-          <div className="sf">
-            <label>Business Type</label>
-            <input
-              type="text"
-              value={businessType}
-              onChange={e => setBusinessType(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && run()}
-              placeholder="gyms, salons, clinics…"
-            />
-          </div>
-          <div className="sf">
-            <label>Your Value Proposition</label>
-            <input
-              type="text"
-              value={valueProp}
-              onChange={e => setValueProp(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && run()}
-              placeholder="Modern website that converts visitors into paying clients"
-            />
-          </div>
-          <div className="sf">
-            <label>&nbsp;</label>
-            <button className="run-btn" onClick={run} disabled={phase === 'running'}>
-              {phase === 'running' ? (
-                <>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                  </svg>
-                  Running…
-                </>
-              ) : (
-                <>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/>
-                  </svg>
-                  Run Pipeline
-                </>
-              )}
-            </button>
-          </div>
-        </div>
+        {currentView === 'forge' && (
+          <ForgeView
+            location={location} setLocation={setLocation}
+            businessType={businessType} setBusinessType={setBusinessType}
+            valueProp={valueProp} setValueProp={setValueProp}
+            phase={phase} nodes={nodes} logs={logs} leads={leads}
+            error={error} runMeta={runMeta} run={run}
+          />
+        )}
 
-        {/* Content */}
-        <div className="content">
-          {phase === 'idle' && (
-            <div className="empty">
-              <div className="empty-rings">
-                <div className="ring ring-1" />
-                <div className="ring ring-2" />
-                <div className="ring ring-3">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                  </svg>
-                </div>
-              </div>
-              <h3>No runs yet</h3>
-              <p>Enter a location, business type, and value prop above — then run the pipeline.</p>
-            </div>
-          )}
-
-          {(phase === 'running' || phase === 'done' || phase === 'error') && (
-            <Pipeline nodes={nodes} logs={logs} visible={phase === 'running'} progressPct={progressPct} />
-          )}
-
-          {error && (
-            <div className="err-banner">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              {error}
-            </div>
-          )}
-
-          {phase === 'done' && leads.length > 0 && (
-            <Results leads={leads} meta={runMeta} />
-          )}
-        </div>
+        {currentView === 'plan' && (
+          <iframe
+            src="/plan.html"
+            className="plan-frame"
+            title="Curcible Sequential Plan"
+          />
+        )}
       </main>
     </div>
   )
