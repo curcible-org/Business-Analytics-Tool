@@ -234,8 +234,11 @@ function LeadDrawer({ lead, targetProduct, onClose }) {
             <div className="drawer-name">{lead.name}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <div className="drawer-addr">{lead.address}</div>
-              {lead.maps_url && (
-                <a href={lead.maps_url} target="_blank" rel="noopener noreferrer"
+              {lead.address && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lead.name} ${lead.address}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--plum)', textDecoration: 'none', letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0 }}>
                   <IconMapPin /> Maps
                 </a>
