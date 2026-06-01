@@ -141,6 +141,14 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
 .sb-item{font-size:12.5px;color:var(--ink-mid);display:flex;gap:8px}
 .sb-item::before{content:'✓';color:var(--ok);flex-shrink:0}
 
+/* HELP GUIDES */
+.help-toggle{margin-bottom:10px}
+.help-guide{animation:fadeIn .15s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+
+/* GOOGLE SIGN-IN */
+#google-signed-in{display:none;background:var(--ok-dim);border:1px solid var(--ok-border);border-radius:3px;padding:10px 14px;font-size:12.5px;color:var(--ink-mid);align-items:center;gap:10px;}
+
 /* ERROR */
 .error-msg{background:var(--error-dim);border:1px solid rgba(122,30,30,.2);border-radius:3px;padding:10px 14px;font-size:12.5px;color:var(--error);margin-bottom:16px;display:none}
 .error-msg.visible{display:block}
@@ -320,48 +328,52 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
             <span class="pt-name">Google Meet</span>
             <div class="pt-check"></div>
           </div>
-          <div class="platform-toggle" id="pt-teams" onclick="togglePlatform('teams')">
-            <input type="checkbox" id="chk-teams">
-            <span class="pt-icon">💼</span>
-            <span class="pt-name">Microsoft Teams</span>
-            <div class="pt-check"></div>
-          </div>
-          <div class="platform-toggle" id="pt-slack" onclick="togglePlatform('slack')">
-            <input type="checkbox" id="chk-slack">
-            <span class="pt-icon">💬</span>
-            <span class="pt-name">Slack</span>
-            <div class="pt-check"></div>
-          </div>
         </div>
       </div>
 
       <!-- Zoom Creds -->
       <div class="cred-section" id="creds-zoom">
         <div class="cred-section-title"><span>🎥</span> Zoom credentials</div>
-        <div class="field"><label>Zoom Client ID <span>required</span></label><input type="text" id="zoom_client_id" placeholder="Your Zoom OAuth2 Client ID" /><div class="field-hint">From <a href="https://marketplace.zoom.us/develop/apps" target="_blank">marketplace.zoom.us</a> → your OAuth app → App Credentials</div></div>
+        <div class="help-toggle" onclick="toggleHelp('zoom-help')">
+          <span style="font-size:11.5px;color:var(--plum);cursor:pointer;text-decoration:underline;">How to get these credentials ↓</span>
+        </div>
+        <div class="help-guide" id="zoom-help" style="display:none;background:var(--parchment);border-radius:3px;padding:14px 16px;margin-bottom:14px;font-size:12px;color:var(--ink-mid);line-height:1.8;">
+          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--stone);margin-bottom:10px;">Steps to create your Zoom app</div>
+          <ol style="list-style:none;display:flex;flex-direction:column;gap:7px;padding:0;">
+            <li><span style="color:var(--plum);font-weight:600;">1.</span> Go to <a href="https://marketplace.zoom.us/develop/apps" target="_blank" style="color:var(--plum);">marketplace.zoom.us/develop/apps</a></li>
+            <li><span style="color:var(--plum);font-weight:600;">2.</span> Click <strong>Build App</strong> → choose <strong>Server-to-Server OAuth</strong></li>
+            <li><span style="color:var(--plum);font-weight:600;">3.</span> Name it anything (e.g. "Curcible Integration") → Create</li>
+            <li><span style="color:var(--plum);font-weight:600;">4.</span> Copy <strong>Client ID</strong> and <strong>Client Secret</strong> from App Credentials tab</li>
+            <li><span style="color:var(--plum);font-weight:600;">5.</span> Find <strong>Account ID</strong> at zoom.us → Admin → Account Profile</li>
+            <li><span style="color:var(--plum);font-weight:600;">6.</span> Add scopes: <code style="background:rgba(106,72,88,0.08);padding:1px 5px;border-radius:2px;">recording:read:admin</code> and <code style="background:rgba(106,72,88,0.08);padding:1px 5px;border-radius:2px;">meeting:read:admin</code></li>
+          </ol>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11.5px;color:var(--stone);">Takes ~5 minutes. Need help? Email <a href="mailto:info@curcible.com" style="color:var(--plum);">info@curcible.com</a></div>
+        </div>
+        <div class="field"><label>Zoom Client ID <span>required</span></label><input type="text" id="zoom_client_id" placeholder="Your Zoom OAuth2 Client ID" /></div>
         <div class="field"><label>Zoom Client Secret <span>required</span></label><input type="password" id="zoom_client_secret" placeholder="••••••••••••••••" /></div>
         <div class="field"><label>Zoom Account ID <span>required</span></label><input type="text" id="zoom_account_id" placeholder="Your Zoom Account ID" /><div class="field-hint">Found in Zoom Admin → Account Profile</div></div>
       </div>
 
       <!-- Google Meet Creds -->
       <div class="cred-section" id="creds-meet">
-        <div class="cred-section-title"><span>📹</span> Google Meet — uses your Google account</div>
-        <div class="field"><label>Google account email <span>required</span></label><input type="email" id="google_email" placeholder="you@company.com" /><div class="field-hint">The Google account that owns your Meet recordings and Google Calendar. We'll send you an OAuth2 authorization link after signup.</div></div>
+        <div class="cred-section-title"><span>📹</span> Google Meet — sign in with your Google account</div>
+        <div id="google-signin-wrap">
+          <div style="margin-bottom:10px;font-size:12.5px;color:var(--stone);line-height:1.6;">Sign in to confirm which Google account owns your Meet recordings and Google Calendar.</div>
+          <div id="google-signin-btn-container"></div>
+          <div id="google-signed-in" style="display:none;background:var(--ok-dim);border:1px solid var(--ok-border);border-radius:3px;padding:10px 14px;font-size:12.5px;color:var(--ink-mid);display:flex;align-items:center;gap:10px;">
+            <span style="color:var(--ok);font-size:15px;">✓</span>
+            <span>Connected as <strong id="google-signed-in-email"></strong></span>
+            <span style="margin-left:auto;font-size:11px;color:var(--stone);cursor:pointer;text-decoration:underline;" onclick="resetGoogleSignIn()">Change</span>
+          </div>
+        </div>
+        <div class="field" id="google-email-fallback" style="margin-top:10px;display:none;">
+          <label>Or enter email manually <span>required</span></label>
+          <input type="email" id="google_email" placeholder="you@company.com" />
+        </div>
+        <div style="margin-top:8px;font-size:11.5px;color:var(--stone);">Can't sign in? <span style="color:var(--plum);cursor:pointer;text-decoration:underline;" onclick="showGoogleEmailFallback()">Enter email manually →</span></div>
+        <input type="hidden" id="google_email_hidden" />
       </div>
 
-      <!-- Teams Creds -->
-      <div class="cred-section" id="creds-teams">
-        <div class="cred-section-title"><span>💼</span> Microsoft Teams credentials</div>
-        <div class="field"><label>Azure App Client ID <span>required</span></label><input type="text" id="teams_client_id" placeholder="Azure Application (client) ID" /><div class="field-hint">From <a href="https://portal.azure.com" target="_blank">portal.azure.com</a> → App registrations → your app → Overview</div></div>
-        <div class="field"><label>Azure Client Secret <span>required</span></label><input type="password" id="teams_client_secret" placeholder="••••••••••••••••" /></div>
-        <div class="field"><label>Azure Tenant ID <span>optional</span></label><input type="text" id="teams_tenant_id" placeholder="common (or your tenant ID)" /></div>
-      </div>
-
-      <!-- Slack Creds -->
-      <div class="cred-section" id="creds-slack">
-        <div class="cred-section-title"><span>💬</span> Slack — coming soon</div>
-        <div class="field"><div class="field-hint" style="background:var(--parchment);padding:10px 14px;border-radius:3px;">Slack huddle transcript integration is in development. Select this to be notified when it's ready. No credentials needed yet.</div></div>
-      </div>
 
       <div class="btn-row">
         <button class="btn btn-secondary" onclick="back(3)">← Back</button>
@@ -477,7 +489,87 @@ html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(
   </main>
 </div>
 
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
+// ─── Google Sign-In ───────────────────────────────────
+// Replace with your Google Cloud OAuth2 Client ID (must have app domain in Authorized JS Origins)
+const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+
+function initGoogleSignIn() {
+  if (!window.google || GOOGLE_CLIENT_ID.startsWith('YOUR_')) {
+    // No client ID configured — show fallback email input
+    showGoogleEmailFallback();
+    document.querySelector('#creds-meet .help-toggle-google')?.remove();
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential,
+    auto_select: false,
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('google-signin-btn-container'),
+    {
+      theme: 'outline',
+      size: 'large',
+      text: 'signin_with',
+      shape: 'rectangular',
+      logo_alignment: 'left',
+    }
+  );
+}
+
+function handleGoogleCredential(response) {
+  // Decode JWT payload (no verification needed — just reading email for UX)
+  const payload = JSON.parse(atob(response.credential.split('.')[1]));
+  const email = payload.email;
+  document.getElementById('google_email_hidden').value = email;
+  document.getElementById('google-signed-in-email').textContent = email;
+  document.getElementById('google-signin-btn-container').style.display = 'none';
+  const signedIn = document.getElementById('google-signed-in');
+  signedIn.style.display = 'flex';
+  // Also set the text input if visible
+  if (document.getElementById('google_email')) {
+    document.getElementById('google_email').value = email;
+  }
+}
+
+function resetGoogleSignIn() {
+  document.getElementById('google_email_hidden').value = '';
+  document.getElementById('google-signed-in').style.display = 'none';
+  document.getElementById('google-signin-btn-container').style.display = 'block';
+  if (window.google) google.accounts.id.disableAutoSelect();
+}
+
+function showGoogleEmailFallback() {
+  document.getElementById('google-email-fallback').style.display = 'block';
+  // Sync hidden field on input
+  const input = document.getElementById('google_email');
+  input.addEventListener('input', () => {
+    document.getElementById('google_email_hidden').value = input.value;
+  });
+}
+
+window.addEventListener('load', () => {
+  // Init Google Sign-In once GSI library is ready
+  const tryInit = setInterval(() => {
+    if (window.google) { clearInterval(tryInit); initGoogleSignIn(); }
+  }, 200);
+  setTimeout(() => { clearInterval(tryInit); showGoogleEmailFallback(); }, 3000);
+});
+
+// ─── Help guides ─────────────────────────────────────
+function toggleHelp(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  const toggle = el.previousElementSibling?.querySelector('span');
+  if (toggle) toggle.textContent = isOpen
+    ? 'How to get these credentials ↓'
+    : 'Hide guide ↑';
+}
+
 // ─── State ───────────────────────────────────────────
 const state = {
   currentStep: 1,
@@ -486,7 +578,7 @@ const state = {
 };
 
 // n8n webhook — replace with your actual webhook URL after creating the workflow
-const WEBHOOK_URL = 'https://n8n-production-fbbb.up.railway.app/webhook/curcible-onboarding';
+const WEBHOOK_URL = '/.netlify/functions/submit';
 
 // ─── Navigation ──────────────────────────────────────
 function next(step) {
@@ -562,15 +654,10 @@ function validate(step) {
       }
     }
     if (state.platforms.has('meet')) {
-      if (!document.getElementById('google_email').value.trim()) {
-        err.textContent = 'Please enter your Google account email.';
-        err.classList.add('visible'); return false;
-      }
-    }
-    if (state.platforms.has('teams')) {
-      if (!document.getElementById('teams_client_id').value.trim() ||
-          !document.getElementById('teams_client_secret').value.trim()) {
-        err.textContent = 'Please fill in your Microsoft Teams credentials.';
+      const gEmail = document.getElementById('google_email_hidden').value.trim()
+                  || document.getElementById('google_email')?.value?.trim();
+      if (!gEmail) {
+        err.textContent = 'Please sign in with Google or enter your Google account email.';
         err.classList.add('visible'); return false;
       }
     }
@@ -628,7 +715,7 @@ function buildReview() {
     <div class="rb-row"><span class="rb-key">Setup fee</span><span class="rb-val">${setupFees[state.tier] || '—'} (invoiced separately)</span></div>
   `;
 
-  const platformNames = {zoom:'Zoom', meet:'Google Meet', teams:'Microsoft Teams', slack:'Slack (waitlist)'};
+  const platformNames = {zoom:'Zoom', meet:'Google Meet'};
   const platformsHtml = [...state.platforms].map(p =>
     `<div class="rb-row"><span class="rb-key">${platformNames[p]}</span><span class="rb-val">Connected ✓</span></div>`
   ).join('');
@@ -671,12 +758,7 @@ async function submitForm() {
         client_secret: v('zoom_client_secret'),
         account_id: v('zoom_account_id'),
       } : null,
-      google_email: state.platforms.has('meet') ? v('google_email') : null,
-      teams: state.platforms.has('teams') ? {
-        client_id: v('teams_client_id'),
-        client_secret: v('teams_client_secret'),
-        tenant_id: v('teams_tenant_id') || 'common',
-      } : null,
+      google_email: state.platforms.has('meet') ? (v('google_email_hidden') || v('google_email')) : null,
     },
     outputs: {
       summary_email: v('output_email'),
@@ -701,15 +783,9 @@ async function submitForm() {
       throw new Error('Non-200 response');
     }
   } catch (e) {
-    // If webhook not yet set up, still show success in dev mode
-    if (WEBHOOK_URL.includes('YOUR_WEBHOOK')) {
-      document.getElementById('confirm-email').textContent = payload.company.contact_email;
-      goTo(6);
-    } else {
-      document.getElementById('err-5').classList.add('visible');
-      btn.classList.remove('btn-loading');
-      btn.disabled = false;
-    }
+    document.getElementById('err-5').classList.add('visible');
+    btn.classList.remove('btn-loading');
+    btn.disabled = false;
   }
 }
 </script>
