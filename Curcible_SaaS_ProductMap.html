@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curcible — SaaS Product Map</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:#F9F7F8; --warm-paper:#FDFBFC; --parchment:#F2EEF0;
+  --ink:#1C1618; --ink-mid:#36262C; --stone:#847278; --ghost:#CCBEC2;
+  --plum:#6A4858; --plum-mid:#7D5569; --plum-pale:rgba(106,72,88,0.07); --plum-pale2:rgba(106,72,88,0.13);
+  --border:rgba(28,22,24,0.10); --border-strong:rgba(28,22,24,0.22); --rule:rgba(28,22,24,0.06);
+  --ok:#2D6A4F; --ok-dim:rgba(45,106,79,0.08); --ok-border:rgba(45,106,79,0.18);
+  --warn:#7A5C1E; --warn-dim:rgba(122,92,30,0.09); --warn-border:rgba(122,92,30,0.22);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
+
+/* COVER */
+.cover{background:var(--ink);padding:60px 64px 52px;display:grid;grid-template-columns:1fr auto;gap:48px;align-items:end}
+.cover-eyebrow{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);margin-bottom:14px}
+.cover-title{font-family:'DM Serif Display',serif;font-size:clamp(36px,5vw,62px);line-height:1.0;letter-spacing:-.025em;color:var(--paper);font-weight:400}
+.cover-title em{font-style:italic;color:var(--ghost)}
+.cover-sub{font-size:13.5px;color:var(--stone);margin-top:16px;max-width:520px;line-height:1.7;font-weight:300}
+.cover-nums{display:flex;flex-direction:column;gap:1px;background:rgba(249,247,248,.08);flex-shrink:0}
+.cnum{background:rgba(249,247,248,.03);padding:16px 24px;display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:baseline;min-width:180px}
+.cnum-n{font-family:'DM Serif Display',serif;font-size:30px;color:var(--paper);line-height:1}
+.cnum-l{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:rgba(249,247,248,.28);line-height:1.4}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(249,247,248,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 64px;display:flex;align-items:center;gap:0;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav-wm{font-family:'DM Serif Display',serif;font-size:15px;color:var(--ink);padding:11px 18px 11px 0;border-right:1px solid var(--border);margin-right:4px;flex-shrink:0}
+.nav-wm .pl{color:var(--plum)}
+.nav a{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.10em;text-transform:uppercase;color:var(--stone);text-decoration:none;padding:13px 12px;white-space:nowrap;flex-shrink:0;transition:color .15s}
+.nav a:hover{color:var(--ink)}
+
+/* SECTIONS */
+.section{padding:52px 64px;border-bottom:1px solid var(--border)}
+.section-eyebrow{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);margin-bottom:10px}
+.section-title{font-family:'DM Serif Display',serif;font-size:28px;letter-spacing:-.02em;font-weight:400;margin-bottom:18px;color:var(--ink)}
+.section-body{font-size:13.5px;color:var(--ink-mid);line-height:1.7;max-width:720px}
+
+/* MODEL OVERVIEW */
+.model-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);margin-top:32px;border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.model-card{background:var(--warm-paper);padding:28px 26px}
+.model-card.highlight{background:var(--ink)}
+.mc-tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);margin-bottom:8px}
+.model-card.highlight .mc-tag{color:rgba(249,247,248,.35)}
+.mc-label{font-family:'DM Serif Display',serif;font-size:20px;letter-spacing:-.015em;color:var(--ink);margin-bottom:6px}
+.model-card.highlight .mc-label{color:var(--paper)}
+.mc-price{font-family:'DM Mono',monospace;font-size:24px;color:var(--plum);letter-spacing:-.01em;margin-bottom:12px}
+.model-card.highlight .mc-price{color:#C9A8B8}
+.mc-desc{font-size:12.5px;color:var(--stone);line-height:1.6}
+.model-card.highlight .mc-desc{color:rgba(249,247,248,.45)}
+.mc-includes{margin-top:16px;display:flex;flex-direction:column;gap:6px}
+.mc-item{font-size:12px;color:var(--ink-mid);display:flex;gap:8px;align-items:flex-start}
+.model-card.highlight .mc-item{color:rgba(249,247,248,.6)}
+.mc-dot{width:4px;height:4px;border-radius:50%;background:var(--plum);flex-shrink:0;margin-top:6px}
+.model-card.highlight .mc-dot{background:#C9A8B8}
+
+/* TIERS */
+.tier-table{width:100%;border-collapse:collapse;margin-top:32px;border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.tier-table th{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);padding:12px 16px;text-align:left;background:var(--parchment);border-bottom:1px solid var(--border)}
+.tier-table th:not(:first-child){text-align:center}
+.tier-table td{padding:12px 16px;border-bottom:1px solid var(--rule);vertical-align:middle;font-size:13px}
+.tier-table tr:last-child td{border-bottom:none}
+.tier-table td:not(:first-child){text-align:center;font-family:'DM Mono',monospace;font-size:11px}
+.tier-name{font-weight:600;color:var(--ink)}
+.tier-price{color:var(--plum);font-size:14px !important;font-weight:500}
+.tier-check{color:var(--ok)}
+.tier-dash{color:var(--ghost)}
+.tier-highlight td{background:rgba(106,72,88,0.04)}
+.tier-highlight .tier-name{color:var(--plum)}
+
+/* PRODUCTS */
+.products-section{padding:0 64px 80px}
+.prod-map{margin-top:28px;border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.pm-header{background:var(--ink);padding:20px 26px;display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center}
+.pm-pid{font-family:'DM Mono',monospace;font-size:10px;color:var(--plum-mid);background:rgba(125,85,105,.15);border:1px solid rgba(125,85,105,.25);padding:3px 9px;border-radius:2px;font-weight:500;flex-shrink:0}
+.pm-name{font-family:'DM Serif Display',serif;font-size:18px;color:var(--paper);letter-spacing:-.015em}
+.pm-tier-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border-radius:2px;flex-shrink:0}
+.tb-starter{background:rgba(45,106,79,.15);color:#7BC4A0;border:1px solid rgba(45,106,79,.25)}
+.tb-growth{background:rgba(106,72,88,.15);color:#C9A8B8;border:1px solid rgba(106,72,88,.25)}
+.tb-scale{background:rgba(28,22,24,.4);color:rgba(249,247,248,.5);border:1px solid rgba(249,247,248,.1)}
+
+.pm-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border)}
+.pm-col{background:var(--warm-paper);padding:20px 22px}
+.pm-col-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);margin-bottom:10px;display:block}
+.pm-col ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.pm-col li{font-size:12.5px;color:var(--ink-mid);display:flex;gap:8px;align-items:flex-start;line-height:1.5}
+.pm-col li::before{content:'—';color:var(--ghost);flex-shrink:0;font-size:11px;margin-top:1px}
+.pm-col li strong{color:var(--ink)}
+
+.pm-creds{background:var(--parchment);padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pm-creds-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--stone);flex-shrink:0}
+.cred-tag{font-family:'DM Mono',monospace;font-size:9px;padding:3px 8px;background:var(--paper);border:1px solid var(--border);border-radius:2px;color:var(--ink-mid)}
+
+/* ONBOARDING FLOW */
+.flow-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);margin-top:32px;border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.flow-step{background:var(--warm-paper);padding:22px 20px}
+.fs-num{font-family:'DM Serif Display',serif;font-size:32px;color:var(--plum);opacity:.3;line-height:1;margin-bottom:10px}
+.fs-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.fs-desc{font-size:12px;color:var(--stone);line-height:1.6}
+
+/* REVENUE */
+.rev-grid{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:32px}
+.rev-card{border:1px solid var(--border);border-radius:3px;padding:28px;background:var(--warm-paper)}
+.rev-card-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);margin-bottom:16px}
+.rev-num{font-family:'DM Serif Display',serif;font-size:42px;color:var(--ink);letter-spacing:-.025em;line-height:1}
+.rev-unit{font-family:'DM Mono',monospace;font-size:11px;color:var(--stone);margin-top:4px}
+.rev-breakdown{margin-top:20px;display:flex;flex-direction:column;gap:8px}
+.rev-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;padding-bottom:8px;border-bottom:1px solid var(--rule)}
+.rev-row:last-child{border-bottom:none;font-weight:600;color:var(--ink)}
+.rev-row-label{color:var(--ink-mid)}
+.rev-row-val{font-family:'DM Mono',monospace;color:var(--plum)}
+
+/* STACK */
+.stack-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);margin-top:32px;border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.stack-item{background:var(--warm-paper);padding:18px 20px}
+.si-layer{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--stone);margin-bottom:6px}
+.si-name{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.si-role{font-size:12px;color:var(--stone)}
+
+/* ROADMAP */
+.roadmap{margin-top:32px;display:flex;flex-direction:column;gap:1px;border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.rm-phase{display:grid;grid-template-columns:140px 1fr;gap:0;background:var(--border)}
+.rm-left{background:var(--ink);padding:20px 22px;display:flex;flex-direction:column;justify-content:center}
+.rm-phase-tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(249,247,248,.3);margin-bottom:4px}
+.rm-phase-label{font-family:'DM Serif Display',serif;font-size:16px;color:var(--paper);line-height:1.2}
+.rm-right{background:var(--warm-paper);padding:20px 24px;display:flex;flex-direction:column;gap:8px}
+.rm-task{font-size:12.5px;color:var(--ink-mid);display:flex;gap:10px;align-items:flex-start}
+.rm-task-dot{width:4px;height:4px;border-radius:50%;background:var(--plum);flex-shrink:0;margin-top:6px}
+.rm-task strong{color:var(--ink)}
+
+/* FOOTER */
+.footer{padding:28px 64px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.footer-wm{font-family:'DM Serif Display',serif;font-size:14px;color:var(--ink)}
+.footer-wm .pl{color:var(--plum)}
+.footer-meta{font-family:'DM Mono',monospace;font-size:9px;color:var(--ghost);letter-spacing:.1em;text-transform:uppercase}
+
+@media(max-width:900px){
+  .cover{grid-template-columns:1fr;padding:40px 28px 36px}.cover-nums{display:none}
+  .nav{padding:0 28px}.section{padding:40px 28px}.products-section{padding:0 28px 60px}
+  .model-grid,.pm-body,.flow-steps,.stack-grid{grid-template-columns:1fr}
+  .tier-table{font-size:11px}.rev-grid{grid-template-columns:1fr}.footer{padding:20px 28px;flex-direction:column;gap:8px;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div>
+    <div class="cover-eyebrow">Curcible · Internal Document</div>
+    <div class="cover-title">SaaS Product Map<br><em>&amp; Go-to-Market</em></div>
+    <div class="cover-sub">Model 2 — Hosted SaaS. All 8 products on your n8n instance. Clients connect credentials via onboarding. Monthly recurring revenue per workspace.</div>
+  </div>
+  <div class="cover-nums">
+    <div class="cnum"><div class="cnum-n">8</div><div class="cnum-l">Automation<br>products</div></div>
+    <div class="cnum"><div class="cnum-n">3</div><div class="cnum-l">Pricing<br>tiers</div></div>
+    <div class="cnum"><div class="cnum-n">$0</div><div class="cnum-l">Per-client<br>infra cost</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-wm">C<span class="pl">ur</span>cible<span class="pl">.</span></div>
+  <a href="#model">Model</a>
+  <a href="#tiers">Tiers</a>
+  <a href="#products">Products</a>
+  <a href="#onboarding">Onboarding</a>
+  <a href="#revenue">Revenue</a>
+  <a href="#stack">Tech Stack</a>
+  <a href="#roadmap">Roadmap</a>
+</nav>
+
+<!-- MODEL -->
+<div class="section" id="model">
+  <div class="section-eyebrow">Business Model</div>
+  <div class="section-title">How Model 2 works</div>
+  <div class="section-body">You host all 8 n8n workflows on your Railway instance. Clients onboard via a branded form — they paste their API keys, select which products they want, and are connected within minutes. You bill monthly per workspace. Infrastructure cost stays near zero because you're already running n8n.</div>
+  <div class="model-grid">
+    <div class="model-card">
+      <div class="mc-tag">Your side</div>
+      <div class="mc-label">You operate</div>
+      <div class="mc-price">Once</div>
+      <div class="mc-desc">Set up once, serve unlimited clients from the same infrastructure.</div>
+      <div class="mc-includes">
+        <div class="mc-item"><div class="mc-dot"></div>Self-hosted n8n on Railway</div>
+        <div class="mc-item"><div class="mc-dot"></div>All 8 workflow templates</div>
+        <div class="mc-item"><div class="mc-dot"></div>Client credential vault</div>
+        <div class="mc-item"><div class="mc-dot"></div>Onboarding UI</div>
+        <div class="mc-item"><div class="mc-dot"></div>Stripe billing</div>
+      </div>
+    </div>
+    <div class="model-card highlight">
+      <div class="mc-tag">Client side</div>
+      <div class="mc-label">They get</div>
+      <div class="mc-price">Monthly</div>
+      <div class="mc-desc">Fully managed automation — no code, no maintenance, just outputs.</div>
+      <div class="mc-includes">
+        <div class="mc-item"><div class="mc-dot"></div>Branded onboarding in &lt;10 min</div>
+        <div class="mc-item"><div class="mc-dot"></div>Automations running 24/7</div>
+        <div class="mc-item"><div class="mc-dot"></div>Email + calendar outputs</div>
+        <div class="mc-item"><div class="mc-dot"></div>Add products anytime</div>
+        <div class="mc-item"><div class="mc-dot"></div>Curcible support</div>
+      </div>
+    </div>
+    <div class="model-card">
+      <div class="mc-tag">Unit economics</div>
+      <div class="mc-label">Per client</div>
+      <div class="mc-price">~$8/mo</div>
+      <div class="mc-desc">Estimated infra + API cost per active client at moderate usage.</div>
+      <div class="mc-includes">
+        <div class="mc-item"><div class="mc-dot"></div>Railway: ~$2/client share</div>
+        <div class="mc-item"><div class="mc-dot"></div>OpenAI: ~$4/mo avg usage</div>
+        <div class="mc-item"><div class="mc-dot"></div>Other APIs: ~$2/mo</div>
+        <div class="mc-item"><div class="mc-dot"></div>Gross margin: 85–92%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TIERS -->
+<div class="section" id="tiers">
+  <div class="section-eyebrow">Pricing</div>
+  <div class="section-title">Three tiers — stack as clients grow</div>
+  <div class="section-body">Start clients on Starter. Upsell to Growth when they see results. Scale is for agencies or multi-location businesses running all 8 products.</div>
+  <table class="tier-table">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Starter<br><span style="color:var(--ok);font-size:10px">$99/mo</span></th>
+        <th>Growth<br><span style="color:var(--plum);font-size:10px">$249/mo</span></th>
+        <th>Scale<br><span style="color:var(--stone);font-size:10px">$499/mo</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="tier-name">P07 MeetCore™</span><br><span style="font-size:11px;color:var(--stone)">Meeting summaries + follow-ups</span></td>
+        <td><span class="tier-check">✓</span></td>
+        <td><span class="tier-check">✓</span></td>
+        <td><span class="tier-check">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="tier-name">P01 InboxCore™</span><br><span style="font-size:11px;color:var(--stone)">Email triage + auto-reply</span></td>
+        <td><span class="tier-check">✓</span></td>
+        <td><span class="tier-check">✓</span></td>
+        <td><span class="tier-check">✓</span></td>
+      </tr>
+      <tr class="tier-highlight">
+        <td><span class="tier-name">P03 LeadCore™</span><br><span style="font-size:11px;color:var(--stone)">Lead qualification + CRM push</span></td>
+        <td><span class="tier-dash">—</span></td>
+        <td><span class="tier-check">✓</span></td>
+        <td><span class="tier-check">✓</span></td>
+      </tr>
+      <tr class="tier-highlight">
+        <td><span class="tier-name">P04 PostCore™</span><br><span style="font-size:11px;color:var(--stone)">Social media auto-posting</span></td>
+        <td><span class="tier-dash">—</span></td>
+        <td><span class="tier-check">✓</span></td>
+        <td><span class="tier-check">✓</span></td>
+      </tr>
+      <tr class="tier-highlight">
+        <td><span class="tier-name">P02 ContentCore™</span><br><span style="font-size:11px;color:var(--stone)">SEO blog auto-writer</span></td>
+        <td><span class="tier-dash">—</span></td>
+        <td><span class="tier-check">✓</span></td>
+        <td><span class="tier-check">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="tier-name">P05 ReportCore™</span><br><span style="font-size:11px;color:var(--stone)">Weekly analytics digest</span></td>
+        <td><span class="tier-dash">—</span></td>
+        <td><span class="tier-dash">—</span></td>
+        <td><span class="tier-check">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="tier-name">P06 KnowCore™</span><br><span style="font-size:11px;color:var(--stone)">WhatsApp AI chatbot + RAG</span></td>
+        <td><span class="tier-dash">—</span></td>
+        <td><span class="tier-dash">—</span></td>
+        <td><span class="tier-check">✓</span></td>
+      </tr>
+      <tr>
+        <td><span class="tier-name">P08 SchedCore™</span><br><span style="font-size:11px;color:var(--stone)">AI scheduling + booking</span></td>
+        <td><span class="tier-dash">—</span></td>
+        <td><span class="tier-dash">—</span></td>
+        <td><span class="tier-check">✓</span></td>
+      </tr>
+      <tr style="background:var(--parchment)">
+        <td><strong>Platforms supported</strong></td>
+        <td style="font-size:11px;color:var(--ink-mid)">Zoom · Google Meet</td>
+        <td style="font-size:11px;color:var(--ink-mid)">+ Teams · Slack</td>
+        <td style="font-size:11px;color:var(--ink-mid)">All + custom</td>
+      </tr>
+      <tr style="background:var(--parchment)">
+        <td><strong>Support</strong></td>
+        <td style="font-size:11px;color:var(--ink-mid)">Email</td>
+        <td style="font-size:11px;color:var(--ink-mid)">Email + chat</td>
+        <td style="font-size:11px;color:var(--ink-mid)">Priority + calls</td>
+      </tr>
+      <tr style="background:var(--parchment)">
+        <td><strong>Setup fee</strong></td>
+        <td><span class="tier-price">$299</span></td>
+        <td><span class="tier-price">$499</span></td>
+        <td><span class="tier-price">$999</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- PRODUCTS -->
+<div class="products-section" id="products">
+  <div style="padding-top:52px">
+    <div class="section-eyebrow">Product Details</div>
+    <div class="section-title" style="font-family:'DM Serif Display',serif;font-size:28px;margin-bottom:0">What each product delivers to clients</div>
+  </div>
+
+  <!-- P07 -->
+  <div class="prod-map" style="margin-top:28px">
+    <div class="pm-header">
+      <span class="pm-pid">P07</span>
+      <span class="pm-name">MeetCore™ — AI Meeting Summary &amp; Follow-Up</span>
+      <span class="pm-tier-badge tb-starter">All Tiers</span>
+    </div>
+    <div class="pm-body">
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client receives</span>
+        <ul>
+          <li>Branded email summary within 1 hour of meeting end</li>
+          <li>Action items with owner + deadline extracted automatically</li>
+          <li>Key decisions and topics listed</li>
+          <li>Follow-up calendar event auto-created when needed</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">Platforms supported</span>
+        <ul>
+          <li><strong>Zoom</strong> — OAuth2, cloud recordings, VTT transcripts</li>
+          <li><strong>Google Meet</strong> — Drive API, auto-saved .vtt files</li>
+          <li><strong>Microsoft Teams</strong> — Graph API, OneDrive (Growth+)</li>
+          <li>No-recording status email every hour</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client setup required</span>
+        <ul>
+          <li>Zoom OAuth2 credentials (or Meet/Teams)</li>
+          <li>Google account for email + calendar delivery</li>
+          <li>Cloud recording enabled in Zoom settings</li>
+          <li>~10 min onboarding form</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pm-creds">
+      <span class="pm-creds-lbl">Credentials</span>
+      <span class="cred-tag">Zoom OAuth2</span>
+      <span class="cred-tag">Google OAuth2</span>
+      <span class="cred-tag">OpenAI API</span>
+      <span class="cred-tag">Microsoft OAuth2 (Teams)</span>
+    </div>
+  </div>
+
+  <!-- P01 -->
+  <div class="prod-map" style="margin-top:16px">
+    <div class="pm-header">
+      <span class="pm-pid">P01</span>
+      <span class="pm-name">InboxCore™ — AI Email Triage &amp; Auto-Reply</span>
+      <span class="pm-tier-badge tb-starter">All Tiers</span>
+    </div>
+    <div class="pm-body">
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client receives</span>
+        <ul>
+          <li>Emails classified by urgency and intent automatically</li>
+          <li>Draft replies generated for routine inquiries</li>
+          <li>High-priority emails flagged for human review</li>
+          <li>Daily inbox digest with summary of activity</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">How it works</span>
+        <ul>
+          <li>Polls Gmail every 15 min via OAuth2</li>
+          <li>GPT-4o classifies: urgent / routine / newsletter / spam</li>
+          <li>RAG against client's FAQ/knowledge base (Qdrant)</li>
+          <li>Drafts saved in Gmail for human approval gate</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client setup required</span>
+        <ul>
+          <li>Gmail OAuth2 access</li>
+          <li>Upload knowledge base documents (FAQs, policies)</li>
+          <li>Define reply tone and escalation rules</li>
+          <li>~20 min onboarding + doc upload</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pm-creds">
+      <span class="pm-creds-lbl">Credentials</span>
+      <span class="cred-tag">Google OAuth2</span>
+      <span class="cred-tag">OpenAI API</span>
+      <span class="cred-tag">Qdrant API</span>
+    </div>
+  </div>
+
+  <!-- P03 -->
+  <div class="prod-map" style="margin-top:16px">
+    <div class="pm-header">
+      <span class="pm-pid">P03</span>
+      <span class="pm-name">LeadCore™ — AI Lead Qualification &amp; CRM Push</span>
+      <span class="pm-tier-badge tb-growth">Growth +</span>
+    </div>
+    <div class="pm-body">
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client receives</span>
+        <ul>
+          <li>Leads scored 1–10 automatically on intake</li>
+          <li>Qualified leads pushed to CRM with enriched profile</li>
+          <li>Instant personalized follow-up email sent</li>
+          <li>Unqualified leads filtered before touching sales team</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">How it works</span>
+        <ul>
+          <li>Webhook trigger from form (Typeform, Webflow, etc.)</li>
+          <li>GPT-4o scores + qualifies against ICP criteria</li>
+          <li>HubSpot / Airtable CRM push via API</li>
+          <li>Personalized email sent via Gmail within 2 min</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client setup required</span>
+        <ul>
+          <li>Form webhook URL from client's intake form</li>
+          <li>CRM credentials (HubSpot API or Airtable token)</li>
+          <li>Define ICP (ideal customer profile) criteria</li>
+          <li>~30 min setup + ICP definition session</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pm-creds">
+      <span class="pm-creds-lbl">Credentials</span>
+      <span class="cred-tag">Google OAuth2</span>
+      <span class="cred-tag">OpenAI API</span>
+      <span class="cred-tag">HubSpot API</span>
+      <span class="cred-tag">Airtable Token</span>
+    </div>
+  </div>
+
+  <!-- P04 -->
+  <div class="prod-map" style="margin-top:16px">
+    <div class="pm-header">
+      <span class="pm-pid">P04</span>
+      <span class="pm-name">PostCore™ — Social Media Auto-Publisher</span>
+      <span class="pm-tier-badge tb-growth">Growth +</span>
+    </div>
+    <div class="pm-body">
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client receives</span>
+        <ul>
+          <li>Captions generated per platform from a content brief</li>
+          <li>Posts scheduled and published automatically</li>
+          <li>Covers LinkedIn, Instagram, X, TikTok, Facebook</li>
+          <li>Airtable content calendar as the control panel</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">How it works</span>
+        <ul>
+          <li>Airtable content calendar triggers on "Approved" status</li>
+          <li>GPT-4o rewrites caption per platform tone/limits</li>
+          <li>Blotato node publishes to all connected socials</li>
+          <li>Status updated to "Posted" on success</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client setup required</span>
+        <ul>
+          <li>Blotato account with social platforms connected</li>
+          <li>Airtable base (template provided)</li>
+          <li>Google Drive for media file storage</li>
+          <li>~45 min setup + first content batch</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pm-creds">
+      <span class="pm-creds-lbl">Credentials</span>
+      <span class="cred-tag">Blotato API</span>
+      <span class="cred-tag">Airtable Token</span>
+      <span class="cred-tag">Google OAuth2</span>
+      <span class="cred-tag">OpenAI API</span>
+    </div>
+  </div>
+
+  <!-- P02 -->
+  <div class="prod-map" style="margin-top:16px">
+    <div class="pm-header">
+      <span class="pm-pid">P02</span>
+      <span class="pm-name">ContentCore™ — Auto SEO Blog Writer</span>
+      <span class="pm-tier-badge tb-growth">Growth +</span>
+    </div>
+    <div class="pm-body">
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client receives</span>
+        <ul>
+          <li>Full SEO article from a keyword in under 3 minutes</li>
+          <li>Real-time research via Perplexity AI (current data)</li>
+          <li>Published to WordPress as draft for approval</li>
+          <li>Google Sheets log of all published articles</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">How it works</span>
+        <ul>
+          <li>Webhook or form triggers with keyword input</li>
+          <li>Perplexity fetches current research + competitor context</li>
+          <li>GPT-4o writes H1/H2 structured article with meta</li>
+          <li>WordPress REST API publishes as draft</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client setup required</span>
+        <ul>
+          <li>WordPress site + Application Password</li>
+          <li>Perplexity API key (client's own, $20/mo)</li>
+          <li>Brand voice document for GPT system prompt</li>
+          <li>~30 min setup + brand voice session</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pm-creds">
+      <span class="pm-creds-lbl">Credentials</span>
+      <span class="cred-tag">WordPress App Password</span>
+      <span class="cred-tag">Perplexity API</span>
+      <span class="cred-tag">OpenAI API</span>
+      <span class="cred-tag">Google Sheets OAuth2</span>
+    </div>
+  </div>
+
+  <!-- P05 -->
+  <div class="prod-map" style="margin-top:16px">
+    <div class="pm-header">
+      <span class="pm-pid">P05</span>
+      <span class="pm-name">ReportCore™ — Weekly Analytics Digest</span>
+      <span class="pm-tier-badge tb-scale">Scale only</span>
+    </div>
+    <div class="pm-body">
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client receives</span>
+        <ul>
+          <li>Monday morning email with the week's key metrics</li>
+          <li>GPT-4o written narrative — not just raw numbers</li>
+          <li>Trend detection: what's up, what's down, what to act on</li>
+          <li>Covers GA4, ads, revenue, social in one digest</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">How it works</span>
+        <ul>
+          <li>Sunday night: pulls GA4, Sheets, ad platform APIs</li>
+          <li>GPT-4o writes narrative from raw metric data</li>
+          <li>Branded HTML email built and sent Monday 7am</li>
+          <li>Data archived to Google Sheets for trend history</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client setup required</span>
+        <ul>
+          <li>GA4 property + API access</li>
+          <li>Ad platform credentials (Google Ads / Meta Ads)</li>
+          <li>Define KPIs and thresholds for alerts</li>
+          <li>~1 hr setup + KPI definition</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pm-creds">
+      <span class="pm-creds-lbl">Credentials</span>
+      <span class="cred-tag">GA4 API</span>
+      <span class="cred-tag">Google Ads API</span>
+      <span class="cred-tag">Google OAuth2</span>
+      <span class="cred-tag">OpenAI API</span>
+    </div>
+  </div>
+
+  <!-- P06 -->
+  <div class="prod-map" style="margin-top:16px">
+    <div class="pm-header">
+      <span class="pm-pid">P06</span>
+      <span class="pm-name">KnowCore™ — WhatsApp AI Chatbot + RAG</span>
+      <span class="pm-tier-badge tb-scale">Scale only</span>
+    </div>
+    <div class="pm-body">
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client receives</span>
+        <ul>
+          <li>24/7 WhatsApp chatbot answering customer questions</li>
+          <li>Answers grounded in client's own documents (RAG)</li>
+          <li>Replies in 2–5 seconds via WhatsApp Business API</li>
+          <li>Unknown questions escalated to human agent</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">How it works</span>
+        <ul>
+          <li>Meta webhook receives WhatsApp message</li>
+          <li>Query embedded → Qdrant vector search → context retrieved</li>
+          <li>GPT-4o generates grounded reply</li>
+          <li>Sent back via WhatsApp Business API instantly</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client setup required</span>
+        <ul>
+          <li>Meta Developer App (approved) + WhatsApp Business</li>
+          <li>Upload knowledge base: FAQs, product docs, policies</li>
+          <li>Define escalation rules and fallback message</li>
+          <li>~2 hr setup + knowledge base ingestion</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pm-creds">
+      <span class="pm-creds-lbl">Credentials</span>
+      <span class="cred-tag">Meta System Token</span>
+      <span class="cred-tag">WhatsApp Phone ID</span>
+      <span class="cred-tag">Qdrant API</span>
+      <span class="cred-tag">OpenAI API</span>
+    </div>
+  </div>
+
+  <!-- P08 -->
+  <div class="prod-map" style="margin-top:16px">
+    <div class="pm-header">
+      <span class="pm-pid">P08</span>
+      <span class="pm-name">SchedCore™ — AI Scheduling &amp; Booking Automation</span>
+      <span class="pm-tier-badge tb-scale">Scale only</span>
+    </div>
+    <div class="pm-body">
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client receives</span>
+        <ul>
+          <li>Inbound booking requests handled automatically</li>
+          <li>Calendar availability checked in real time</li>
+          <li>Confirmation + reminder emails sent without human touch</li>
+          <li>Cancellation and reschedule flows handled end-to-end</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">How it works</span>
+        <ul>
+          <li>Calendly / Cal.com webhook on new booking</li>
+          <li>GPT-4o writes personalized confirmation email</li>
+          <li>Google Calendar event created with all details</li>
+          <li>48hr + 2hr reminders sent automatically</li>
+        </ul>
+      </div>
+      <div class="pm-col">
+        <span class="pm-col-lbl">Client setup required</span>
+        <ul>
+          <li>Calendly or Cal.com account + webhook</li>
+          <li>Google Calendar OAuth2</li>
+          <li>Define confirmation email tone and content</li>
+          <li>~20 min setup</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pm-creds">
+      <span class="pm-creds-lbl">Credentials</span>
+      <span class="cred-tag">Calendly API</span>
+      <span class="cred-tag">Google OAuth2</span>
+      <span class="cred-tag">OpenAI API</span>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="section" id="onboarding">
+  <div class="section-eyebrow">Client Onboarding</div>
+  <div class="section-title">How a client goes from signup to live in under 15 minutes</div>
+  <div class="section-body">The onboarding UI is a single branded page. Client selects their tier, enters credentials for their chosen products, and you activate their workflows in n8n. No code on their end.</div>
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="fs-num">01</div>
+      <div class="fs-title">Stripe checkout</div>
+      <div class="fs-desc">Client pays setup fee + first month via Stripe. Webhook fires to trigger onboarding.</div>
+    </div>
+    <div class="flow-step">
+      <div class="fs-num">02</div>
+      <div class="fs-title">Onboarding form</div>
+      <div class="fs-desc">Branded page collects company name, email, and credentials for selected products only.</div>
+    </div>
+    <div class="flow-step">
+      <div class="fs-num">03</div>
+      <div class="fs-title">Credential storage</div>
+      <div class="fs-desc">Credentials stored securely in n8n's credential vault, isolated per client workspace.</div>
+    </div>
+    <div class="flow-step">
+      <div class="fs-num">04</div>
+      <div class="fs-title">Workflow activation</div>
+      <div class="fs-desc">You activate the relevant workflows in n8n and assign the client's credentials. Takes 5 min.</div>
+    </div>
+    <div class="flow-step">
+      <div class="fs-num">05</div>
+      <div class="fs-title">Confirmation email</div>
+      <div class="fs-desc">Client receives a "You're live" email with what's running, what to expect, and how to reach support.</div>
+    </div>
+  </div>
+</div>
+
+<!-- REVENUE -->
+<div class="section" id="revenue">
+  <div class="section-eyebrow">Revenue Model</div>
+  <div class="section-title">MRR projections</div>
+  <div class="section-body">Conservative growth assuming 2–3 new clients per month. All three tiers contributing after month 6.</div>
+  <div class="rev-grid">
+    <div class="rev-card">
+      <div class="rev-card-title">Month 6 — 10 clients</div>
+      <div class="rev-num">$1,490</div>
+      <div class="rev-unit">Monthly recurring revenue</div>
+      <div class="rev-breakdown">
+        <div class="rev-row"><span class="rev-row-label">5 × Starter ($99)</span><span class="rev-row-val">$495</span></div>
+        <div class="rev-row"><span class="rev-row-label">3 × Growth ($249)</span><span class="rev-row-val">$747</span></div>
+        <div class="rev-row"><span class="rev-row-label">1 × Scale ($499)</span><span class="rev-row-val">$499</span></div>
+        <div class="rev-row"><span class="rev-row-label">Infra cost (~$80)</span><span class="rev-row-val" style="color:var(--stone)">−$80</span></div>
+        <div class="rev-row"><span class="rev-row-label">Net MRR</span><span class="rev-row-val">~$1,661</span></div>
+      </div>
+    </div>
+    <div class="rev-card">
+      <div class="rev-card-title">Month 12 — 25 clients</div>
+      <div class="rev-num">$5,975</div>
+      <div class="rev-unit">Monthly recurring revenue</div>
+      <div class="rev-breakdown">
+        <div class="rev-row"><span class="rev-row-label">10 × Starter ($99)</span><span class="rev-row-val">$990</span></div>
+        <div class="rev-row"><span class="rev-row-label">10 × Growth ($249)</span><span class="rev-row-val">$2,490</span></div>
+        <div class="rev-row"><span class="rev-row-label">5 × Scale ($499)</span><span class="rev-row-val">$2,495</span></div>
+        <div class="rev-row"><span class="rev-row-label">Infra cost (~$200)</span><span class="rev-row-val" style="color:var(--stone)">−$200</span></div>
+        <div class="rev-row"><span class="rev-row-label">Net MRR</span><span class="rev-row-val">~$5,775</span></div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:16px;padding:16px 20px;background:var(--plum-pale);border:1px solid var(--plum-pale2);border-radius:3px;font-size:12.5px;color:var(--ink-mid)">
+    <strong style="color:var(--plum)">Setup fees not included above.</strong> At 2–3 clients/month with avg setup fee of $499 — that's an additional $1,000–$1,500/month in one-time revenue during growth phase, front-loading cash while MRR builds.
+  </div>
+</div>
+
+<!-- TECH STACK -->
+<div class="section" id="stack">
+  <div class="section-eyebrow">Infrastructure</div>
+  <div class="section-title">What you need to run this</div>
+  <div class="section-body">Everything already in place or near-complete from the implementation plan. Only Stripe and the onboarding UI are new builds.</div>
+  <div class="stack-grid">
+    <div class="stack-item">
+      <div class="si-layer">Automation</div>
+      <div class="si-name">n8n (Railway)</div>
+      <div class="si-role">All 8 workflow templates. Already deployed. ✓</div>
+    </div>
+    <div class="stack-item">
+      <div class="si-layer">AI</div>
+      <div class="si-name">OpenAI GPT-4o</div>
+      <div class="si-role">Summarization, classification, generation. ✓</div>
+    </div>
+    <div class="stack-item">
+      <div class="si-layer">Vector DB</div>
+      <div class="si-name">Qdrant</div>
+      <div class="si-role">RAG for InboxCore + KnowCore. Needed for P01/P06.</div>
+    </div>
+    <div class="stack-item">
+      <div class="si-layer">Billing</div>
+      <div class="si-name">Stripe</div>
+      <div class="si-role">Subscription + setup fees. Build next.</div>
+    </div>
+    <div class="stack-item">
+      <div class="si-layer">Onboarding UI</div>
+      <div class="si-name">HTML + Netlify</div>
+      <div class="si-role">Branded form page. Deployable to curcible.com subdomain.</div>
+    </div>
+    <div class="stack-item">
+      <div class="si-layer">Email delivery</div>
+      <div class="si-name">Gmail OAuth2</div>
+      <div class="si-role">All client-facing email outputs. ✓</div>
+    </div>
+    <div class="stack-item">
+      <div class="si-layer">CRM (optional)</div>
+      <div class="si-name">Airtable / HubSpot</div>
+      <div class="si-role">Track clients, credentials, subscription status.</div>
+    </div>
+    <div class="stack-item">
+      <div class="si-layer">Hosting</div>
+      <div class="si-name">Railway + Netlify</div>
+      <div class="si-role">n8n backend on Railway. Front-end pages on Netlify. ✓</div>
+    </div>
+  </div>
+</div>
+
+<!-- ROADMAP -->
+<div class="section" id="roadmap">
+  <div class="section-eyebrow">Build Roadmap</div>
+  <div class="section-title">What to build next, in order</div>
+  <div class="roadmap">
+    <div class="rm-phase">
+      <div class="rm-left">
+        <div class="rm-phase-tag">Phase 1</div>
+        <div class="rm-phase-label">Ship MeetCore</div>
+      </div>
+      <div class="rm-right">
+        <div class="rm-task"><div class="rm-task-dot"></div><div><strong>Activate P07 workflow</strong> — Zoom + Meet live, hourly polling, email + calendar outputs. Done now. ✓</div></div>
+        <div class="rm-task"><div class="rm-task-dot"></div><div><strong>Build onboarding form</strong> — single HTML page, client enters Zoom/Google credentials, submits to n8n webhook.</div></div>
+        <div class="rm-task"><div class="rm-task-dot"></div><div><strong>Add Stripe</strong> — $299 setup + $99/mo Starter plan. First paying client validates the model.</div></div>
+      </div>
+    </div>
+    <div class="rm-phase">
+      <div class="rm-left">
+        <div class="rm-phase-tag">Phase 2</div>
+        <div class="rm-phase-label">Add InboxCore</div>
+      </div>
+      <div class="rm-right">
+        <div class="rm-task"><div class="rm-task-dot"></div><div><strong>Set up Qdrant</strong> — required for RAG pipeline. Free tier covers early clients.</div></div>
+        <div class="rm-task"><div class="rm-task-dot"></div><div><strong>Build P01 InboxCore workflow</strong> — Gmail polling, GPT classification, draft replies, daily digest.</div></div>
+        <div class="rm-task"><div class="rm-task-dot"></div><div><strong>Upsell existing MeetCore clients</strong> — bundle offer: add InboxCore for $50/mo more.</div></div>
+      </div>
+    </div>
+    <div class="rm-phase">
+      <div class="rm-left">
+        <div class="rm-phase-tag">Phase 3</div>
+        <div class="rm-phase-label">Growth Tier</div>
+      </div>
+      <div class="rm-right">
+        <div class="rm-task"><div class="rm-task-dot"></div><div><strong>Build P03 LeadCore + P04 PostCore + P02 ContentCore</strong> — unlocks the $249/mo Growth tier.</div></div>
+        <div class="rm-task"><div class="rm-task-dot"></div><div><strong>Launch Growth tier</strong> — target clients already on Starter who want more automation.</div></div>
+        <div class="rm-task"><div class="rm-task-dot"></div><div><strong>Build client dashboard</strong> — simple status page showing which automations are running.</div></div>
+      </div>
+    </div>
+    <div class="rm-phase">
+      <div class="rm-left">
+        <div class="rm-phase-tag">Phase 4</div>
+        <div class="rm-phase-label">Scale Tier</div>
+      </div>
+      <div class="rm-right">
+        <div class="rm-task"><div class="rm-task-dot"></div><div><strong>Build P05, P06, P08</strong> — ReportCore, KnowCore (pending Meta approval), SchedCore.</div></div>
+        <div class="rm-task"><div class="rm-task-dot"></div><div><strong>Launch Scale tier at $499/mo</strong> — target agencies and multi-location SMBs.</div></div>
+        <div class="rm-task"><div class="rm-task-dot"></div><div><strong>Productize onboarding</strong> — self-serve signup with zero manual intervention from Curcible.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-wm">C<span class="pl">ur</span>cible<span class="pl">.</span></div>
+  <div class="footer-meta">SaaS Product Map · Internal · 2026</div>
+</div>
+
+</body>
+</html>

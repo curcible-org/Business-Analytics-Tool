@@ -167,6 +167,26 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--paper);color:va
 .sh-rule{flex:1;height:1px;background:var(--border)}
 .sh-note{font-family:'DM Mono',monospace;font-size:9px;color:var(--ghost)}
 
+/* Ref row (workflow + agent references per product) */
+.ref-row{padding:10px 26px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px;background:var(--warm-paper)}
+.ref-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);flex-shrink:0;margin-top:3px}
+.ref-items{display:flex;flex-wrap:wrap;gap:6px}
+.ref-chip{font-family:'DM Mono',monospace;font-size:8.5px;color:var(--plum);background:var(--plum-pale);border:1px solid var(--plum-pale2);padding:2px 9px;border-radius:2px;text-decoration:none;white-space:nowrap}
+.ref-chip:hover{background:var(--plum-pale2)}
+.ref-chip.n8n{color:var(--ink-mid);background:var(--parchment);border-color:var(--border)}
+
+/* Resource Library section */
+.res-lib{padding:40px 64px;border-bottom:1px solid var(--border);background:var(--warm-paper)}
+.res-lib-title{font-family:'DM Serif Display',serif;font-size:22px;letter-spacing:-.02em;font-weight:400;margin-bottom:6px}
+.res-lib-sub{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);margin-bottom:20px}
+.res-cards{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.res-card{background:var(--paper);padding:18px 22px}
+.res-card-tag{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--plum);margin-bottom:6px}
+.res-card-name{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.res-card-meta{font-size:12px;color:var(--stone);line-height:1.6}
+.res-card-lic{display:inline-block;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.10em;text-transform:uppercase;color:var(--ok);background:var(--ok-dim);border:1px solid var(--ok-border);padding:1px 7px;border-radius:2px;margin-top:6px}
+.res-card-note{font-size:11.5px;color:var(--stone);margin-top:6px;line-height:1.5;border-top:1px solid var(--rule);padding-top:6px}
+
 /* LEGEND + FOOTER */
 .legend{padding:36px 64px;border-top:1px solid var(--border);background:var(--parchment)}
 .legend-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--stone);margin-bottom:12px}
@@ -208,11 +228,48 @@ footer{background:var(--ink);padding:36px 64px;display:flex;justify-content:spac
 <nav class="nav">
   <div class="nav-wm">C<span class="pl">ur</span>cible</div>
   <a href="#overview">Overview</a>
+  <a href="#resources">Resources</a>
   <a href="#week0">Pre-flight</a>
   <a href="#p07">P07</a><a href="#p01">P01</a><a href="#p04">P04</a>
   <a href="#p02">P02</a><a href="#p06">P06</a><a href="#p05">P05</a>
   <a href="#p08">P08</a><a href="#p03">P03</a>
 </nav>
+
+<!-- RESOURCE LIBRARY -->
+<div class="res-lib" id="resources">
+  <div class="res-lib-title">Reference Library</div>
+  <div class="res-lib-sub">Open-source · MIT Licensed · Safe to use, modify, and rebrand commercially</div>
+  <div class="res-cards">
+    <div class="res-card">
+      <div class="res-card-tag">Workflow Reference</div>
+      <div class="res-card-name">1,900+ n8n Automations</div>
+      <div class="res-card-meta">Curated library of n8n workflow JSONs covering email, CRM, social, content, HR, and more. Primary reference for all 8 product builds — search this before building any workflow from scratch.</div>
+      <span class="res-card-lic">Internal Reference · XLSX</span>
+      <div class="res-card-note">Usage: Import JSONs directly into n8n, adapt node credentials and logic to client context. Do not ship raw workflows — wrap in Curcible product layer with branded UI/docs.</div>
+    </div>
+    <div class="res-card">
+      <div class="res-card-tag">Agent Architecture Reference</div>
+      <div class="res-card-name">500+ AI Agent Projects</div>
+      <div class="res-card-meta">github.com/ashishpatel26/500-AI-Agents-Projects — curated use cases across CrewAI, AutoGen, LangGraph, Agno. Maps directly to P07, P01, P05, P04, P03.</div>
+      <span class="res-card-lic">MIT License · Rebrand OK</span>
+      <div class="res-card-note">Usage: Use as architecture and prompt logic reference only. All linked repos (crewAI-examples, AutoGen, LangGraph) are also MIT. Obligation: retain MIT notice in internal codebase — not required in client-facing product or UI.</div>
+    </div>
+    <div class="res-card">
+      <div class="res-card-tag">Framework · Agent Orchestration</div>
+      <div class="res-card-name">CrewAI Examples</div>
+      <div class="res-card-meta">github.com/crewAIInc/crewAI-examples — reference implementations for email auto-responder, meeting assistant, lead scoring, recruitment workflow, Instagram post generator.</div>
+      <span class="res-card-lic">MIT License · Rebrand OK</span>
+      <div class="res-card-note">Direct product maps: Email Responder → P01, Meeting Assistant → P07, Lead Score → P03, Recruitment → P05, Instagram → P04.</div>
+    </div>
+    <div class="res-card">
+      <div class="res-card-tag">IP Policy</div>
+      <div class="res-card-name">What You Can and Can't Do</div>
+      <div class="res-card-meta">All sources above are MIT. You can: use, modify, rebrand, sell derivative products. You must: include MIT copyright notice in your internal codebase (not client UI).</div>
+      <span class="res-card-lic">Verified Clean</span>
+      <div class="res-card-note">Your IP is the Curcible product layer — the onboarding, branded docs, prompt engineering, n8n configuration, and client delivery process. The workflows are the raw material, not the product.</div>
+    </div>
+  </div>
+</div>
 
 <!-- CRITICAL BANNER -->
 <div class="critical-banner">
@@ -347,6 +404,14 @@ footer{background:var(--ink);padding:36px 64px;display:flex;justify-content:spac
   <div class="p-desc-row">
     <div class="p-desc">Triggers after a Zoom meeting (scheduled or webhook), pulls the recording transcript, generates a structured summary — <strong>decisions, action items, owners, follow-up dates</strong> — pushes tasks to ClickUp or Airtable, creates Calendar invites, emails all attendees + posts to Slack. <strong>Why start here:</strong> lowest complexity, all native nodes, no external approval cycles. First demo closes clients same day.</div>
   </div>
+  <div class="ref-row">
+    <span class="ref-lbl">Refs</span>
+    <div class="ref-items">
+      <span class="ref-chip">CrewAI · Meeting Assistant Flow</span>
+      <span class="ref-chip">AutoGen · Sequential Multi-Agent Chat</span>
+      <span class="ref-chip n8n">n8n Library · Zoom + GPT workflows</span>
+    </div>
+  </div>
   <div class="prereq-row">
     <span class="prereq-lbl">Needs</span>
     <div class="prereq-items">
@@ -428,6 +493,14 @@ footer{background:var(--ink);padding:36px 64px;display:flex;justify-content:spac
   </div>
   <div class="p-desc-row">
     <div class="p-desc">Monitors an IMAP inbox, summarises incoming emails, queries a <strong>Qdrant vector knowledge base</strong> (loaded with company FAQs and service docs), drafts a context-aware reply, then routes to a human for one-click approval before sending. No email goes out without sign-off. <strong>3 weeks because</strong> Qdrant setup and knowledge base population is the complexity — you're teaching it the client's business.</div>
+  </div>
+  <div class="ref-row">
+    <span class="ref-lbl">Refs</span>
+    <div class="ref-items">
+      <span class="ref-chip">CrewAI · Email Auto Responder Flow</span>
+      <span class="ref-chip">500 Agents · 24/7 AI Chatbot (Customer Service)</span>
+      <span class="ref-chip n8n">n8n Library · IMAP + Qdrant + GPT workflows</span>
+    </div>
   </div>
   <div class="prereq-row">
     <span class="prereq-lbl">Needs</span>
@@ -521,6 +594,14 @@ footer{background:var(--ink);padding:36px 64px;display:flex;justify-content:spac
     <span class="flag-icon">⚠</span>
     <div><strong>Verify this before Week 7:</strong> Open your n8n Admin Panel → Community Nodes. Confirm <code style="font-family:'DM Mono',monospace;font-size:10px;background:var(--warn-dim);padding:1px 5px;border-radius:2px">n8n-nodes-blotato</code> is installed. If it's not, install it now — it takes 5 minutes but requires a restart.</div>
   </div>
+  <div class="ref-row">
+    <span class="ref-lbl">Refs</span>
+    <div class="ref-items">
+      <span class="ref-chip">CrewAI · Instagram Post Generator</span>
+      <span class="ref-chip">500 Agents · Content Personalization Agent</span>
+      <span class="ref-chip n8n">n8n Library · Airtable + GPT + social post workflows</span>
+    </div>
+  </div>
   <div class="prereq-row">
     <span class="prereq-lbl">Needs</span>
     <div class="prereq-items">
@@ -600,6 +681,14 @@ footer{background:var(--ink);padding:36px 64px;display:flex;justify-content:spac
   <div class="p-desc-row">
     <div class="p-desc">Takes a keyword or topic input, queries <strong>Perplexity AI for real-time research</strong> (current data, competitor context, citations), passes the researched brief to GPT-4o to write a structured SEO article (H1/H2, meta description, internal link placeholders), then publishes directly to WordPress, logs in Google Sheets, and sends a completion email. <strong>Fastest ROI product for content-heavy clients</strong> — each article costs under $2 in API credits.</div>
   </div>
+  <div class="ref-row">
+    <span class="ref-lbl">Refs</span>
+    <div class="ref-items">
+      <span class="ref-chip">CrewAI · Marketing Strategy Generator</span>
+      <span class="ref-chip">500 Agents · Content Personalization Agent</span>
+      <span class="ref-chip n8n">n8n Library · Perplexity + WordPress + GPT workflows</span>
+    </div>
+  </div>
   <div class="prereq-row">
     <span class="prereq-lbl">Needs</span>
     <div class="prereq-items">
@@ -678,6 +767,14 @@ footer{background:var(--ink);padding:36px 64px;display:flex;justify-content:spac
   </div>
   <div class="p-desc-row">
     <div class="p-desc">Receives WhatsApp messages via Meta webhook, filters non-message events, runs a <strong>RAG pipeline</strong>: embeds the query with OpenAI, searches a Qdrant vector store loaded with company docs, passes context + message to GPT Chat Model, replies via WhatsApp API within 2–5 seconds. High-visibility product — clients can see it working in their customers' phones in real time.</div>
+  </div>
+  <div class="ref-row">
+    <span class="ref-lbl">Refs</span>
+    <div class="ref-items">
+      <span class="ref-chip">500 Agents · 24/7 AI Chatbot · RAG pipeline pattern</span>
+      <span class="ref-chip">AutoGen · RAG Group Chat</span>
+      <span class="ref-chip n8n">n8n Library · WhatsApp + Qdrant + OpenAI workflows</span>
+    </div>
   </div>
   <div class="flag-row">
     <span class="flag-icon">⚠</span>
@@ -774,6 +871,15 @@ footer{background:var(--ink);padding:36px 64px;display:flex;justify-content:spac
   <div class="p-desc-row">
     <div class="p-desc">Receives CV uploads via n8n form, extracts text via OCR, scores each candidate against a <strong>configurable job description rubric</strong> (0–100 across experience, skills, seniority, location match) using GPT-4o, logs all results in a Google Sheets ATS, auto-schedules interviews for above-threshold candidates, sends status emails to every applicant. All native Google nodes — no external dependencies.</div>
   </div>
+  <div class="ref-row">
+    <span class="ref-lbl">Refs</span>
+    <div class="ref-items">
+      <span class="ref-chip">CrewAI · Recruitment Workflow</span>
+      <span class="ref-chip">CrewAI · Match Profile to Positions</span>
+      <span class="ref-chip">500 Agents · Recruitment Recommendation Agent</span>
+      <span class="ref-chip n8n">n8n Library · CV parsing + Google Sheets + calendar workflows</span>
+    </div>
+  </div>
   <div class="prereq-row">
     <span class="prereq-lbl">Needs</span>
     <div class="prereq-items">
@@ -852,6 +958,14 @@ footer{background:var(--ink);padding:36px 64px;display:flex;justify-content:spac
   </div>
   <div class="p-desc-row">
     <div class="p-desc">Takes a YouTube URL or monitors a channel for new uploads, fetches the video transcript, passes to <strong>Google Gemini</strong> (generous free tier — 1M tokens/day) for structured summarisation: key takeaways, action items, notable quotes, SEO metadata. Publishes as a blog post to WordPress, logs in Google Sheets, sends email digest. <strong>Natural bundle with P02 ContentCore</strong> — same WordPress + Sheets setup, reuse existing config.</div>
+  </div>
+  <div class="ref-row">
+    <span class="ref-lbl">Refs</span>
+    <div class="ref-items">
+      <span class="ref-chip">AutoGen · Whisper Agent (audio/video transcription)</span>
+      <span class="ref-chip">500 Agents · Content Personalization Agent</span>
+      <span class="ref-chip n8n">n8n Library · YouTube + Gemini + WordPress workflows</span>
+    </div>
   </div>
   <div class="prereq-row">
     <span class="prereq-lbl">Needs</span>
@@ -934,6 +1048,14 @@ footer{background:var(--ink);padding:36px 64px;display:flex;justify-content:spac
   <div class="p-desc-row">
     <div class="p-desc">Takes a target persona definition, pulls enriched lead records via <strong>Apollo.io API</strong> (recommended: compliant, GDPR-safe, $49/mo+ for production), uses GPT-4o to write personalised icebreaker messages per lead using their company and role context, exports a clean enriched list to Google Sheets, and optionally pushes contacts to HubSpot or Pipedrive. <strong>Saved for last</strong> because it requires 3rd-party API procurement, compliance planning, and is the highest-risk product to demo without experience.</div>
   </div>
+  <div class="ref-row">
+    <span class="ref-lbl">Refs</span>
+    <div class="ref-items">
+      <span class="ref-chip">CrewAI · Lead Score Flow</span>
+      <span class="ref-chip">500 Agents · Recruitment Recommendation Agent</span>
+      <span class="ref-chip n8n">n8n Library · Apollo.io + GPT + HubSpot workflows</span>
+    </div>
+  </div>
   <div class="flag-row">
     <span class="flag-icon">⚠</span>
     <div><strong>Two requirements before starting Week 18:</strong> (1) Apollo.io or Proxycurl account active — sign up at Week 16 at the latest, free tier for testing. (2) Compliance approach confirmed with client — LinkedIn ToS prohibits direct scraping. Apollo sources data via public records and user opt-ins, which is compliant. Document this in your client contract and get written acknowledgement before running any campaigns.</div>
@@ -1010,6 +1132,13 @@ footer{background:var(--ink);padding:36px 64px;display:flex;justify-content:spac
     <div class="li"><div class="ldot" style="background:var(--ok)"></div>Working Clean — native nodes only, no external dependencies</div>
     <div class="li"><div class="ldot" style="background:var(--warn)"></div>Working w/ Flag — 3rd-party API or community node required</div>
     <div class="li"><div class="ldot" style="background:var(--plum)"></div>External action — requires submission/approval before build (Meta app, Apollo procurement)</div>
+  </div>
+  <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+    <div class="legend-lbl">Reference Sources</div>
+    <div class="legend-row" style="margin-top:8px">
+      <div class="li" style="font-size:11px"><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--plum);background:var(--plum-pale);border:1px solid var(--plum-pale2);padding:1px 6px;border-radius:2px;margin-right:6px">AGENT REF</span>500-AI-Agents-Projects (MIT) · CrewAI-examples (MIT) · AutoGen (MIT) · LangGraph (MIT) — architecture + prompt logic reference only</div>
+      <div class="li" style="font-size:11px"><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--ink-mid);background:var(--parchment);border:1px solid var(--border);padding:1px 6px;border-radius:2px;margin-right:6px">N8N REF</span>1,900+ n8n Automations — workflow JSON reference, adapt per client context, wrap in Curcible product layer</div>
+    </div>
   </div>
 </div>
 

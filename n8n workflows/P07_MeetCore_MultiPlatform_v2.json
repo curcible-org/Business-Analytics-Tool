@@ -1,0 +1,469 @@
+{
+  "name": "P07 MeetCore™ — Multi-Platform v2",
+  "nodes": [
+    {
+      "id": "node-sched",
+      "name": "Every Hour1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 400],
+      "parameters": {
+        "rule": {
+          "interval": [{"field": "hours", "hoursInterval": 1}]
+        }
+      }
+    },
+
+    {
+      "id": "node-zoom-get",
+      "name": "Zoom: Get Recordings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.zoom.us/v2/users/me/recordings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "zoomOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {"name": "from", "value": "={{ new Date(Date.now() - 3600000).toISOString().split('T')[0] }}"},
+            {"name": "to", "value": "={{ new Date().toISOString().split('T')[0] }}"},
+            {"name": "page_size", "value": "20"}
+          ]
+        }
+      },
+      "credentials": {
+        "zoomOAuth2Api": {"id": "", "name": "Zoom OAuth2"}
+      }
+    },
+    {
+      "id": "node-zoom-if",
+      "name": "Zoom: Has Recordings?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 200],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [
+            {
+              "id": "zoom-check",
+              "leftValue": "={{ $json.total_records }}",
+              "rightValue": 0,
+              "operator": {"type": "number", "operation": "gt"}
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "node-zoom-split",
+      "name": "Zoom: Split Meetings",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [660, 200],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "node-zoom-extract",
+      "name": "Zoom: Extract Transcript URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 200],
+      "parameters": {
+        "jsCode": "const meeting = $input.first().json;\nconst meetings = meeting.meetings || [];\nconst results = [];\nfor (const m of meetings) {\n  const files = m.recording_files || [];\n  const vtt = files.find(f => f.file_type === 'TRANSCRIPT');\n  if (vtt) {\n    results.push({\n      json: {\n        platform: 'zoom',\n        meeting_id: m.uuid,\n        topic: m.topic,\n        start_time: m.start_time,\n        duration: m.duration,\n        host_email: m.host_email,\n        transcript_url: vtt.download_url\n      }\n    });\n  }\n}\nreturn results;"
+      }
+    },
+    {
+      "id": "node-zoom-download",
+      "name": "Zoom: Download Transcript",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1100, 200],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.transcript_url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "zoomOAuth2Api",
+        "options": {"response": {"response": {"responseFormat": "text"}}}
+      },
+      "credentials": {
+        "zoomOAuth2Api": {"id": "", "name": "Zoom OAuth2"}
+      }
+    },
+    {
+      "id": "node-zoom-parse",
+      "name": "Zoom: Parse VTT",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1320, 200],
+      "parameters": {
+        "jsCode": "const vttRaw = $input.first().json.data || '';\nconst lines = vttRaw.split('\\n');\nconst textLines = [];\nfor (const line of lines) {\n  const trimmed = line.trim();\n  if (!trimmed || trimmed === 'WEBVTT' || /^\\d+$/.test(trimmed) || /-->/.test(trimmed)) continue;\n  textLines.push(trimmed);\n}\nconst prev = $('Zoom: Extract Transcript URL').first().json;\nreturn [{\n  json: {\n    platform: prev.platform,\n    topic: prev.topic,\n    start_time: prev.start_time,\n    duration: prev.duration,\n    host: prev.host_email,\n    transcript_text: textLines.join(' ')\n  }\n}];"
+      }
+    },
+
+    {
+      "id": "node-meet-search",
+      "name": "Meet: Search Drive for VTT",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [220, 500],
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {"name": "q", "value": "={{ \"mimeType='text/vtt' and modifiedTime > '\" + new Date(Date.now() - 3600000).toISOString() + \"' and trashed=false\" }}"},
+            {"name": "fields", "value": "files(id,name,modifiedTime,owners)"},
+            {"name": "orderBy", "value": "modifiedTime desc"},
+            {"name": "pageSize", "value": "20"}
+          ]
+        }
+      },
+      "credentials": {
+        "googleOAuth2Api": {"id": "", "name": "Google OAuth2"}
+      }
+    },
+    {
+      "id": "node-meet-if",
+      "name": "Meet: Has Transcripts?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [440, 500],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [
+            {
+              "id": "meet-check",
+              "leftValue": "={{ $json.files.length }}",
+              "rightValue": 0,
+              "operator": {"type": "number", "operation": "gt"}
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "node-meet-split",
+      "name": "Meet: Split Files",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [660, 500],
+      "parameters": {
+        "jsCode": "const files = $input.first().json.files || [];\nreturn files.map(f => ({\n  json: {\n    file_id: f.id,\n    file_name: f.name,\n    modified_time: f.modifiedTime,\n    owner: (f.owners || [{}])[0].emailAddress || 'unknown'\n  }\n}));"
+      }
+    },
+    {
+      "id": "node-meet-download",
+      "name": "Meet: Download VTT",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [880, 500],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://www.googleapis.com/drive/v3/files/' + $json.file_id + '?alt=media' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleOAuth2Api",
+        "options": {"response": {"response": {"responseFormat": "text"}}}
+      },
+      "credentials": {
+        "googleOAuth2Api": {"id": "", "name": "Google OAuth2"}
+      }
+    },
+    {
+      "id": "node-meet-parse",
+      "name": "Meet: Parse VTT",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1100, 500],
+      "parameters": {
+        "jsCode": "const vttRaw = $input.first().json.data || '';\nconst lines = vttRaw.split('\\n');\nconst textLines = [];\nfor (const line of lines) {\n  const trimmed = line.trim();\n  if (!trimmed || trimmed === 'WEBVTT' || /^\\d+$/.test(trimmed) || /-->/.test(trimmed)) continue;\n  textLines.push(trimmed);\n}\nconst meta = $('Meet: Split Files').first().json;\nconst topicGuess = meta.file_name.replace('.vtt','').replace(/_/g,' ').replace(/-transcript$/i,'').trim();\nreturn [{\n  json: {\n    platform: 'google_meet',\n    topic: topicGuess,\n    start_time: meta.modified_time,\n    duration: null,\n    host: meta.owner,\n    transcript_text: textLines.join(' ')\n  }\n}];"
+      }
+    },
+
+    {
+      "id": "node-no-activity-merge",
+      "name": "Collect No-Activity Signals",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [660, 760],
+      "parameters": {
+        "mode": "append",
+        "options": {}
+      }
+    },
+    {
+      "id": "node-no-activity-check",
+      "name": "Build No-Activity Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 760],
+      "parameters": {
+        "jsCode": "// Deduplicate — only send ONE no-activity email per run\n// This node fires when at least one platform found nothing\nconst now = new Date();\nreturn [{\n  json: {\n    subject: `[MeetCore] No recordings found — ${now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'})}`,\n    checked_at: now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'}),\n    checked_date: now.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'}),\n    platforms: 'Zoom · Google Meet'\n  }\n}];"
+      }
+    },
+    {
+      "id": "node-no-activity-dedup",
+      "name": "Only Once Per Run",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1100, 760],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [
+            {
+              "id": "dedup-check",
+              "leftValue": "={{ $runIndex }}",
+              "rightValue": 0,
+              "operator": {"type": "number", "operation": "equal"}
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "node-no-activity-email",
+      "name": "No Activity Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1320, 760],
+      "parameters": {
+        "sendTo": "info@curcible.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "=<!DOCTYPE html>\n<html>\n<head><meta charset=\"UTF-8\"></head>\n<body style=\"margin:0;padding:0;background:#F9F7F8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;\">\n  <div style=\"max-width:560px;margin:32px auto;background:#ffffff;border:1px solid rgba(28,22,24,0.10);border-radius:3px;overflow:hidden;\">\n    <div style=\"background:#1C1618;padding:24px 32px;\">\n      <div style=\"font-family:Georgia,serif;font-size:20px;color:#F9F7F8;letter-spacing:-0.025em;\">C<span style=\"color:#7D5569;\">ur</span>cible<span style=\"color:#7D5569;\">.</span></div>\n      <div style=\"color:#CCBEC2;font-size:11px;font-family:monospace;letter-spacing:0.16em;text-transform:uppercase;margin-top:4px;\">MeetCore™ — Hourly Status</div>\n    </div>\n    <div style=\"padding:32px;\">\n      <div style=\"width:48px;height:48px;background:#F2EEF0;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:20px;\">\n        <span style=\"font-size:22px;\">✓</span>\n      </div>\n      <h2 style=\"margin:0 0 8px;font-size:20px;font-weight:400;color:#1C1618;letter-spacing:-0.02em;font-family:Georgia,serif;\">No new recordings found</h2>\n      <p style=\"margin:0 0 24px;color:#847278;font-size:14px;line-height:1.6;\">Checked {{ $json.platforms }} at <strong>{{ $json.checked_at }}</strong> on {{ $json.checked_date }}. No new meeting transcripts were available this hour.</p>\n      <div style=\"background:#F2EEF0;border-radius:3px;padding:16px 20px;\">\n        <p style=\"margin:0;font-size:12px;font-family:monospace;letter-spacing:0.08em;text-transform:uppercase;color:#847278;\">Platforms monitored</p>\n        <p style=\"margin:6px 0 0;color:#36262C;font-size:14px;\">{{ $json.platforms }}</p>\n      </div>\n    </div>\n    <div style=\"padding:14px 32px;border-top:1px solid rgba(28,22,24,0.06);background:#F2EEF0;\">\n      <p style=\"margin:0;font-size:11px;color:#847278;font-family:monospace;letter-spacing:0.08em;\">CURCIBLE MEETCORE™ · AUTO-GENERATED · DO NOT REPLY</p>\n    </div>\n  </div>\n</body>\n</html>",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {"id": "", "name": "Google OAuth2"}
+      }
+    },
+
+    {
+      "id": "node-merge",
+      "name": "Merge All Platforms",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [1540, 350],
+      "parameters": {
+        "mode": "append",
+        "options": {}
+      }
+    },
+
+    {
+      "id": "node-gpt",
+      "name": "GPT-4o: Summarize Meeting",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.4,
+      "position": [1760, 350],
+      "parameters": {
+        "resource": "text",
+        "operation": "message",
+        "modelId": {"__rl": true, "value": "gpt-4o", "mode": "list", "cachedResultName": "GPT-4O"},
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a professional meeting analyst. Analyze the following meeting transcript and return a JSON object with these exact keys:\n- summary: 3-5 sentence executive summary\n- decisions: array of strings (key decisions made)\n- action_items: array of objects with {task, owner, deadline}\n- follow_up_required: boolean\n- follow_up_notes: string (what to cover in follow-up, or empty string)\n- key_topics: array of strings (main topics discussed)\n- platform: pass through the platform value from input\n- topic: pass through the meeting topic\n- start_time: pass through the start_time\n- host: pass through the host\n\nReturn ONLY valid JSON, no markdown fences.\n\nPlatform: {{ $json.platform }}\nMeeting: {{ $json.topic }}\nDate: {{ $json.start_time }}\nHost: {{ $json.host }}\n\nTranscript:\n{{ $json.transcript_text.slice(0, 12000) }}"
+            }
+          ]
+        },
+        "simplify": true,
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {"id": "", "name": "OpenAI"}
+      }
+    },
+
+    {
+      "id": "node-parse-gpt",
+      "name": "Parse GPT Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1980, 350],
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.message?.content || $input.first().json.content || '';\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch(e) {\n  const match = raw.match(/\\{[\\s\\S]*\\}/);\n  parsed = match ? JSON.parse(match[0]) : {summary:'Parse error',decisions:[],action_items:[],follow_up_required:false,follow_up_notes:'',key_topics:[]};\n}\nreturn [{json: parsed}];"
+      }
+    },
+
+    {
+      "id": "node-email-build",
+      "name": "Build Email HTML1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2200, 350],
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nconst platformLabel = {zoom:'Zoom',google_meet:'Google Meet',microsoft_teams:'Microsoft Teams',slack:'Slack'}[d.platform] || d.platform;\nconst platformIcon = {zoom:'🎥',google_meet:'📹',microsoft_teams:'💼',slack:'💬'}[d.platform] || '📅';\nconst actionRows = (d.action_items || []).map(a => `<tr><td style=\"padding:8px 12px;border-bottom:1px solid #e8e4e6;\">${a.task||''}</td><td style=\"padding:8px 12px;border-bottom:1px solid #e8e4e6;color:#6A4858;\">${a.owner||'TBD'}</td><td style=\"padding:8px 12px;border-bottom:1px solid #e8e4e6;\">${a.deadline||'TBD'}</td></tr>`).join('');\nconst decisionItems = (d.decisions || []).map(dec => `<li style=\"margin-bottom:6px;\">${dec}</li>`).join('');\nconst topicTags = (d.key_topics || []).map(t => `<span style=\"display:inline-block;background:#F2EEF0;color:#36262C;font-family:monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 8px;border-radius:3px;margin:2px;\">${t}</span>`).join('');\nconst html = `<!DOCTYPE html><html><head><meta charset=\"UTF-8\"></head><body style=\"margin:0;padding:0;background:#F9F7F8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;\"><div style=\"max-width:640px;margin:32px auto;background:#ffffff;border:1px solid rgba(28,22,24,0.10);border-radius:3px;overflow:hidden;\"><div style=\"background:#1C1618;padding:28px 32px;\"><div style=\"font-family:Georgia,serif;font-size:22px;color:#F9F7F8;letter-spacing:-0.025em;\">C<span style=\"color:#7D5569;\">ur</span>cible<span style=\"color:#7D5569;\">.</span></div><div style=\"color:#CCBEC2;font-size:12px;font-family:monospace;letter-spacing:0.16em;text-transform:uppercase;margin-top:4px;\">MeetCore™ — Meeting Summary</div></div><div style=\"padding:32px;\"><div style=\"margin-bottom:4px;\"><span style=\"font-size:18px;\">${platformIcon}</span> <span style=\"font-family:monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#847278;\">${platformLabel}</span></div><h1 style=\"margin:0 0 4px;font-size:24px;font-weight:400;color:#1C1618;letter-spacing:-0.025em;font-family:Georgia,serif;\">${d.topic||'Meeting Summary'}</h1><p style=\"margin:0 0 24px;color:#847278;font-size:13px;\">${new Date(d.start_time).toLocaleString('en-US',{dateStyle:'full',timeStyle:'short'})} · Host: ${d.host||'—'}</p><div style=\"margin-bottom:4px;\">${topicTags}</div><hr style=\"border:none;border-top:1px solid rgba(28,22,24,0.06);margin:24px 0;\"><h2 style=\"font-size:14px;font-family:monospace;letter-spacing:0.12em;text-transform:uppercase;color:#847278;margin:0 0 12px;\">Summary</h2><p style=\"margin:0 0 24px;color:#36262C;line-height:1.7;\">${d.summary||''}</p>${decisionItems?`<h2 style=\"font-size:14px;font-family:monospace;letter-spacing:0.12em;text-transform:uppercase;color:#847278;margin:0 0 12px;\">Decisions</h2><ul style=\"margin:0 0 24px;padding-left:20px;color:#36262C;line-height:1.7;\">${decisionItems}</ul>`:''  }${actionRows?`<h2 style=\"font-size:14px;font-family:monospace;letter-spacing:0.12em;text-transform:uppercase;color:#847278;margin:0 0 12px;\">Action Items</h2><table style=\"width:100%;border-collapse:collapse;margin-bottom:24px;\"><thead><tr style=\"background:#F2EEF0;\"><th style=\"padding:8px 12px;text-align:left;font-size:11px;font-family:monospace;letter-spacing:0.1em;text-transform:uppercase;color:#847278;\">Task</th><th style=\"padding:8px 12px;text-align:left;font-size:11px;font-family:monospace;letter-spacing:0.1em;text-transform:uppercase;color:#847278;\">Owner</th><th style=\"padding:8px 12px;text-align:left;font-size:11px;font-family:monospace;letter-spacing:0.1em;text-transform:uppercase;color:#847278;\">Deadline</th></tr></thead><tbody>${actionRows}</tbody></table>`:''  }${d.follow_up_required?`<div style=\"background:rgba(106,72,88,0.07);border-left:3px solid #6A4858;padding:16px;border-radius:3px;\"><p style=\"margin:0;color:#36262C;font-size:13px;\"><strong style=\"color:#6A4858;\">Follow-up required:</strong> ${d.follow_up_notes||''}</p></div>`:''  }</div><div style=\"padding:16px 32px;border-top:1px solid rgba(28,22,24,0.06);background:#F2EEF0;\"><p style=\"margin:0;font-size:11px;color:#847278;font-family:monospace;letter-spacing:0.08em;\">CURCIBLE MEETCORE™ · AUTO-GENERATED · DO NOT REPLY</p></div></div></body></html>`;\nreturn [{json: {html, subject: `[MeetCore] ${d.topic||'Meeting'} — ${platformLabel} · ${new Date(d.start_time).toLocaleDateString()}`, follow_up_required: d.follow_up_required, follow_up_notes: d.follow_up_notes, topic: d.topic, start_time: d.start_time}}];"
+      }
+    },
+
+    {
+      "id": "node-send-email",
+      "name": "Send Summary Email1",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [2420, 200],
+      "parameters": {
+        "sendTo": "info@curcible.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {"id": "", "name": "Google OAuth2"}
+      }
+    },
+
+    {
+      "id": "node-cal-if",
+      "name": "Follow-up Needed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [2420, 450],
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "conditions": [
+            {
+              "id": "followup-check",
+              "leftValue": "={{ $json.follow_up_required }}",
+              "rightValue": true,
+              "operator": {"type": "boolean", "operation": "equal"}
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+
+    {
+      "id": "node-calendar",
+      "name": "Create Follow-up Event1",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [2640, 350],
+      "parameters": {
+        "calendar": {"__rl": true, "mode": "id", "value": "primary"},
+        "start": "={{ new Date(new Date($json.start_time).getTime() + 3*24*3600*1000).toISOString().split('T')[0] + 'T10:00:00' }}",
+        "end": "={{ new Date(new Date($json.start_time).getTime() + 3*24*3600*1000).toISOString().split('T')[0] + 'T10:30:00' }}",
+        "additionalFields": {
+          "summary": "={{ 'Follow-up: ' + ($json.topic || 'Meeting') }}",
+          "description": "={{ 'Auto-created by MeetCore™\\n\\n' + ($json.follow_up_notes || '') }}"
+        }
+      },
+      "credentials": {
+        "googleCalendarOAuth2Api": {"id": "", "name": "Google OAuth2"}
+      }
+    }
+  ],
+
+  "connections": {
+    "Every Hour1": {
+      "main": [
+        [
+          {"node": "Zoom: Get Recordings", "type": "main", "index": 0},
+          {"node": "Meet: Search Drive for VTT", "type": "main", "index": 0}
+        ]
+      ]
+    },
+    "Zoom: Get Recordings": {
+      "main": [[{"node": "Zoom: Has Recordings?", "type": "main", "index": 0}]]
+    },
+    "Zoom: Has Recordings?": {
+      "main": [
+        [{"node": "Zoom: Split Meetings", "type": "main", "index": 0}],
+        [{"node": "Collect No-Activity Signals", "type": "main", "index": 0}]
+      ]
+    },
+    "Zoom: Split Meetings": {
+      "main": [[{"node": "Zoom: Extract Transcript URL", "type": "main", "index": 0}]]
+    },
+    "Zoom: Extract Transcript URL": {
+      "main": [[{"node": "Zoom: Download Transcript", "type": "main", "index": 0}]]
+    },
+    "Zoom: Download Transcript": {
+      "main": [[{"node": "Zoom: Parse VTT", "type": "main", "index": 0}]]
+    },
+    "Zoom: Parse VTT": {
+      "main": [[{"node": "Merge All Platforms", "type": "main", "index": 0}]]
+    },
+    "Meet: Search Drive for VTT": {
+      "main": [[{"node": "Meet: Has Transcripts?", "type": "main", "index": 0}]]
+    },
+    "Meet: Has Transcripts?": {
+      "main": [
+        [{"node": "Meet: Split Files", "type": "main", "index": 0}],
+        [{"node": "Collect No-Activity Signals", "type": "main", "index": 1}]
+      ]
+    },
+    "Meet: Split Files": {
+      "main": [[{"node": "Meet: Download VTT", "type": "main", "index": 0}]]
+    },
+    "Meet: Download VTT": {
+      "main": [[{"node": "Meet: Parse VTT", "type": "main", "index": 0}]]
+    },
+    "Meet: Parse VTT": {
+      "main": [[{"node": "Merge All Platforms", "type": "main", "index": 1}]]
+    },
+    "Collect No-Activity Signals": {
+      "main": [[{"node": "Build No-Activity Status", "type": "main", "index": 0}]]
+    },
+    "Build No-Activity Status": {
+      "main": [[{"node": "Only Once Per Run", "type": "main", "index": 0}]]
+    },
+    "Only Once Per Run": {
+      "main": [
+        [{"node": "No Activity Email", "type": "main", "index": 0}],
+        []
+      ]
+    },
+    "Merge All Platforms": {
+      "main": [[{"node": "GPT-4o: Summarize Meeting", "type": "main", "index": 0}]]
+    },
+    "GPT-4o: Summarize Meeting": {
+      "main": [[{"node": "Parse GPT Response", "type": "main", "index": 0}]]
+    },
+    "Parse GPT Response": {
+      "main": [[{"node": "Build Email HTML1", "type": "main", "index": 0}]]
+    },
+    "Build Email HTML1": {
+      "main": [
+        [{"node": "Send Summary Email1", "type": "main", "index": 0}],
+        [{"node": "Follow-up Needed?", "type": "main", "index": 0}]
+      ]
+    },
+    "Follow-up Needed?": {
+      "main": [
+        [{"node": "Create Follow-up Event1", "type": "main", "index": 0}],
+        []
+      ]
+    }
+  },
+
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
