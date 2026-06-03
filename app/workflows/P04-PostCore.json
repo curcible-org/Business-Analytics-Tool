@@ -1,0 +1,108 @@
+{
+  "name": "P04 PostCore — Social Media Auto-Publisher",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "search",
+        "base": { "value": "{{CLIENT_AIRTABLE_BASE_ID}}", "mode": "id" },
+        "table": { "value": "Content Calendar", "mode": "name" },
+        "filterByFormula": "AND({Status}='Approved', {Scheduled Date} <= TODAY())"
+      },
+      "id": "airtable-fetch-approved",
+      "name": "Airtable — Fetch Approved Posts",
+      "type": "n8n-nodes-base.airtable",
+      "credentials": { "airtableTokenApi": { "id": "{{CLIENT_AIRTABLE_CRED_ID}}", "name": "Airtable Token" } },
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a social media copywriter. Given a content brief, rewrite it optimized for each platform.\n\nBrand voice: {{CLIENT_BRAND_VOICE}}\n\nReturn JSON with keys: linkedin, instagram, twitter, facebook, tiktok_caption\nEach value is the platform-optimized post text (with appropriate hashtags, emojis if brand-appropriate, and character limits respected: Twitter 280, others 2200 max)."
+            },
+            {
+              "role": "user",
+              "content": "=Content brief: {{ $json.fields['Content Brief'] }}\nTopic: {{ $json.fields['Topic'] }}\nTarget audience: {{ $json.fields['Target Audience'] }}\nTone: {{ $json.fields['Tone'] }}"
+            }
+          ]
+        },
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      },
+      "id": "gpt-rewrite-captions",
+      "name": "GPT-4o — Rewrite Per Platform",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "credentials": { "openAiApi": { "id": "{{CLIENT_OPENAI_CRED_ID}}", "name": "OpenAI API" } },
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.blotato.com/v1/posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Authorization", "value": "=Bearer {{CLIENT_BLOTATO_KEY}}" }]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"platforms\": [\"linkedin\", \"instagram\", \"twitter\", \"facebook\"],\n  \"content\": {\n    \"linkedin\": {{ JSON.stringify($json.message.content.linkedin) }},\n    \"instagram\": {{ JSON.stringify($json.message.content.instagram) }},\n    \"twitter\": {{ JSON.stringify($json.message.content.twitter) }},\n    \"facebook\": {{ JSON.stringify($json.message.content.facebook) }}\n  },\n  \"media_url\": {{ JSON.stringify($('Airtable — Fetch Approved Posts').item.json.fields['Media URL'] || null) }},\n  \"schedule_time\": {{ JSON.stringify($('Airtable — Fetch Approved Posts').item.json.fields['Scheduled Date']) }}\n}",
+        "options": {}
+      },
+      "id": "blotato-publish",
+      "name": "Blotato — Publish to Socials",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": { "value": "{{CLIENT_AIRTABLE_BASE_ID}}", "mode": "id" },
+        "table": { "value": "Content Calendar", "mode": "name" },
+        "id": "={{ $('Airtable — Fetch Approved Posts').item.json.id }}",
+        "fields": {
+          "fieldValues": [
+            { "fieldId": "Status", "fieldValue": "Posted" },
+            { "fieldId": "Posted At", "fieldValue": "={{ $now.toISO() }}" },
+            { "fieldId": "Blotato Post ID", "fieldValue": "={{ $json.post_id }}" }
+          ]
+        }
+      },
+      "id": "airtable-update-status",
+      "name": "Airtable — Mark Posted",
+      "type": "n8n-nodes-base.airtable",
+      "credentials": { "airtableTokenApi": { "id": "{{CLIENT_AIRTABLE_CRED_ID}}", "name": "Airtable Token" } },
+      "position": [600, 300]
+    }
+  ],
+  "connections": {
+    "Airtable — Fetch Approved Posts": { "main": [[{ "node": "GPT-4o — Rewrite Per Platform", "type": "main", "index": 0 }]] },
+    "GPT-4o — Rewrite Per Platform": { "main": [[{ "node": "Blotato — Publish to Socials", "type": "main", "index": 0 }]] },
+    "Blotato — Publish to Socials": { "main": [[{ "node": "Airtable — Mark Posted", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "curcible_product": "P04", "curcible_tier": "growth", "version": "1.0.0" },
+  "_SETUP_NOTES": {
+    "REPLACE": [
+      "{{CLIENT_AIRTABLE_BASE_ID}} — Airtable base ID (appXXXXXXXX)",
+      "{{CLIENT_AIRTABLE_CRED_ID}} — Airtable credential ID in n8n",
+      "{{CLIENT_OPENAI_CRED_ID}} — OpenAI credential ID",
+      "{{CLIENT_BLOTATO_KEY}} — Blotato API key",
+      "{{CLIENT_BRAND_VOICE}} — inject brand voice description into GPT system prompt"
+    ],
+    "AIRTABLE_TEMPLATE_FIELDS": [
+      "Content Brief (Long text)",
+      "Topic (Short text)",
+      "Target Audience (Short text)",
+      "Tone (Single select: Professional, Casual, Playful, Educational)",
+      "Status (Single select: Draft, Approved, Posted, Failed)",
+      "Scheduled Date (Date)",
+      "Media URL (URL)",
+      "Posted At (Date)",
+      "Blotato Post ID (Short text)"
+    ],
+    "TRIGGER": "Add a Schedule Trigger (every 30 min) or use Airtable Automation webhook to trigger this workflow when Status changes to Approved"
+  }
+}

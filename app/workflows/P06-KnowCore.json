@@ -1,0 +1,171 @@
+{
+  "name": "P06 KnowCore — WhatsApp AI Chatbot + RAG",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "knowcore-{{CLIENT_ID}}",
+        "options": {}
+      },
+      "id": "trigger-whatsapp",
+      "name": "Webhook — WhatsApp Message",
+      "type": "n8n-nodes-base.webhook",
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.entry[0].changes[0].value.messages[0].type }}",
+              "rightValue": "text",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "if-text-message",
+      "name": "Is Text Message?",
+      "type": "n8n-nodes-base.if",
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/embeddings",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{CLIENT_OPENAI_KEY}}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"model\": \"text-embedding-3-small\",\n  \"input\": {{ JSON.stringify($json.body.entry[0].changes[0].value.messages[0].text.body) }}\n}",
+        "options": {}
+      },
+      "id": "embed-query",
+      "name": "OpenAI — Embed Query",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [400, 200]
+    },
+    {
+      "parameters": {
+        "url": "={{CLIENT_QDRANT_URL}}/collections/{{CLIENT_COLLECTION_NAME}}/points/search",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "api-key", "value": "{{CLIENT_QDRANT_KEY}}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"vector\": {{ JSON.stringify($json.data[0].embedding) }},\n  \"limit\": 5,\n  \"with_payload\": true\n}",
+        "options": {}
+      },
+      "id": "qdrant-search",
+      "name": "Qdrant — Vector Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [600, 200]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a helpful customer service assistant for {{CLIENT_BUSINESS_NAME}}.\n\nInstructions:\n- Answer questions using ONLY the context provided\n- Be concise — WhatsApp messages should be short (2-4 sentences max)\n- If you cannot answer from context, say: 'I don't have that information. Let me connect you with our team.'\n- Never make up information\n- Use a friendly, professional tone\n\nBusiness context: {{CLIENT_BUSINESS_DESCRIPTION}}"
+            },
+            {
+              "role": "user",
+              "content": "=Customer question: {{ $('Webhook — WhatsApp Message').item.json.body.entry[0].changes[0].value.messages[0].text.body }}\n\nKnowledge base context:\n{{ $json.result.map(r => r.payload.text).join('\\n\\n') }}"
+            }
+          ]
+        }
+      },
+      "id": "gpt-generate-reply",
+      "name": "GPT-4o — Generate Reply",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "credentials": { "openAiApi": { "id": "{{CLIENT_OPENAI_CRED_ID}}", "name": "OpenAI API" } },
+      "position": [800, 200]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{CLIENT_WHATSAPP_PHONE_ID}}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{CLIENT_META_TOKEN}}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": {{ JSON.stringify($('Webhook — WhatsApp Message').item.json.body.entry[0].changes[0].value.messages[0].from) }},\n  \"type\": \"text\",\n  \"text\": { \"body\": {{ JSON.stringify($json.message.content) }} }\n}",
+        "options": {}
+      },
+      "id": "whatsapp-send-reply",
+      "name": "WhatsApp — Send Reply",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1000, 200]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{CLIENT_WHATSAPP_PHONE_ID}}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{CLIENT_META_TOKEN}}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": {{ JSON.stringify($json.body.entry[0].changes[0].value.messages[0].from) }},\n  \"type\": \"text\",\n  \"text\": { \"body\": \"This message type isn't supported yet. Please send a text message or call us at {{CLIENT_PHONE}}.\" }\n}",
+        "options": {}
+      },
+      "id": "whatsapp-unsupported",
+      "name": "WhatsApp — Unsupported Type",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [400, 450]
+    }
+  ],
+  "connections": {
+    "Webhook — WhatsApp Message": { "main": [[{ "node": "Is Text Message?", "type": "main", "index": 0 }]] },
+    "Is Text Message?": {
+      "main": [
+        [{ "node": "OpenAI — Embed Query", "type": "main", "index": 0 }],
+        [{ "node": "WhatsApp — Unsupported Type", "type": "main", "index": 0 }]
+      ]
+    },
+    "OpenAI — Embed Query": { "main": [[{ "node": "Qdrant — Vector Search", "type": "main", "index": 0 }]] },
+    "Qdrant — Vector Search": { "main": [[{ "node": "GPT-4o — Generate Reply", "type": "main", "index": 0 }]] },
+    "GPT-4o — Generate Reply": { "main": [[{ "node": "WhatsApp — Send Reply", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "curcible_product": "P06", "curcible_tier": "scale", "version": "1.0.0" },
+  "_SETUP_NOTES": {
+    "REPLACE": [
+      "{{CLIENT_ID}} — unique slug for webhook path",
+      "{{CLIENT_OPENAI_KEY}} — OpenAI API key (for HTTP request embedding node)",
+      "{{CLIENT_OPENAI_CRED_ID}} — OpenAI n8n credential ID",
+      "{{CLIENT_QDRANT_URL}} — Qdrant cluster URL",
+      "{{CLIENT_QDRANT_KEY}} — Qdrant API key",
+      "{{CLIENT_COLLECTION_NAME}} — Qdrant collection name for this client",
+      "{{CLIENT_META_TOKEN}} — Meta System User token",
+      "{{CLIENT_WHATSAPP_PHONE_ID}} — WhatsApp Business phone number ID",
+      "{{CLIENT_BUSINESS_NAME}} — client's business name",
+      "{{CLIENT_BUSINESS_DESCRIPTION}} — 1-2 sentence business description",
+      "{{CLIENT_PHONE}} — client's human support phone number"
+    ],
+    "WEBHOOK_SETUP": [
+      "1. In Meta Developer Portal: Add webhook URL pointing to n8n webhook path",
+      "2. Subscribe to: messages, message_deliveries",
+      "3. Verify token: set a static verify token and handle GET verification request",
+      "4. WhatsApp webhook verification requires a separate GET handler in n8n"
+    ],
+    "QDRANT_INGESTION": "Use a separate ingestion workflow: read client docs (PDF/Drive) → chunk into 500-token segments → embed each → upsert to Qdrant collection"
+  }
+}

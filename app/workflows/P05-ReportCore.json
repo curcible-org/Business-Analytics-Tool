@@ -1,0 +1,133 @@
+{
+  "name": "P05 ReportCore — Weekly Analytics Digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 7 * * 1" }] }
+      },
+      "id": "trigger-monday",
+      "name": "Monday 7am Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "resource": "report",
+        "operation": "runReport",
+        "propertyId": "{{CLIENT_GA4_PROPERTY_ID}}",
+        "dateRanges": [
+          { "startDate": "7daysAgo", "endDate": "yesterday" }
+        ],
+        "dimensions": [{ "name": "date" }],
+        "metrics": [
+          { "name": "sessions" },
+          { "name": "activeUsers" },
+          { "name": "newUsers" },
+          { "name": "bounceRate" },
+          { "name": "averageSessionDuration" },
+          { "name": "conversions" }
+        ]
+      },
+      "id": "ga4-pull",
+      "name": "GA4 — Pull Weekly Data",
+      "type": "n8n-nodes-base.googleAnalytics",
+      "credentials": { "googleAnalyticsOAuth2Api": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [200, 200]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "spreadsheetId": "{{CLIENT_KPI_SHEET_ID}}",
+        "range": "KPIs!A:Z",
+        "options": {}
+      },
+      "id": "sheets-pull-kpis",
+      "name": "Sheets — Pull Revenue KPIs",
+      "type": "n8n-nodes-base.googleSheets",
+      "credentials": { "googleSheetsOAuth2Api": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [200, 400]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a business analytics narrator. Write a concise, actionable weekly digest email.\n\nRules:\n- Lead with the most important insight, not the biggest number\n- Call out trends (up/down vs last week)\n- Highlight anything that needs attention\n- End with 1-2 recommended actions\n- Tone: direct, confident, no fluff\n- Length: 250-350 words\n\nClient KPIs to highlight: {{CLIENT_KPI_DEFINITIONS}}\n\nReturn JSON:\n{\n  \"subject\": \"email subject line\",\n  \"headline\": \"one-line summary of the week\",\n  \"narrative\": \"full email body in HTML\",\n  \"top_metric\": { \"label\": \"string\", \"value\": \"string\", \"trend\": \"up|down|flat\" },\n  \"action_items\": [\"string\"]\n}"
+            },
+            {
+              "role": "user",
+              "content": "=GA4 data (this week):\n{{ JSON.stringify($('GA4 — Pull Weekly Data').item.json) }}\n\nRevenue/KPI data:\n{{ JSON.stringify($('Sheets — Pull Revenue KPIs').item.json) }}\n\nDate range: {{ $now.minus(7, 'days').toFormat('MMM d') }} – {{ $now.minus(1, 'days').toFormat('MMM d, yyyy') }}"
+            }
+          ]
+        },
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      },
+      "id": "gpt-write-digest",
+      "name": "GPT-4o — Write Digest Narrative",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "credentials": { "openAiApi": { "id": "{{CLIENT_OPENAI_CRED_ID}}", "name": "OpenAI API" } },
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{CLIENT_EMAIL}}",
+        "subject": "={{ $json.message.content.subject }}",
+        "emailType": "html",
+        "message": "=<div style=\"font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1C1618\">\n  <div style=\"background:#1C1618;padding:20px 28px\">\n    <span style=\"font-family:'Georgia',serif;font-size:18px;color:#F9F7F8\">C<span style='color:#6A4858'>ur</span>cible<span style='color:#6A4858'>.</span></span>\n    <span style=\"font-family:monospace;font-size:9px;color:rgba(249,247,248,.3);margin-left:12px;text-transform:uppercase;letter-spacing:.12em\">Weekly Report</span>\n  </div>\n  <div style=\"padding:28px;background:#FDFBFC;border:1px solid rgba(28,22,24,.1)\">\n    <p style=\"font-family:Georgia,serif;font-size:22px;font-weight:400;margin-bottom:4px\">{{ $json.message.content.headline }}</p>\n    <p style=\"font-family:monospace;font-size:10px;color:#847278;margin-bottom:24px\">{{ $now.minus(7, 'days').toFormat('MMM d') }} – {{ $now.minus(1, 'days').toFormat('MMM d, yyyy') }}</p>\n    {{ $json.message.content.narrative }}\n    <p style=\"font-size:11px;color:#CCBEC2;margin-top:28px;border-top:1px solid rgba(28,22,24,.06);padding-top:16px\">Automated by Curcible ReportCore™</p>\n  </div>\n</div>",
+        "options": {}
+      },
+      "id": "gmail-send-digest",
+      "name": "Gmail — Send Weekly Digest",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": { "value": "{{CLIENT_REPORT_ARCHIVE_SHEET}}", "mode": "id" },
+        "sheetName": { "value": "Weekly Reports", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Week": "={{ $now.minus(7, 'days').toFormat('MMM d') + ' - ' + $now.minus(1, 'days').toFormat('MMM d, yyyy') }}",
+            "Headline": "={{ $('GPT-4o — Write Digest Narrative').item.json.message.content.headline }}",
+            "Top Metric": "={{ $('GPT-4o — Write Digest Narrative').item.json.message.content.top_metric.label + ': ' + $('GPT-4o — Write Digest Narrative').item.json.message.content.top_metric.value }}"
+          }
+        }
+      },
+      "id": "sheets-archive",
+      "name": "Sheets — Archive Report",
+      "type": "n8n-nodes-base.googleSheets",
+      "credentials": { "googleSheetsOAuth2Api": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [800, 300]
+    }
+  ],
+  "connections": {
+    "Monday 7am Trigger": { "main": [[
+      { "node": "GA4 — Pull Weekly Data", "type": "main", "index": 0 },
+      { "node": "Sheets — Pull Revenue KPIs", "type": "main", "index": 0 }
+    ]]},
+    "GA4 — Pull Weekly Data": { "main": [[{ "node": "GPT-4o — Write Digest Narrative", "type": "main", "index": 0 }]] },
+    "Sheets — Pull Revenue KPIs": { "main": [[{ "node": "GPT-4o — Write Digest Narrative", "type": "main", "index": 0 }]] },
+    "GPT-4o — Write Digest Narrative": { "main": [[
+      { "node": "Gmail — Send Weekly Digest", "type": "main", "index": 0 }
+    ]]},
+    "Gmail — Send Weekly Digest": { "main": [[{ "node": "Sheets — Archive Report", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "curcible_product": "P05", "curcible_tier": "scale", "version": "1.0.0" },
+  "_SETUP_NOTES": {
+    "REPLACE": [
+      "{{CLIENT_GA4_PROPERTY_ID}} — GA4 property ID (numbers only, e.g. 123456789)",
+      "{{CLIENT_GOOGLE_CRED_ID}} — Google OAuth2 credential ID",
+      "{{CLIENT_OPENAI_CRED_ID}} — OpenAI credential ID",
+      "{{CLIENT_EMAIL}} — client email for digest delivery",
+      "{{CLIENT_KPI_SHEET_ID}} — Google Sheets ID for revenue/KPI data",
+      "{{CLIENT_REPORT_ARCHIVE_SHEET}} — Google Sheets ID for report history",
+      "{{CLIENT_KPI_DEFINITIONS}} — which KPIs to highlight (e.g. 'MRR, CAC, Churn Rate, Leads')"
+    ]
+  }
+}

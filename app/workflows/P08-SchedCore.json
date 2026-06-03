@@ -1,0 +1,188 @@
+{
+  "name": "P08 SchedCore — AI Scheduling & Booking Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "schedcore-{{CLIENT_ID}}",
+        "options": {}
+      },
+      "id": "trigger-booking",
+      "name": "Webhook — New Booking",
+      "type": "n8n-nodes-base.webhook",
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "invitee.created",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "if-new-booking",
+      "name": "Is New Booking?",
+      "type": "n8n-nodes-base.if",
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Write a warm, personalized booking confirmation email.\n\nBusiness: {{CLIENT_BUSINESS_NAME}}\nTone: {{CLIENT_EMAIL_TONE}}\n\nInclude:\n- Confirmation of what was booked\n- Date/time (format nicely)\n- Any prep instructions: {{CLIENT_PREP_INSTRUCTIONS}}\n- How to reschedule/cancel\n- Contact info\n\nKeep it under 200 words. No corporate fluff."
+            },
+            {
+              "role": "user",
+              "content": "=Booking details:\nName: {{ $json.body.payload.invitee.name }}\nEmail: {{ $json.body.payload.invitee.email }}\nEvent: {{ $json.body.payload.event_type.name }}\nDate: {{ $json.body.payload.event.start_time }}\nDuration: {{ $json.body.payload.event_type.duration }} minutes\nLocation: {{ $json.body.payload.event.location.join_url || $json.body.payload.event.location.location || 'TBD' }}"
+            }
+          ]
+        }
+      },
+      "id": "gpt-confirmation-email",
+      "name": "GPT-4o — Write Confirmation",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "credentials": { "openAiApi": { "id": "{{CLIENT_OPENAI_CRED_ID}}", "name": "OpenAI API" } },
+      "position": [400, 200]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook — New Booking').item.json.body.payload.invitee.email }}",
+        "subject": "=Confirmed: {{ $('Webhook — New Booking').item.json.body.payload.event_type.name }}",
+        "message": "={{ $json.message.content }}",
+        "options": {}
+      },
+      "id": "gmail-send-confirmation",
+      "name": "Gmail — Send Confirmation",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [600, 200]
+    },
+    {
+      "parameters": {
+        "calendar": "primary",
+        "start": "={{ $('Webhook — New Booking').item.json.body.payload.event.start_time }}",
+        "end": "={{ $('Webhook — New Booking').item.json.body.payload.event.end_time }}",
+        "summary": "={{ $('Webhook — New Booking').item.json.body.payload.event_type.name }} — {{ $('Webhook — New Booking').item.json.body.payload.invitee.name }}",
+        "description": "=Booked via Calendly\nClient: {{ $('Webhook — New Booking').item.json.body.payload.invitee.email }}\nJoin: {{ $('Webhook — New Booking').item.json.body.payload.event.location.join_url || '' }}",
+        "sendUpdates": "all"
+      },
+      "id": "gcal-create-event",
+      "name": "Google Calendar — Create Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "credentials": { "googleCalendarOAuth2Api": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [600, 350]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 9 * * *" }]
+        }
+      },
+      "id": "trigger-reminder-check",
+      "name": "Daily Reminder Check (9am)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [0, 600]
+    },
+    {
+      "parameters": {
+        "resource": "event",
+        "operation": "getAll",
+        "calendar": "primary",
+        "timeMin": "={{ $now.plus(47, 'hours').toISO() }}",
+        "timeMax": "={{ $now.plus(49, 'hours').toISO() }}",
+        "options": {}
+      },
+      "id": "gcal-find-upcoming",
+      "name": "Google Calendar — Find 48h Events",
+      "type": "n8n-nodes-base.googleCalendar",
+      "credentials": { "googleCalendarOAuth2Api": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [200, 600]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.attendees[1].email }}",
+        "subject": "=Reminder: {{ $json.summary }} in 48 hours",
+        "message": "=Hi {{ $json.attendees[1].displayName || $json.attendees[1].email }},\n\nThis is a reminder that your {{ $json.summary }} is scheduled for {{ $now.plus(48, 'hours').toFormat('EEEE, MMMM d') }} at {{ $now.plus(48, 'hours').toFormat('h:mm a') }}.\n\nJoin link: {{ $json.hangoutLink || $json.location || 'Check your calendar invite' }}\n\nNeed to reschedule? {{ '{{CLIENT_RESCHEDULE_URL}}' }}\n\n{{CLIENT_SIGNATURE}}",
+        "options": {}
+      },
+      "id": "gmail-48hr-reminder",
+      "name": "Gmail — 48hr Reminder",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [400, 600]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.body.event }}",
+              "rightValue": "invitee.canceled",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "if-cancellation",
+      "name": "Is Cancellation?",
+      "type": "n8n-nodes-base.if",
+      "position": [200, 450]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{CLIENT_OWNER_EMAIL}}",
+        "subject": "=Booking cancelled: {{ $json.body.payload.event_type.name }} — {{ $json.body.payload.invitee.name }}",
+        "message": "=Cancellation received.\n\nClient: {{ $json.body.payload.invitee.name }} ({{ $json.body.payload.invitee.email }})\nOriginal time: {{ $json.body.payload.event.start_time }}\nReason: {{ $json.body.payload.cancellation.reason || 'No reason given' }}",
+        "options": {}
+      },
+      "id": "gmail-notify-cancellation",
+      "name": "Gmail — Notify Cancellation",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [400, 450]
+    }
+  ],
+  "connections": {
+    "Webhook — New Booking": { "main": [[
+      { "node": "Is New Booking?", "type": "main", "index": 0 },
+      { "node": "Is Cancellation?", "type": "main", "index": 0 }
+    ]]},
+    "Is New Booking?": {
+      "main": [[
+        { "node": "GPT-4o — Write Confirmation", "type": "main", "index": 0 }
+      ]]
+    },
+    "GPT-4o — Write Confirmation": { "main": [[
+      { "node": "Gmail — Send Confirmation", "type": "main", "index": 0 },
+      { "node": "Google Calendar — Create Event", "type": "main", "index": 0 }
+    ]]},
+    "Is Cancellation?": {
+      "main": [[{ "node": "Gmail — Notify Cancellation", "type": "main", "index": 0 }]]
+    },
+    "Daily Reminder Check (9am)": { "main": [[{ "node": "Google Calendar — Find 48h Events", "type": "main", "index": 0 }]] },
+    "Google Calendar — Find 48h Events": { "main": [[{ "node": "Gmail — 48hr Reminder", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "curcible_product": "P08", "curcible_tier": "scale", "version": "1.0.0" },
+  "_SETUP_NOTES": {
+    "REPLACE": [
+      "{{CLIENT_ID}} — unique slug for webhook path",
+      "{{CLIENT_OPENAI_CRED_ID}} — OpenAI credential ID",
+      "{{CLIENT_GOOGLE_CRED_ID}} — Google OAuth2 credential ID",
+      "{{CLIENT_BUSINESS_NAME}} — client business name",
+      "{{CLIENT_EMAIL_TONE}} — e.g. 'warm and professional'",
+      "{{CLIENT_PREP_INSTRUCTIONS}} — what client should prepare before the meeting",
+      "{{CLIENT_RESCHEDULE_URL}} — Calendly reschedule URL",
+      "{{CLIENT_SIGNATURE}} — email signature",
+      "{{CLIENT_OWNER_EMAIL}} — client's internal email for cancellation notifications"
+    ],
+    "CALENDLY_WEBHOOK": "In Calendly: Integrations > Webhooks > Add subscription > paste n8n webhook URL > select 'invitee.created' and 'invitee.canceled'"
+  }
+}

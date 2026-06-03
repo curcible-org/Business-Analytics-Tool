@@ -1,0 +1,118 @@
+{
+  "name": "P02 ContentCore — Auto SEO Blog Writer",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contentcore-{{CLIENT_ID}}",
+        "options": {}
+      },
+      "id": "trigger-webhook",
+      "name": "Webhook — Keyword Input",
+      "type": "n8n-nodes-base.webhook",
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.perplexity.ai/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.perplexityApi.apiKey }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"model\": \"sonar-pro\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Research the topic: '{{ $json.body.keyword }}'. Provide: current stats, expert opinions, top-ranking content angles, and 3 unique insight angles not commonly covered. Include source URLs.\"\n    }\n  ],\n  \"return_citations\": true,\n  \"search_recency_filter\": \"month\"\n}",
+        "options": {}
+      },
+      "id": "perplexity-research",
+      "name": "Perplexity — Research Keyword",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an expert SEO content writer. Write a full, publication-ready blog article.\n\nBrand voice: {{CLIENT_BRAND_VOICE}}\nTarget audience: {{CLIENT_TARGET_AUDIENCE}}\n\nArticle structure (REQUIRED):\n- SEO-optimized H1 title\n- Meta description (150-160 chars)\n- Introduction (hook + problem statement)\n- 4-6 H2 sections with 200-300 words each\n- Practical examples and actionable advice\n- Conclusion with clear CTA\n\nReturn JSON:\n{\n  \"title\": \"H1 title\",\n  \"meta_description\": \"string\",\n  \"slug\": \"url-friendly-slug\",\n  \"content_html\": \"full HTML article body\",\n  \"word_count\": number,\n  \"primary_keyword\": \"string\",\n  \"secondary_keywords\": [\"string\"]\n}"
+            },
+            {
+              "role": "user",
+              "content": "=Target keyword: {{ $('Webhook — Keyword Input').item.json.body.keyword }}\n\nResearch:\n{{ $json.choices[0].message.content }}\n\nSources:\n{{ $json.citations ? $json.citations.join('\\n') : 'N/A' }}"
+            }
+          ]
+        },
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      },
+      "id": "gpt-write-article",
+      "name": "GPT-4o — Write Article",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "credentials": { "openAiApi": { "id": "{{CLIENT_OPENAI_CRED_ID}}", "name": "OpenAI API" } },
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{CLIENT_WORDPRESS_URL}}/wp-json/wp/v2/posts",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"title\": {{ JSON.stringify($json.message.content.title) }},\n  \"content\": {{ JSON.stringify($json.message.content.content_html) }},\n  \"slug\": {{ JSON.stringify($json.message.content.slug) }},\n  \"status\": \"draft\",\n  \"excerpt\": {{ JSON.stringify($json.message.content.meta_description) }},\n  \"meta\": {\n    \"_yoast_wpseo_metadesc\": {{ JSON.stringify($json.message.content.meta_description) }},\n    \"_yoast_wpseo_focuskw\": {{ JSON.stringify($json.message.content.primary_keyword) }}\n  }\n}",
+        "options": {}
+      },
+      "id": "wordpress-publish-draft",
+      "name": "WordPress — Publish as Draft",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": { "value": "{{CLIENT_SHEETS_LOG_ID}}", "mode": "id" },
+        "sheetName": { "value": "Articles", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Keyword": "={{ $('Webhook — Keyword Input').item.json.body.keyword }}",
+            "Title": "={{ $('GPT-4o — Write Article').item.json.message.content.title }}",
+            "WordPress URL": "={{ $json.link }}",
+            "Word Count": "={{ $('GPT-4o — Write Article').item.json.message.content.word_count }}",
+            "Date": "={{ $now.toISO() }}",
+            "Status": "Draft"
+          }
+        }
+      },
+      "id": "sheets-log",
+      "name": "Google Sheets — Log Article",
+      "type": "n8n-nodes-base.googleSheets",
+      "credentials": { "googleSheetsOAuth2Api": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [800, 300]
+    }
+  ],
+  "connections": {
+    "Webhook — Keyword Input": { "main": [[{ "node": "Perplexity — Research Keyword", "type": "main", "index": 0 }]] },
+    "Perplexity — Research Keyword": { "main": [[{ "node": "GPT-4o — Write Article", "type": "main", "index": 0 }]] },
+    "GPT-4o — Write Article": { "main": [[{ "node": "WordPress — Publish as Draft", "type": "main", "index": 0 }]] },
+    "WordPress — Publish as Draft": { "main": [[{ "node": "Google Sheets — Log Article", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "curcible_product": "P02", "curcible_tier": "growth", "version": "1.0.0" },
+  "_SETUP_NOTES": {
+    "REPLACE": [
+      "{{CLIENT_ID}} — unique client slug for webhook URL",
+      "{{CLIENT_OPENAI_CRED_ID}} — OpenAI credential ID",
+      "{{CLIENT_GOOGLE_CRED_ID}} — Google OAuth2 credential ID",
+      "{{CLIENT_WORDPRESS_URL}} — client's WordPress URL",
+      "{{CLIENT_SHEETS_LOG_ID}} — Google Sheets ID for article log",
+      "{{CLIENT_BRAND_VOICE}} — brand voice description",
+      "{{CLIENT_TARGET_AUDIENCE}} — target audience description"
+    ],
+    "WORDPRESS_AUTH": "Use HTTP Basic Auth with username + Application Password (not regular WP password)",
+    "PERPLEXITY_NOTE": "Client provides their own Perplexity API key (~$20/mo). Set as separate credential per client."
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "name": "P07 MeetCore — AI Meeting Summary & Follow-Up",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "minutesInterval": 60 }]
+        }
+      },
+      "id": "trigger-schedule",
+      "name": "Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "resource": "recording",
+        "filters": {
+          "from": "={{ $now.minus(1, 'hour').toISO() }}",
+          "to": "={{ $now.toISO() }}"
+        }
+      },
+      "id": "zoom-get-recordings",
+      "name": "Zoom — Get Recent Recordings",
+      "type": "n8n-nodes-base.zoom",
+      "credentials": { "zoomOAuth2Api": { "id": "{{CLIENT_ZOOM_CRED_ID}}", "name": "Zoom OAuth2" } },
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": false },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.recording_files.length }}",
+              "rightValue": 0,
+              "operator": { "type": "number", "operation": "gt" }
+            }
+          ]
+        }
+      },
+      "id": "if-has-recordings",
+      "name": "Has New Recordings?",
+      "type": "n8n-nodes-base.if",
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.recording_files[0].download_url }}",
+        "authentication": "oAuth2",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $credentials.zoomOAuth2Api.accessToken }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "download-transcript",
+      "name": "Download VTT Transcript",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [600, 200]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a meeting intelligence system. Given a VTT transcript, extract:\n1. A 3-5 sentence executive summary\n2. All action items (owner + deadline if mentioned)\n3. Key decisions made\n4. Topics discussed\n5. Whether a follow-up meeting was mentioned (yes/no + suggested date if given)\n\nReturn valid JSON matching this schema:\n{\n  \"summary\": \"string\",\n  \"action_items\": [{\"item\": \"string\", \"owner\": \"string|null\", \"deadline\": \"string|null\"}],\n  \"decisions\": [\"string\"],\n  \"topics\": [\"string\"],\n  \"followup_needed\": boolean,\n  \"followup_date\": \"string|null\"\n}"
+            },
+            {
+              "role": "user",
+              "content": "=Transcript:\n\n{{ $json.transcript_text }}\n\nMeeting title: {{ $('Zoom — Get Recent Recordings').item.json.topic }}\nDate: {{ $('Zoom — Get Recent Recordings').item.json.start_time }}\nDuration: {{ $('Zoom — Get Recent Recordings').item.json.duration }} minutes"
+            }
+          ]
+        },
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      },
+      "id": "gpt-summarize",
+      "name": "GPT-4o — Extract Summary",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "credentials": { "openAiApi": { "id": "{{CLIENT_OPENAI_CRED_ID}}", "name": "OpenAI API" } },
+      "position": [800, 200]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Zoom — Get Recent Recordings').item.json.host_email }}",
+        "subject": "=Meeting Summary: {{ $('Zoom — Get Recent Recordings').item.json.topic }}",
+        "emailType": "html",
+        "message": "=<div style=\"font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1C1618\">\n  <div style=\"background:#1C1618;padding:20px 28px;margin-bottom:0\">\n    <span style=\"font-family:'Georgia',serif;font-size:18px;color:#F9F7F8\">C<span style='color:#6A4858'>ur</span>cible<span style='color:#6A4858'>.</span></span>\n  </div>\n  <div style=\"padding:28px;background:#FDFBFC;border:1px solid rgba(28,22,24,.1)\">\n    <p style=\"font-family:monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#847278;margin-bottom:8px\">Meeting Summary</p>\n    <h2 style=\"font-family:Georgia,serif;font-size:22px;font-weight:400;margin-bottom:4px\">{{ $('Zoom — Get Recent Recordings').item.json.topic }}</h2>\n    <p style=\"font-size:13px;color:#847278;margin-bottom:24px\">{{ $('Zoom — Get Recent Recordings').item.json.start_time }} · {{ $('Zoom — Get Recent Recordings').item.json.duration }} min</p>\n    \n    <p style=\"font-size:13px;color:#36262C;line-height:1.7;margin-bottom:24px\">{{ $json.message.content.summary }}</p>\n    \n    {{#if $json.message.content.action_items.length}}\n    <p style=\"font-family:monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#847278;margin-bottom:10px\">Action Items</p>\n    <ul style=\"margin:0 0 24px;padding:0 0 0 18px\">\n      {{#each $json.message.content.action_items}}\n      <li style=\"font-size:13px;color:#36262C;margin-bottom:6px\"><strong>{{ this.item }}</strong>{{#if this.owner}} — {{ this.owner }}{{/if}}{{#if this.deadline}} · due {{ this.deadline }}{{/if}}</li>\n      {{/each}}\n    </ul>\n    {{/if}}\n    \n    {{#if $json.message.content.decisions.length}}\n    <p style=\"font-family:monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#847278;margin-bottom:10px\">Decisions</p>\n    <ul style=\"margin:0 0 24px;padding:0 0 0 18px\">\n      {{#each $json.message.content.decisions}}\n      <li style=\"font-size:13px;color:#36262C;margin-bottom:4px\">{{ this }}</li>\n      {{/each}}\n    </ul>\n    {{/if}}\n    \n    <p style=\"font-size:11px;color:#CCBEC2;margin-top:28px;border-top:1px solid rgba(28,22,24,.06);padding-top:16px\">Automated by Curcible MeetCore™ · <a href=\"mailto:support@curcible.com\" style=\"color:#6A4858\">support@curcible.com</a></p>\n  </div>\n</div>",
+        "options": {}
+      },
+      "id": "send-summary-email",
+      "name": "Gmail — Send Summary",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [1000, 200]
+    },
+    {
+      "parameters": {
+        "calendar": "primary",
+        "start": "={{ $json.message.content.followup_date || $now.plus(7, 'days').startOf('day').plus(10, 'hours').toISO() }}",
+        "end": "={{ $json.message.content.followup_date ? $json.message.content.followup_date : $now.plus(7, 'days').startOf('day').plus(11, 'hours').toISO() }}",
+        "summary": "=Follow-up: {{ $('Zoom — Get Recent Recordings').item.json.topic }}",
+        "description": "=Action items from previous meeting:\n\n{{ $('GPT-4o — Extract Summary').item.json.message.content.action_items.map(a => '• ' + a.item + (a.owner ? ' (' + a.owner + ')' : '')).join('\\n') }}"
+      },
+      "id": "create-calendar-event",
+      "name": "Google Calendar — Create Follow-up",
+      "type": "n8n-nodes-base.googleCalendar",
+      "credentials": { "googleCalendarOAuth2Api": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [1000, 350]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Zoom — Get Recent Recordings').item.json.host_email }}",
+        "subject": "=No new recordings in the past hour",
+        "message": "No new Zoom recordings detected in the past hour. This is a status check — no action needed.",
+        "options": {}
+      },
+      "id": "send-no-recording-email",
+      "name": "Gmail — No Recording Status",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [600, 450]
+    }
+  ],
+  "connections": {
+    "Every Hour": { "main": [[{ "node": "Zoom — Get Recent Recordings", "type": "main", "index": 0 }]] },
+    "Zoom — Get Recent Recordings": { "main": [[{ "node": "Has New Recordings?", "type": "main", "index": 0 }]] },
+    "Has New Recordings?": {
+      "main": [
+        [{ "node": "Download VTT Transcript", "type": "main", "index": 0 }],
+        [{ "node": "Gmail — No Recording Status", "type": "main", "index": 0 }]
+      ]
+    },
+    "Download VTT Transcript": { "main": [[{ "node": "GPT-4o — Extract Summary", "type": "main", "index": 0 }]] },
+    "GPT-4o — Extract Summary": {
+      "main": [[
+        { "node": "Gmail — Send Summary", "type": "main", "index": 0 },
+        { "node": "Google Calendar — Create Follow-up", "type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "curcible_product": "P07", "curcible_tier": "starter", "version": "1.0.0" },
+  "_SETUP_NOTES": {
+    "REPLACE": [
+      "{{CLIENT_ZOOM_CRED_ID}} — n8n credential ID for this client's Zoom OAuth2",
+      "{{CLIENT_OPENAI_CRED_ID}} — n8n credential ID for this client's OpenAI API key",
+      "{{CLIENT_GOOGLE_CRED_ID}} — n8n credential ID for this client's Google OAuth2"
+    ],
+    "NOTES": [
+      "Import into n8n, then swap credential IDs per client",
+      "Duplicate this workflow template for each new MeetCore client",
+      "For Google Meet: replace Zoom node with Google Drive > watch folder for .vtt files",
+      "For Teams: use Microsoft Graph API node with OneDrive folder watch"
+    ]
+  }
+}

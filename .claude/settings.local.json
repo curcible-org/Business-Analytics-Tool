@@ -14,7 +14,13 @@
       "Bash(node -e \"require\\('libphonenumber-js'\\); require\\('validator'\\); console.log\\('OK'\\)\")",
       "Bash(gh api *)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "WebFetch(domain:api.github.com)"
+      "WebFetch(domain:api.github.com)",
+      "Bash(npm --version)",
+      "Bash(n8n --version)",
+      "Bash(Start-Process powershell *)",
+      "PowerShell(Start-Process powershell -ArgumentList '-NoExit', '-Command', 'n8n start' -WindowStyle Normal)",
+      "PowerShell(Copy-Item \"d:\\\\Business Analytics tool\\\\Curcible-Implementation\\\\onboarding\\\\index.html\" \"d:\\\\Business Analytics tool\\\\app\\\\index.html\")",
+      "PowerShell(Copy-Item \"d:\\\\Business Analytics tool\\\\Curcible-Implementation\\\\workflows\" \"d:\\\\Business Analytics tool\\\\app\\\\workflows\" -Recurse)"
     ]
   }
 }

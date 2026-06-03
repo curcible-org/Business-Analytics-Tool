@@ -1,0 +1,191 @@
+{
+  "name": "P01 InboxCore — AI Email Triage & Auto-Reply",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "minutes", "minutesInterval": 15 }] }
+      },
+      "id": "trigger-schedule",
+      "name": "Every 15 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [0, 300]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "filters": { "q": "is:unread -label:curcible-processed" },
+        "options": { "maxResults": 50 }
+      },
+      "id": "gmail-fetch",
+      "name": "Gmail — Fetch Unread",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [200, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an email triage system. Classify the email and, if appropriate, generate a reply draft.\n\nClassifications:\n- URGENT: Requires immediate human response (complaints, legal, time-sensitive)\n- ROUTINE: Standard inquiry answerable from FAQ/knowledge base\n- NEWSLETTER: Marketing, newsletters, no-reply\n- SPAM: Junk, phishing, irrelevant\n\nReturn JSON:\n{\n  \"classification\": \"URGENT|ROUTINE|NEWSLETTER|SPAM\",\n  \"confidence\": 0.0-1.0,\n  \"subject_summary\": \"one-line summary\",\n  \"draft_reply\": \"string|null (only for ROUTINE with answer from KB)\",\n  \"reason\": \"brief explanation\"\n}"
+            },
+            {
+              "role": "user",
+              "content": "=From: {{ $json.from }}\nSubject: {{ $json.subject }}\nDate: {{ $json.date }}\n\nBody:\n{{ $json.snippet }}\n\nKnowledge base context:\n{{CLIENT_KB_CONTEXT}}"
+            }
+          ]
+        },
+        "options": { "response": { "response": { "responseFormat": "json" } } }
+      },
+      "id": "gpt-classify",
+      "name": "GPT-4o — Classify Email",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "credentials": { "openAiApi": { "id": "{{CLIENT_OPENAI_CRED_ID}}", "name": "OpenAI API" } },
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.message.content.classification }}",
+              "rightValue": "ROUTINE",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "if-routine",
+      "name": "Is Routine?",
+      "type": "n8n-nodes-base.if",
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "threadId": "={{ $('Gmail — Fetch Unread').item.json.threadId }}",
+        "subject": "=Re: {{ $('Gmail — Fetch Unread').item.json.subject }}",
+        "message": "={{ $json.message.content.draft_reply }}",
+        "options": { "sendAsLabel": "DRAFT" }
+      },
+      "id": "gmail-create-draft",
+      "name": "Gmail — Save as Draft",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [800, 200]
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail — Fetch Unread').item.json.id }}",
+        "labelIds": ["Label_URGENT_CURCIBLE"]
+      },
+      "id": "gmail-label-urgent",
+      "name": "Gmail — Flag Urgent",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [800, 400]
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail — Fetch Unread').item.json.id }}",
+        "labelIds": ["Label_CURCIBLE_PROCESSED"]
+      },
+      "id": "gmail-label-processed",
+      "name": "Gmail — Mark Processed",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [1000, 300]
+    },
+    {
+      "parameters": {
+        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 17 * * *" }] }
+      },
+      "id": "trigger-digest",
+      "name": "Daily Digest Trigger (5pm)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [0, 600]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "filters": { "q": "label:curcible-processed after:{{TODAY}}" },
+        "options": { "maxResults": 200 }
+      },
+      "id": "gmail-fetch-today",
+      "name": "Gmail — Today's Processed",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [200, 600]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "Write a concise daily inbox digest email. Summarize what came in, highlight anything still needing attention, and list draft replies saved for review. Keep it under 200 words. Use plain language, no bullet overkill."
+            },
+            {
+              "role": "user",
+              "content": "=Today's email data (JSON):\n{{ JSON.stringify($json) }}"
+            }
+          ]
+        }
+      },
+      "id": "gpt-digest",
+      "name": "GPT-4o — Write Digest",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "credentials": { "openAiApi": { "id": "{{CLIENT_OPENAI_CRED_ID}}", "name": "OpenAI API" } },
+      "position": [400, 600]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{CLIENT_EMAIL}}",
+        "subject": "=Your inbox digest — {{ $now.toFormat('MMMM d') }}",
+        "message": "={{ $json.message.content }}",
+        "options": {}
+      },
+      "id": "send-digest",
+      "name": "Gmail — Send Digest",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
+      "position": [600, 600]
+    }
+  ],
+  "connections": {
+    "Every 15 Minutes": { "main": [[{ "node": "Gmail — Fetch Unread", "type": "main", "index": 0 }]] },
+    "Gmail — Fetch Unread": { "main": [[{ "node": "GPT-4o — Classify Email", "type": "main", "index": 0 }]] },
+    "GPT-4o — Classify Email": { "main": [[{ "node": "Is Routine?", "type": "main", "index": 0 }]] },
+    "Is Routine?": {
+      "main": [
+        [{ "node": "Gmail — Save as Draft", "type": "main", "index": 0 }],
+        [{ "node": "Gmail — Flag Urgent", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gmail — Save as Draft": { "main": [[{ "node": "Gmail — Mark Processed", "type": "main", "index": 0 }]] },
+    "Gmail — Flag Urgent": { "main": [[{ "node": "Gmail — Mark Processed", "type": "main", "index": 0 }]] },
+    "Daily Digest Trigger (5pm)": { "main": [[{ "node": "Gmail — Today's Processed", "type": "main", "index": 0 }]] },
+    "Gmail — Today's Processed": { "main": [[{ "node": "GPT-4o — Write Digest", "type": "main", "index": 0 }]] },
+    "GPT-4o — Write Digest": { "main": [[{ "node": "Gmail — Send Digest", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "meta": { "curcible_product": "P01", "curcible_tier": "starter", "version": "1.0.0" },
+  "_SETUP_NOTES": {
+    "REPLACE": [
+      "{{CLIENT_GOOGLE_CRED_ID}} — n8n credential ID for this client's Google OAuth2",
+      "{{CLIENT_OPENAI_CRED_ID}} — n8n credential ID for this client's OpenAI key",
+      "{{CLIENT_EMAIL}} — client's email address for digest delivery",
+      "{{CLIENT_KB_CONTEXT}} — inject client's FAQ text into the GPT system prompt, OR replace with Qdrant vector search node"
+    ],
+    "LABELS_TO_CREATE_IN_GMAIL": [
+      "curcible-processed",
+      "curcible-urgent"
+    ],
+    "QDRANT_UPGRADE": "Replace {{CLIENT_KB_CONTEXT}} with: HTTP Request node to Qdrant /collections/{{client_id}}/points/search with embedded query vector from the email body"
+  }
+}

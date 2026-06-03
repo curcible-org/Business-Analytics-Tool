@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Curcible — Get Started</title>
+<title>Curcible — Client Onboarding</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -12,782 +12,496 @@
   --plum:#6A4858; --plum-mid:#7D5569; --plum-pale:rgba(106,72,88,0.07); --plum-pale2:rgba(106,72,88,0.13);
   --border:rgba(28,22,24,0.10); --border-strong:rgba(28,22,24,0.22); --rule:rgba(28,22,24,0.06);
   --ok:#2D6A4F; --ok-dim:rgba(45,106,79,0.08); --ok-border:rgba(45,106,79,0.18);
-  --error:#7A1E1E; --error-dim:rgba(122,30,30,0.08);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:'DM Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased;min-height:100vh}
 
-/* LAYOUT */
-.shell{min-height:100vh;display:grid;grid-template-columns:380px 1fr;grid-template-rows:1fr}
-.sidebar{background:var(--ink);padding:48px 40px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
-.main{padding:56px 64px;max-width:720px}
+.header{background:var(--ink);padding:28px 48px;display:flex;justify-content:space-between;align-items:center}
+.wm{font-family:'DM Serif Display',serif;font-size:18px;color:var(--paper)}
+.wm .pl{color:var(--plum)}
+.header-sub{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(249,247,248,.3)}
 
-/* SIDEBAR */
-.wm{font-family:'DM Serif Display',serif;font-size:22px;color:var(--paper);letter-spacing:-.02em;margin-bottom:48px}
-.wm .pl{color:var(--plum-mid)}
-.steps{display:flex;flex-direction:column;gap:0}
-.step{display:flex;gap:16px;align-items:flex-start;padding:14px 0;border-bottom:1px solid rgba(249,247,248,.06)}
-.step:last-child{border-bottom:none}
-.step-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:10px;font-weight:500;flex-shrink:0;margin-top:1px;transition:all .2s}
-.step-num.done{background:var(--ok);color:#fff}
-.step-num.active{background:var(--plum-mid);color:#fff}
-.step-num.pending{background:rgba(249,247,248,.08);color:rgba(249,247,248,.3)}
-.step-info{}
-.step-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;transition:color .2s}
-.step-label.active{color:var(--paper)}
-.step-label.done{color:rgba(249,247,248,.45)}
-.step-label.pending{color:rgba(249,247,248,.25)}
-.step-desc{font-size:12px;color:rgba(249,247,248,.3);margin-top:2px}
-.step-desc.active{color:rgba(249,247,248,.5)}
+.container{max-width:720px;margin:0 auto;padding:52px 32px 80px}
 
-.sidebar-footer{margin-top:auto;padding-top:32px;border-top:1px solid rgba(249,247,248,.06)}
-.sf-text{font-size:12px;color:rgba(249,247,248,.25);line-height:1.6}
-.sf-text a{color:rgba(249,247,248,.4);text-decoration:none}
-.sf-text a:hover{color:rgba(249,247,248,.7)}
+.page{display:none}
+.page.active{display:block}
 
-/* FORM PANELS */
-.panel{display:none}
-.panel.active{display:block}
+/* STEP INDICATOR */
+.steps{display:flex;gap:0;margin-bottom:40px;border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.step-item{flex:1;padding:10px 14px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ghost);background:var(--warm-paper);border-right:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.step-item:last-child{border-right:none}
+.step-item.active{color:var(--ink);background:var(--parchment)}
+.step-item.done{color:var(--ok)}
+.step-num{width:18px;height:18px;border-radius:50%;background:var(--ghost);color:var(--paper);display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0}
+.step-item.active .step-num{background:var(--plum)}
+.step-item.done .step-num{background:var(--ok)}
 
-.panel-eyebrow{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);margin-bottom:10px}
-.panel-title{font-family:'DM Serif Display',serif;font-size:32px;letter-spacing:-.025em;font-weight:400;color:var(--ink);line-height:1.1;margin-bottom:10px}
-.panel-sub{font-size:13.5px;color:var(--stone);max-width:520px;line-height:1.7;margin-bottom:36px}
+/* TIER SELECTION */
+.section-eyebrow{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);margin-bottom:8px}
+.section-title{font-family:'DM Serif Display',serif;font-size:26px;letter-spacing:-.02em;font-weight:400;margin-bottom:8px;color:var(--ink)}
+.section-body{font-size:13px;color:var(--stone);line-height:1.7;margin-bottom:32px}
 
-/* TIER SELECTOR */
 .tier-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:32px}
-.tier-card{background:var(--warm-paper);padding:20px 18px;cursor:pointer;transition:background .15s;position:relative}
+.tier-card{background:var(--warm-paper);padding:22px 20px;cursor:pointer;transition:background .15s;position:relative}
 .tier-card:hover{background:var(--parchment)}
 .tier-card.selected{background:var(--ink)}
-.tier-card input[type=radio]{position:absolute;opacity:0;width:0;height:0}
-.tc-tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--stone);margin-bottom:6px;transition:color .15s}
+.tier-card input[type=radio]{position:absolute;opacity:0;pointer-events:none}
+.tc-tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--stone);margin-bottom:6px}
 .tier-card.selected .tc-tag{color:rgba(249,247,248,.35)}
-.tc-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:4px;transition:color .15s}
+.tc-name{font-family:'DM Serif Display',serif;font-size:17px;color:var(--ink);margin-bottom:4px}
 .tier-card.selected .tc-name{color:var(--paper)}
-.tc-price{font-family:'DM Mono',monospace;font-size:20px;color:var(--plum);margin-bottom:12px;transition:color .15s}
+.tc-price{font-family:'DM Mono',monospace;font-size:20px;color:var(--plum);margin-bottom:4px}
 .tier-card.selected .tc-price{color:#C9A8B8}
-.tc-features{list-style:none;display:flex;flex-direction:column;gap:5px}
-.tc-features li{font-size:12px;color:var(--stone);display:flex;gap:7px;align-items:flex-start;line-height:1.5;transition:color .15s}
-.tier-card.selected .tc-features li{color:rgba(249,247,248,.4)}
-.tc-features li::before{content:'·';flex-shrink:0;color:var(--ghost)}
-.tier-card.selected .tc-features li::before{color:rgba(249,247,248,.2)}
-.tc-check{position:absolute;top:14px;right:14px;width:18px;height:18px;border-radius:50%;background:var(--plum-mid);display:none;align-items:center;justify-content:center}
-.tier-card.selected .tc-check{display:flex}
-.tc-check::after{content:'✓';color:#fff;font-size:10px}
+.tc-setup{font-size:11px;color:var(--stone);margin-bottom:12px}
+.tier-card.selected .tc-setup{color:rgba(249,247,248,.35)}
+.tc-features{list-style:none;display:flex;flex-direction:column;gap:4px}
+.tc-features li{font-size:11.5px;color:var(--ink-mid);display:flex;gap:7px;align-items:flex-start}
+.tier-card.selected .tc-features li{color:rgba(249,247,248,.6)}
+.tc-dot{width:3px;height:3px;border-radius:50%;background:var(--plum);flex-shrink:0;margin-top:6px}
+.tier-card.selected .tc-dot{background:#C9A8B8}
 
-/* FORM FIELDS */
-.field-group{margin-bottom:28px}
-.field-group-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--stone);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--rule)}
-.field{margin-bottom:16px}
-.field label{display:block;font-size:12.5px;font-weight:500;color:var(--ink-mid);margin-bottom:6px}
-.field label span{font-family:'DM Mono',monospace;font-size:9px;color:var(--stone);margin-left:6px;font-weight:400;letter-spacing:.08em;text-transform:uppercase}
-.field input,.field select{width:100%;padding:10px 14px;border:1px solid var(--border-strong);border-radius:3px;background:var(--warm-paper);font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--ink);outline:none;transition:border-color .15s}
-.field input:focus,.field select:focus{border-color:var(--plum);background:#fff}
-.field input::placeholder{color:var(--ghost)}
-.field-hint{font-size:11.5px;color:var(--stone);margin-top:5px;line-height:1.5}
-.field-hint a{color:var(--plum);text-decoration:none}
-.field-hint a:hover{text-decoration:underline}
+/* FORM */
+.form-section{margin-bottom:28px}
+.form-section-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);padding:10px 14px;background:var(--parchment);border:1px solid var(--border);border-bottom:none;border-radius:3px 3px 0 0}
+.form-fields{border:1px solid var(--border);border-radius:0 0 3px 3px;overflow:hidden}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--border)}
+.form-row.single{grid-template-columns:1fr}
+.field{background:var(--warm-paper);padding:16px 18px;display:flex;flex-direction:column;gap:5px}
+label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--stone)}
+input,select,textarea{font-family:'DM Sans',system-ui,sans-serif;font-size:13px;color:var(--ink);background:transparent;border:none;outline:none;width:100%;padding:0}
+input::placeholder,textarea::placeholder{color:var(--ghost)}
+textarea{resize:none;height:60px;line-height:1.5}
+.field-hint{font-size:11px;color:var(--ghost);margin-top:2px}
 
-/* PLATFORM TOGGLES */
-.platform-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-.platform-toggle{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--border-strong);border-radius:3px;cursor:pointer;background:var(--warm-paper);transition:all .15s;user-select:none}
-.platform-toggle:hover{background:var(--parchment)}
-.platform-toggle.active{border-color:var(--plum);background:var(--plum-pale)}
-.platform-toggle input{display:none}
-.pt-icon{font-size:16px;flex-shrink:0}
-.pt-name{font-size:13px;font-weight:500;color:var(--ink-mid)}
-.pt-check{margin-left:auto;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border-strong);transition:all .15s;flex-shrink:0}
-.platform-toggle.active .pt-check{background:var(--plum);border-color:var(--plum)}
+.cred-info{background:var(--plum-pale);border:1px solid var(--plum-pale2);border-radius:3px;padding:12px 16px;font-size:12.5px;color:var(--ink-mid);margin-bottom:20px;line-height:1.6}
+.cred-info strong{color:var(--plum)}
 
-/* CONDITIONAL FIELDS */
-.cred-section{display:none;border:1px solid var(--border);border-radius:3px;padding:20px;background:var(--warm-paper);margin-bottom:16px}
-.cred-section.visible{display:block}
-.cred-section-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);margin-bottom:14px;display:flex;align-items:center;gap:8px}
-.cred-section-title span{font-size:14px}
+/* PRODUCT TOGGLE */
+.product-toggles{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:28px}
+.product-toggle{background:var(--warm-paper);padding:14px 18px;display:flex;align-items:center;gap:14px;cursor:pointer}
+.product-toggle.locked{opacity:.4;cursor:not-allowed}
+.product-toggle.active{background:var(--parchment)}
+.pt-check{width:16px;height:16px;border:1px solid var(--border-strong);border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.product-toggle.active .pt-check{background:var(--plum);border-color:var(--plum)}
+.pt-check svg{display:none}
+.product-toggle.active .pt-check svg{display:block}
+.pt-pid{font-family:'DM Mono',monospace;font-size:9px;color:var(--plum);background:var(--plum-pale);border:1px solid var(--plum-pale2);padding:2px 7px;border-radius:2px;flex-shrink:0}
+.pt-name{font-size:13px;font-weight:500;color:var(--ink);flex:1}
+.pt-tier{font-family:'DM Mono',monospace;font-size:9px;color:var(--stone)}
 
 /* BUTTONS */
-.btn-row{display:flex;gap:12px;align-items:center;margin-top:36px}
-.btn{padding:11px 28px;border-radius:3px;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;border:none;transition:all .15s}
-.btn-primary{background:var(--ink);color:var(--paper)}
+.btn-row{display:flex;gap:10px;justify-content:flex-end;margin-top:28px}
+.btn{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:12px 24px;border-radius:3px;border:1px solid var(--border-strong);background:var(--warm-paper);color:var(--ink);cursor:pointer;transition:all .15s}
+.btn:hover{background:var(--parchment)}
+.btn-primary{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 .btn-primary:hover{background:var(--ink-mid)}
-.btn-primary:disabled{background:var(--ghost);cursor:not-allowed}
-.btn-secondary{background:transparent;color:var(--stone);border:1px solid var(--border-strong)}
-.btn-secondary:hover{color:var(--ink);border-color:var(--ink)}
-.btn-plum{background:var(--plum);color:#fff}
-.btn-plum:hover{background:var(--plum-mid)}
-
-/* PROGRESS BAR */
-.progress-bar{height:2px;background:var(--rule);margin-bottom:48px;border-radius:1px;overflow:hidden}
-.progress-fill{height:100%;background:var(--plum);transition:width .4s ease;border-radius:1px}
 
 /* REVIEW */
 .review-block{border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:16px}
-.rb-header{background:var(--parchment);padding:12px 18px;display:flex;justify-content:space-between;align-items:center}
-.rb-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--stone)}
-.rb-edit{font-size:12px;color:var(--plum);cursor:pointer;text-decoration:none}
-.rb-edit:hover{text-decoration:underline}
-.rb-body{padding:14px 18px;display:flex;flex-direction:column;gap:6px}
-.rb-row{display:flex;justify-content:space-between;font-size:12.5px}
-.rb-key{color:var(--stone)}
-.rb-val{color:var(--ink);font-weight:500;text-align:right;max-width:60%;word-break:break-all}
+.review-header{background:var(--parchment);padding:10px 16px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--stone)}
+.review-body{padding:16px;background:var(--warm-paper)}
+.review-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--rule);font-size:13px}
+.review-row:last-child{border-bottom:none}
+.review-row-label{color:var(--stone)}
+.review-row-val{color:var(--ink);font-weight:500}
 
-/* SUCCESS */
-.success-wrap{text-align:center;padding:40px 0}
-.success-icon{font-size:48px;margin-bottom:20px}
-.success-title{font-family:'DM Serif Display',serif;font-size:32px;letter-spacing:-.025em;color:var(--ink);margin-bottom:10px}
-.success-sub{font-size:14px;color:var(--stone);max-width:400px;margin:0 auto 32px;line-height:1.7}
-.success-box{background:var(--ok-dim);border:1px solid var(--ok-border);border-radius:3px;padding:18px 22px;text-align:left;max-width:440px;margin:0 auto}
-.sb-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);margin-bottom:10px}
-.sb-items{display:flex;flex-direction:column;gap:7px}
-.sb-item{font-size:12.5px;color:var(--ink-mid);display:flex;gap:8px}
-.sb-item::before{content:'✓';color:var(--ok);flex-shrink:0}
+/* CONFIRMATION */
+.confirm-box{text-align:center;padding:48px 32px;border:1px solid var(--ok-border);background:var(--ok-dim);border-radius:3px}
+.confirm-icon{font-size:32px;margin-bottom:16px}
+.confirm-title{font-family:'DM Serif Display',serif;font-size:24px;color:var(--ink);margin-bottom:8px}
+.confirm-body{font-size:13px;color:var(--stone);max-width:420px;margin:0 auto;line-height:1.7}
 
-/* HELP GUIDES */
-.help-toggle{margin-bottom:10px}
-.help-guide{animation:fadeIn .15s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
 
-/* GOOGLE SIGN-IN */
-#google-signed-in{display:none;background:var(--ok-dim);border:1px solid var(--ok-border);border-radius:3px;padding:10px 14px;font-size:12.5px;color:var(--ink-mid);align-items:center;gap:10px;}
-
-/* ERROR */
-.error-msg{background:var(--error-dim);border:1px solid rgba(122,30,30,.2);border-radius:3px;padding:10px 14px;font-size:12.5px;color:var(--error);margin-bottom:16px;display:none}
-.error-msg.visible{display:block}
-
-/* LOADING */
-.btn-loading{position:relative;color:transparent !important}
-.btn-loading::after{content:'';position:absolute;top:50%;left:50%;width:14px;height:14px;border:2px solid rgba(249,247,248,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;transform:translate(-50%,-50%)}
-@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
-
-@media(max-width:860px){
-  .shell{grid-template-columns:1fr;grid-template-rows:auto 1fr}
-  .sidebar{height:auto;position:relative;padding:28px 24px}
-  .steps{display:none}
-  .main{padding:36px 24px}
+@media(max-width:680px){
+  .container{padding:32px 20px 60px}
   .tier-cards{grid-template-columns:1fr}
-  .platform-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .header{padding:20px 24px}
+  .steps{display:none}
 }
 </style>
 </head>
 <body>
 
-<div class="shell">
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="wm">C<span class="pl">ur</span>cible<span class="pl">.</span></div>
-    <div class="steps">
-      <div class="step" id="nav-1">
-        <div class="step-num active" id="snum-1">1</div>
-        <div class="step-info">
-          <div class="step-label active" id="slabel-1">Your details</div>
-          <div class="step-desc active" id="sdesc-1">Company info and contact</div>
-        </div>
-      </div>
-      <div class="step" id="nav-2">
-        <div class="step-num pending" id="snum-2">2</div>
-        <div class="step-info">
-          <div class="step-label pending" id="slabel-2">Choose a plan</div>
-          <div class="step-desc" id="sdesc-2">Starter · Growth · Scale</div>
-        </div>
-      </div>
-      <div class="step" id="nav-3">
-        <div class="step-num pending" id="snum-3">3</div>
-        <div class="step-info">
-          <div class="step-label pending" id="slabel-3">Connect platforms</div>
-          <div class="step-desc" id="sdesc-3">Meeting platform credentials</div>
-        </div>
-      </div>
-      <div class="step" id="nav-4">
-        <div class="step-num pending" id="snum-4">4</div>
-        <div class="step-info">
-          <div class="step-label pending" id="slabel-4">Email &amp; calendar</div>
-          <div class="step-desc" id="sdesc-4">Where to send outputs</div>
-        </div>
-      </div>
-      <div class="step" id="nav-5">
-        <div class="step-num pending" id="snum-5">5</div>
-        <div class="step-info">
-          <div class="step-label pending" id="slabel-5">Review &amp; submit</div>
-          <div class="step-desc" id="sdesc-5">Confirm and go live</div>
-        </div>
-      </div>
-    </div>
-    <div class="sidebar-footer">
-      <div class="sf-text">Questions? Email <a href="mailto:info@curcible.com">info@curcible.com</a><br>All credentials are stored encrypted and never shared.</div>
-    </div>
-  </aside>
-
-  <!-- MAIN -->
-  <main class="main">
-    <div class="progress-bar"><div class="progress-fill" id="progress" style="width:20%"></div></div>
-
-    <!-- PANEL 1: Company Details -->
-    <div class="panel active" id="panel-1">
-      <div class="panel-eyebrow">Step 1 of 5</div>
-      <div class="panel-title">Tell us about<br>your company</div>
-      <div class="panel-sub">This is where your summaries, reports, and automation outputs will be labelled. Takes 2 minutes.</div>
-      <div class="error-msg" id="err-1">Please fill in all required fields.</div>
-      <div class="field"><label>Company name <span>required</span></label><input type="text" id="company_name" placeholder="Acme Inc." /></div>
-      <div class="field"><label>Your full name <span>required</span></label><input type="text" id="contact_name" placeholder="Jane Smith" /></div>
-      <div class="field"><label>Work email <span>required</span></label><input type="email" id="contact_email" placeholder="jane@acme.com" /></div>
-      <div class="field"><label>Phone number <span>optional</span></label><input type="tel" id="contact_phone" placeholder="+1 (555) 000-0000" /></div>
-      <div class="field"><label>Industry <span>required</span></label>
-        <select id="industry">
-          <option value="">Select your industry</option>
-          <option>Professional Services</option>
-          <option>Real Estate</option>
-          <option>Healthcare</option>
-          <option>E-commerce / Retail</option>
-          <option>Marketing / Agency</option>
-          <option>Technology / SaaS</option>
-          <option>Finance</option>
-          <option>Education</option>
-          <option>Other</option>
-        </select>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-primary" onclick="next(1)">Continue →</button>
-      </div>
-    </div>
-
-    <!-- PANEL 2: Plan Selection -->
-    <div class="panel" id="panel-2">
-      <div class="panel-eyebrow">Step 2 of 5</div>
-      <div class="panel-title">Choose your plan</div>
-      <div class="panel-sub">Start with Starter and upgrade anytime. All plans include a one-time setup fee for configuration and onboarding.</div>
-      <div class="error-msg" id="err-2">Please select a plan to continue.</div>
-      <div class="tier-cards">
-        <label class="tier-card" id="tc-starter" onclick="selectTier('starter')">
-          <input type="radio" name="tier" value="starter">
-          <div class="tc-check"></div>
-          <div class="tc-tag">Starter</div>
-          <div class="tc-name">2 Products</div>
-          <div class="tc-price">$99<span style="font-size:12px;color:inherit">/mo</span></div>
-          <ul class="tc-features">
-            <li>MeetCore™</li>
-            <li>InboxCore™</li>
-            <li>Zoom + Google Meet</li>
-            <li>Email support</li>
-            <li>$299 setup fee</li>
-          </ul>
-        </label>
-        <label class="tier-card" id="tc-growth" onclick="selectTier('growth')">
-          <input type="radio" name="tier" value="growth">
-          <div class="tc-check"></div>
-          <div class="tc-tag">Growth</div>
-          <div class="tc-name">5 Products</div>
-          <div class="tc-price">$249<span style="font-size:12px;color:inherit">/mo</span></div>
-          <ul class="tc-features">
-            <li>Everything in Starter</li>
-            <li>LeadCore™ · PostCore™</li>
-            <li>ContentCore™</li>
-            <li>+ Teams · Slack</li>
-            <li>$499 setup fee</li>
-          </ul>
-        </label>
-        <label class="tier-card" id="tc-scale" onclick="selectTier('scale')">
-          <input type="radio" name="tier" value="scale">
-          <div class="tc-check"></div>
-          <div class="tc-tag">Scale</div>
-          <div class="tc-name">All 8 Products</div>
-          <div class="tc-price">$499<span style="font-size:12px;color:inherit">/mo</span></div>
-          <ul class="tc-features">
-            <li>Everything in Growth</li>
-            <li>ReportCore™ · KnowCore™</li>
-            <li>SchedCore™</li>
-            <li>Priority support + calls</li>
-            <li>$999 setup fee</li>
-          </ul>
-        </label>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-secondary" onclick="back(2)">← Back</button>
-        <button class="btn btn-primary" onclick="next(2)">Continue →</button>
-      </div>
-    </div>
-
-    <!-- PANEL 3: Meeting Platforms -->
-    <div class="panel" id="panel-3">
-      <div class="panel-eyebrow">Step 3 of 5</div>
-      <div class="panel-title">Connect your meeting<br>platforms</div>
-      <div class="panel-sub">Select which platforms you use. You'll provide the credentials needed to access recordings and transcripts automatically.</div>
-      <div class="error-msg" id="err-3">Please select at least one platform and fill in its credentials.</div>
-
-      <div class="field-group">
-        <div class="field-group-title">Which platforms do you use?</div>
-        <div class="platform-grid">
-          <div class="platform-toggle" id="pt-zoom" onclick="togglePlatform('zoom')">
-            <input type="checkbox" id="chk-zoom">
-            <span class="pt-icon">🎥</span>
-            <span class="pt-name">Zoom</span>
-            <div class="pt-check"></div>
-          </div>
-          <div class="platform-toggle" id="pt-meet" onclick="togglePlatform('meet')">
-            <input type="checkbox" id="chk-meet">
-            <span class="pt-icon">📹</span>
-            <span class="pt-name">Google Meet</span>
-            <div class="pt-check"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Zoom Creds -->
-      <div class="cred-section" id="creds-zoom">
-        <div class="cred-section-title"><span>🎥</span> Zoom credentials</div>
-        <div class="help-toggle" onclick="toggleHelp('zoom-help')">
-          <span style="font-size:11.5px;color:var(--plum);cursor:pointer;text-decoration:underline;">How to get these credentials ↓</span>
-        </div>
-        <div class="help-guide" id="zoom-help" style="display:none;background:var(--parchment);border-radius:3px;padding:14px 16px;margin-bottom:14px;font-size:12px;color:var(--ink-mid);line-height:1.8;">
-          <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--stone);margin-bottom:10px;">Steps to create your Zoom app</div>
-          <ol style="list-style:none;display:flex;flex-direction:column;gap:7px;padding:0;">
-            <li><span style="color:var(--plum);font-weight:600;">1.</span> Go to <a href="https://marketplace.zoom.us/develop/apps" target="_blank" style="color:var(--plum);">marketplace.zoom.us/develop/apps</a></li>
-            <li><span style="color:var(--plum);font-weight:600;">2.</span> Click <strong>Build App</strong> → choose <strong>Server-to-Server OAuth</strong></li>
-            <li><span style="color:var(--plum);font-weight:600;">3.</span> Name it anything (e.g. "Curcible Integration") → Create</li>
-            <li><span style="color:var(--plum);font-weight:600;">4.</span> Copy <strong>Client ID</strong> and <strong>Client Secret</strong> from App Credentials tab</li>
-            <li><span style="color:var(--plum);font-weight:600;">5.</span> Find <strong>Account ID</strong> at zoom.us → Admin → Account Profile</li>
-            <li><span style="color:var(--plum);font-weight:600;">6.</span> Add scopes: <code style="background:rgba(106,72,88,0.08);padding:1px 5px;border-radius:2px;">recording:read:admin</code> and <code style="background:rgba(106,72,88,0.08);padding:1px 5px;border-radius:2px;">meeting:read:admin</code></li>
-          </ol>
-          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11.5px;color:var(--stone);">Takes ~5 minutes. Need help? Email <a href="mailto:info@curcible.com" style="color:var(--plum);">info@curcible.com</a></div>
-        </div>
-        <div class="field"><label>Zoom Client ID <span>required</span></label><input type="text" id="zoom_client_id" placeholder="Your Zoom OAuth2 Client ID" /></div>
-        <div class="field"><label>Zoom Client Secret <span>required</span></label><input type="password" id="zoom_client_secret" placeholder="••••••••••••••••" /></div>
-        <div class="field"><label>Zoom Account ID <span>required</span></label><input type="text" id="zoom_account_id" placeholder="Your Zoom Account ID" /><div class="field-hint">Found in Zoom Admin → Account Profile</div></div>
-      </div>
-
-      <!-- Google Meet Creds -->
-      <div class="cred-section" id="creds-meet">
-        <div class="cred-section-title"><span>📹</span> Google Meet — sign in with your Google account</div>
-        <div id="google-signin-wrap">
-          <div style="margin-bottom:10px;font-size:12.5px;color:var(--stone);line-height:1.6;">Sign in to confirm which Google account owns your Meet recordings and Google Calendar.</div>
-          <div id="google-signin-btn-container"></div>
-          <div id="google-signed-in" style="display:none;background:var(--ok-dim);border:1px solid var(--ok-border);border-radius:3px;padding:10px 14px;font-size:12.5px;color:var(--ink-mid);display:flex;align-items:center;gap:10px;">
-            <span style="color:var(--ok);font-size:15px;">✓</span>
-            <span>Connected as <strong id="google-signed-in-email"></strong></span>
-            <span style="margin-left:auto;font-size:11px;color:var(--stone);cursor:pointer;text-decoration:underline;" onclick="resetGoogleSignIn()">Change</span>
-          </div>
-        </div>
-        <div class="field" id="google-email-fallback" style="margin-top:10px;display:none;">
-          <label>Or enter email manually <span>required</span></label>
-          <input type="email" id="google_email" placeholder="you@company.com" />
-        </div>
-        <div style="margin-top:8px;font-size:11.5px;color:var(--stone);">Can't sign in? <span style="color:var(--plum);cursor:pointer;text-decoration:underline;" onclick="showGoogleEmailFallback()">Enter email manually →</span></div>
-        <input type="hidden" id="google_email_hidden" />
-      </div>
-
-
-      <div class="btn-row">
-        <button class="btn btn-secondary" onclick="back(3)">← Back</button>
-        <button class="btn btn-primary" onclick="next(3)">Continue →</button>
-      </div>
-    </div>
-
-    <!-- PANEL 4: Email & Calendar -->
-    <div class="panel" id="panel-4">
-      <div class="panel-eyebrow">Step 4 of 5</div>
-      <div class="panel-title">Where should we send<br>your outputs?</div>
-      <div class="panel-sub">Meeting summaries, action items, and status emails will be delivered here. Follow-up events will be added to your calendar.</div>
-      <div class="error-msg" id="err-4">Please fill in the required fields.</div>
-
-      <div class="field-group">
-        <div class="field-group-title">Email delivery</div>
-        <div class="field"><label>Summary email address <span>required</span></label><input type="email" id="output_email" placeholder="you@company.com" /><div class="field-hint">Where MeetCore sends meeting summaries, action items, and status updates.</div></div>
-        <div class="field"><label>CC email address <span>optional</span></label><input type="email" id="output_cc" placeholder="team@company.com" /></div>
-      </div>
-
-      <div class="field-group">
-        <div class="field-group-title">Calendar</div>
-        <div class="field"><label>Google Calendar email <span>required</span></label><input type="email" id="calendar_email" placeholder="you@gmail.com or workspace@company.com" /><div class="field-hint">Follow-up events will be added to this calendar. Must be a Google Calendar account.</div></div>
-      </div>
-
-      <div class="field-group">
-        <div class="field-group-title">Preferences</div>
-        <div class="field"><label>Timezone <span>required</span></label>
-          <select id="timezone">
-            <option value="">Select timezone</option>
-            <option>America/New_York (ET)</option>
-            <option>America/Chicago (CT)</option>
-            <option>America/Denver (MT)</option>
-            <option>America/Los_Angeles (PT)</option>
-            <option>America/Phoenix (AZ)</option>
-            <option>Europe/London (GMT)</option>
-            <option>Europe/Paris (CET)</option>
-            <option>Asia/Dubai (GST)</option>
-            <option>Asia/Kolkata (IST)</option>
-            <option>Asia/Singapore (SGT)</option>
-            <option>Australia/Sydney (AEST)</option>
-          </select>
-        </div>
-        <div class="field"><label>Follow-up event lead time</label>
-          <select id="followup_days">
-            <option value="1">1 day after meeting</option>
-            <option value="2">2 days after meeting</option>
-            <option value="3" selected>3 days after meeting (default)</option>
-            <option value="5">5 days after meeting</option>
-            <option value="7">7 days after meeting</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-secondary" onclick="back(4)">← Back</button>
-        <button class="btn btn-primary" onclick="next(4)">Review →</button>
-      </div>
-    </div>
-
-    <!-- PANEL 5: Review -->
-    <div class="panel" id="panel-5">
-      <div class="panel-eyebrow">Step 5 of 5</div>
-      <div class="panel-title">Review &amp; go live</div>
-      <div class="panel-sub">Check everything looks right. Once submitted, Curcible will configure your automations and send a confirmation email within 24 hours.</div>
-      <div class="error-msg" id="err-5">Submission failed. Please try again or email info@curcible.com.</div>
-
-      <div class="review-block">
-        <div class="rb-header"><span class="rb-label">Company</span><a class="rb-edit" onclick="goTo(1)">Edit</a></div>
-        <div class="rb-body" id="review-company"></div>
-      </div>
-      <div class="review-block">
-        <div class="rb-header"><span class="rb-label">Plan</span><a class="rb-edit" onclick="goTo(2)">Edit</a></div>
-        <div class="rb-body" id="review-plan"></div>
-      </div>
-      <div class="review-block">
-        <div class="rb-header"><span class="rb-label">Platforms</span><a class="rb-edit" onclick="goTo(3)">Edit</a></div>
-        <div class="rb-body" id="review-platforms"></div>
-      </div>
-      <div class="review-block">
-        <div class="rb-header"><span class="rb-label">Outputs</span><a class="rb-edit" onclick="goTo(4)">Edit</a></div>
-        <div class="rb-body" id="review-outputs"></div>
-      </div>
-
-      <div style="background:var(--plum-pale);border:1px solid var(--plum-pale2);border-radius:3px;padding:14px 18px;margin-top:8px;font-size:12.5px;color:var(--ink-mid);line-height:1.6;">
-        By submitting, you agree to Curcible's <a href="mailto:info@curcible.com" style="color:var(--plum)">Terms of Service</a>. Your credentials are stored encrypted and used only to run your automations.
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-secondary" onclick="back(5)">← Back</button>
-        <button class="btn btn-plum" id="submit-btn" onclick="submitForm()">Submit &amp; Go Live →</button>
-      </div>
-    </div>
-
-    <!-- PANEL 6: Success -->
-    <div class="panel" id="panel-6">
-      <div class="success-wrap">
-        <div class="success-icon">✓</div>
-        <div class="success-title">You're all set.</div>
-        <div class="success-sub">Your onboarding submission has been received. Curcible will configure your automations and send a confirmation to <strong id="confirm-email"></strong> within 24 hours.</div>
-        <div class="success-box">
-          <div class="sb-title">What happens next</div>
-          <div class="sb-items">
-            <div class="sb-item">Your credentials are securely stored and workflows activated</div>
-            <div class="sb-item">A Google OAuth2 authorization link will be sent to your email</div>
-            <div class="sb-item">First MeetCore summary delivered after your next recorded meeting</div>
-            <div class="sb-item">Status check email confirms everything is running within 24h</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </main>
+<div class="header">
+  <div class="wm">C<span class="pl">ur</span>cible<span class="pl">.</span></div>
+  <div class="header-sub">Client Onboarding</div>
 </div>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<div class="container">
+
+  <div class="steps" id="stepIndicator">
+    <div class="step-item active" data-step="0"><div class="step-num">1</div>Select Tier</div>
+    <div class="step-item" data-step="1"><div class="step-num">2</div>Your Info</div>
+    <div class="step-item" data-step="2"><div class="step-num">3</div>Credentials</div>
+    <div class="step-item" data-step="3"><div class="step-num">4</div>Review</div>
+  </div>
+
+  <!-- PAGE 1: TIER SELECTION -->
+  <div class="page active" id="page-0">
+    <div class="section-eyebrow">Step 1 of 4</div>
+    <div class="section-title">Choose your plan</div>
+    <div class="section-body">Select the tier that fits your needs. You can upgrade at any time.</div>
+
+    <div class="tier-cards">
+      <div class="tier-card" onclick="selectTier('starter',this)">
+        <input type="radio" name="tier" value="starter">
+        <div class="tc-tag">Starter</div>
+        <div class="tc-name">Starter</div>
+        <div class="tc-price">$99/mo</div>
+        <div class="tc-setup">+ $299 setup fee</div>
+        <ul class="tc-features">
+          <li><div class="tc-dot"></div>P07 MeetCore™</li>
+          <li><div class="tc-dot"></div>P01 InboxCore™</li>
+          <li><div class="tc-dot"></div>Email support</li>
+        </ul>
+      </div>
+      <div class="tier-card selected" onclick="selectTier('growth',this)">
+        <input type="radio" name="tier" value="growth" checked>
+        <div class="tc-tag">Most popular</div>
+        <div class="tc-name">Growth</div>
+        <div class="tc-price">$249/mo</div>
+        <div class="tc-setup">+ $499 setup fee</div>
+        <ul class="tc-features">
+          <li><div class="tc-dot"></div>Everything in Starter</li>
+          <li><div class="tc-dot"></div>P03 LeadCore™</li>
+          <li><div class="tc-dot"></div>P04 PostCore™</li>
+          <li><div class="tc-dot"></div>P02 ContentCore™</li>
+          <li><div class="tc-dot"></div>Email + chat support</li>
+        </ul>
+      </div>
+      <div class="tier-card" onclick="selectTier('scale',this)">
+        <input type="radio" name="tier" value="scale">
+        <div class="tc-tag">Scale</div>
+        <div class="tc-name">Scale</div>
+        <div class="tc-price">$499/mo</div>
+        <div class="tc-setup">+ $999 setup fee</div>
+        <ul class="tc-features">
+          <li><div class="tc-dot"></div>All 8 products</li>
+          <li><div class="tc-dot"></div>P05 ReportCore™</li>
+          <li><div class="tc-dot"></div>P06 KnowCore™</li>
+          <li><div class="tc-dot"></div>P08 SchedCore™</li>
+          <li><div class="tc-dot"></div>Priority support + calls</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goTo(1)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- PAGE 2: COMPANY INFO -->
+  <div class="page" id="page-1">
+    <div class="section-eyebrow">Step 2 of 4</div>
+    <div class="section-title">Your information</div>
+    <div class="section-body">Used for onboarding, billing, and all automation outputs.</div>
+
+    <div class="form-section">
+      <div class="form-section-title">Account details</div>
+      <div class="form-fields">
+        <div class="form-row">
+          <div class="field">
+            <label>First name</label>
+            <input type="text" id="firstName" placeholder="Jane" autocomplete="given-name">
+          </div>
+          <div class="field">
+            <label>Last name</label>
+            <input type="text" id="lastName" placeholder="Smith" autocomplete="family-name">
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="field">
+            <label>Work email</label>
+            <input type="email" id="email" placeholder="jane@company.com" autocomplete="email">
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="field">
+            <label>Company name</label>
+            <input type="text" id="company" placeholder="Acme Inc." autocomplete="organization">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Industry</label>
+            <select id="industry">
+              <option value="">Select…</option>
+              <option>Real estate</option>
+              <option>Healthcare</option>
+              <option>Legal</option>
+              <option>Marketing / Agency</option>
+              <option>E-commerce</option>
+              <option>Consulting</option>
+              <option>Financial services</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Team size</label>
+            <select id="teamSize">
+              <option value="">Select…</option>
+              <option>1–5</option>
+              <option>6–20</option>
+              <option>21–50</option>
+              <option>51–200</option>
+              <option>200+</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn" onclick="goTo(0)">← Back</button>
+      <button class="btn btn-primary" onclick="goTo(2)">Continue →</button>
+    </div>
+  </div>
+
+  <!-- PAGE 3: CREDENTIALS -->
+  <div class="page" id="page-2">
+    <div class="section-eyebrow">Step 3 of 4</div>
+    <div class="section-title">Connect your accounts</div>
+    <div class="section-body">Credentials are stored in an encrypted vault, isolated to your workspace. Never shared.</div>
+
+    <div class="cred-info">
+      <strong>What you're connecting:</strong> Your credentials are passed directly to your private n8n workspace. Curcible staff cannot see your API keys or OAuth tokens.
+    </div>
+
+    <!-- Products selected for this tier -->
+    <div id="credForms"></div>
+
+    <div class="btn-row">
+      <button class="btn" onclick="goTo(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goTo(3)">Review →</button>
+    </div>
+  </div>
+
+  <!-- PAGE 4: REVIEW + PAY -->
+  <div class="page" id="page-3">
+    <div class="section-eyebrow">Step 4 of 4</div>
+    <div class="section-title">Review and submit</div>
+    <div class="section-body">Confirm your details. Submitting activates your workspace.</div>
+
+    <div class="review-block">
+      <div class="review-header">Plan</div>
+      <div class="review-body" id="reviewPlan"></div>
+    </div>
+
+    <div class="review-block">
+      <div class="review-header">Account</div>
+      <div class="review-body" id="reviewAccount"></div>
+    </div>
+
+    <div class="review-block">
+      <div class="review-header">Products activated</div>
+      <div class="review-body" id="reviewProducts"></div>
+    </div>
+
+    <div id="submit-errors" style="display:none;color:#B85050;font-size:12px;margin-top:8px;font-family:'DM Mono',monospace"></div>
+
+    <div class="btn-row">
+      <button class="btn" onclick="goTo(2)">← Back</button>
+      <button class="btn btn-primary" onclick="submitForm()" id="submitBtn">Submit →</button>
+    </div>
+  </div>
+
+  <!-- PAGE 5: CONFIRMATION -->
+  <div class="page" id="page-4">
+    <div class="confirm-box">
+      <div class="confirm-icon">✓</div>
+      <div class="confirm-title">You're live.</div>
+      <div class="confirm-body">Your Curcible workspace is activating now. Expect a confirmation email within 10 minutes with what's running and how to reach support.</div>
+    </div>
+  </div>
+
+</div>
+
 <script>
-// ─── Google Sign-In ───────────────────────────────────
-// Replace with your Google Cloud OAuth2 Client ID (must have app domain in Authorized JS Origins)
-const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+// ─── CONFIG ───────────────────────────────────────────────
+const N8N_WEBHOOK_URL = '/.netlify/functions/submit';
 
-function initGoogleSignIn() {
-  if (!window.google || GOOGLE_CLIENT_ID.startsWith('YOUR_')) {
-    // No client ID configured — show fallback email input
-    showGoogleEmailFallback();
-    document.querySelector('#creds-meet .help-toggle-google')?.remove();
-    return;
-  }
-  google.accounts.id.initialize({
-    client_id: GOOGLE_CLIENT_ID,
-    callback: handleGoogleCredential,
-    auto_select: false,
-  });
-  google.accounts.id.renderButton(
-    document.getElementById('google-signin-btn-container'),
-    {
-      theme: 'outline',
-      size: 'large',
-      text: 'signin_with',
-      shape: 'rectangular',
-      logo_alignment: 'left',
-    }
-  );
-}
-
-function handleGoogleCredential(response) {
-  // Decode JWT payload (no verification needed — just reading email for UX)
-  const payload = JSON.parse(atob(response.credential.split('.')[1]));
-  const email = payload.email;
-  document.getElementById('google_email_hidden').value = email;
-  document.getElementById('google-signed-in-email').textContent = email;
-  document.getElementById('google-signin-btn-container').style.display = 'none';
-  const signedIn = document.getElementById('google-signed-in');
-  signedIn.style.display = 'flex';
-  // Also set the text input if visible
-  if (document.getElementById('google_email')) {
-    document.getElementById('google_email').value = email;
-  }
-}
-
-function resetGoogleSignIn() {
-  document.getElementById('google_email_hidden').value = '';
-  document.getElementById('google-signed-in').style.display = 'none';
-  document.getElementById('google-signin-btn-container').style.display = 'block';
-  if (window.google) google.accounts.id.disableAutoSelect();
-}
-
-function showGoogleEmailFallback() {
-  document.getElementById('google-email-fallback').style.display = 'block';
-  // Sync hidden field on input
-  const input = document.getElementById('google_email');
-  input.addEventListener('input', () => {
-    document.getElementById('google_email_hidden').value = input.value;
-  });
-}
-
-window.addEventListener('load', () => {
-  // Init Google Sign-In once GSI library is ready
-  const tryInit = setInterval(() => {
-    if (window.google) { clearInterval(tryInit); initGoogleSignIn(); }
-  }, 200);
-  setTimeout(() => { clearInterval(tryInit); showGoogleEmailFallback(); }, 3000);
-});
-
-// ─── Help guides ─────────────────────────────────────
-function toggleHelp(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const isOpen = el.style.display !== 'none';
-  el.style.display = isOpen ? 'none' : 'block';
-  const toggle = el.previousElementSibling?.querySelector('span');
-  if (toggle) toggle.textContent = isOpen
-    ? 'How to get these credentials ↓'
-    : 'Hide guide ↑';
-}
-
-// ─── State ───────────────────────────────────────────
-const state = {
-  currentStep: 1,
-  tier: null,
-  platforms: new Set(),
+const TIERS = {
+  starter: { name: 'Starter', mrr: 99,  setup: 299, products: ['P07','P01'] },
+  growth:  { name: 'Growth',  mrr: 249, setup: 499, products: ['P07','P01','P03','P04','P02'] },
+  scale:   { name: 'Scale',   mrr: 499, setup: 999, products: ['P07','P01','P03','P04','P02','P05','P06','P08'] }
 };
 
-// n8n webhook — replace with your actual webhook URL after creating the workflow
-const WEBHOOK_URL = '/.netlify/functions/submit';
+const PRODUCTS = {
+  P07: { name: 'MeetCore™', creds: ['zoom_client_id','zoom_client_secret','google_oauth_token','openai_api_key'], labels: ['Zoom Client ID','Zoom Client Secret','Google OAuth Token','OpenAI API Key'] },
+  P01: { name: 'InboxCore™', creds: ['google_oauth_token','openai_api_key','qdrant_api_key','qdrant_url'], labels: ['Google OAuth Token','OpenAI API Key','Qdrant API Key','Qdrant URL'] },
+  P03: { name: 'LeadCore™', creds: ['google_oauth_token','openai_api_key','hubspot_api_key','form_webhook_secret'], labels: ['Google OAuth Token','OpenAI API Key','HubSpot API Key','Form Webhook Secret'] },
+  P04: { name: 'PostCore™', creds: ['blotato_api_key','airtable_token','airtable_base_id','google_oauth_token'], labels: ['Blotato API Key','Airtable Token','Airtable Base ID','Google OAuth Token'] },
+  P02: { name: 'ContentCore™', creds: ['wordpress_url','wordpress_app_password','perplexity_api_key','openai_api_key'], labels: ['WordPress URL','WordPress App Password','Perplexity API Key','OpenAI API Key'] },
+  P05: { name: 'ReportCore™', creds: ['ga4_property_id','google_oauth_token','openai_api_key'], labels: ['GA4 Property ID','Google OAuth Token','OpenAI API Key'] },
+  P06: { name: 'KnowCore™', creds: ['meta_system_token','whatsapp_phone_id','qdrant_api_key','openai_api_key'], labels: ['Meta System Token','WhatsApp Phone ID','Qdrant API Key','OpenAI API Key'] },
+  P08: { name: 'SchedCore™', creds: ['calendly_api_key','google_oauth_token','openai_api_key'], labels: ['Calendly API Key','Google OAuth Token','OpenAI API Key'] }
+};
 
-// ─── Navigation ──────────────────────────────────────
-function next(step) {
-  if (!validate(step)) return;
-  goTo(step + 1);
+let selectedTier = 'growth';
+let credData = {};
+
+function selectTier(tier, el) {
+  selectedTier = tier;
+  document.querySelectorAll('.tier-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
 }
 
-function back(step) {
-  goTo(step - 1);
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.step-item').forEach((s, i) => {
+    s.classList.remove('active','done');
+    if(i < page) s.classList.add('done');
+    if(i === page) s.classList.add('active');
+  });
+  window.scrollTo(0,0);
+  if(page === 2) buildCredForms();
+  if(page === 3) buildReview();
 }
 
-function goTo(step) {
-  document.getElementById(`panel-${state.currentStep}`).classList.remove('active');
-  state.currentStep = step;
-  document.getElementById(`panel-${step}`).classList.add('active');
-  updateNav(step);
-  updateProgress(step);
-  if (step === 5) buildReview();
-  window.scrollTo({top: 0, behavior: 'smooth'});
-}
+function buildCredForms() {
+  const tier = TIERS[selectedTier];
+  const container = document.getElementById('credForms');
+  container.innerHTML = '';
 
-function updateProgress(step) {
-  const pct = (step / 5) * 100;
-  document.getElementById('progress').style.width = pct + '%';
-}
-
-function updateNav(step) {
-  for (let i = 1; i <= 5; i++) {
-    const num = document.getElementById(`snum-${i}`);
-    const label = document.getElementById(`slabel-${i}`);
-    if (i < step) {
-      num.className = 'step-num done';
-      num.textContent = '✓';
-      label.className = 'step-label done';
-    } else if (i === step) {
-      num.className = 'step-num active';
-      num.textContent = i;
-      label.className = 'step-label active';
-      document.getElementById(`sdesc-${i}`).className = 'step-desc active';
-    } else {
-      num.className = 'step-num pending';
-      num.textContent = i;
-      label.className = 'step-label pending';
-      document.getElementById(`sdesc-${i}`).className = 'step-desc';
-    }
-  }
-}
-
-// ─── Validation ──────────────────────────────────────
-function validate(step) {
-  const err = document.getElementById(`err-${step}`);
-  err.classList.remove('visible');
-
-  if (step === 1) {
-    const required = ['company_name','contact_name','contact_email','industry'];
-    const missing = required.some(id => !document.getElementById(id).value.trim());
-    if (missing) { err.classList.add('visible'); return false; }
-  }
-
-  if (step === 2) {
-    if (!state.tier) { err.classList.add('visible'); return false; }
-  }
-
-  if (step === 3) {
-    if (state.platforms.size === 0) { err.classList.add('visible'); return false; }
-    // validate credentials for active platforms
-    if (state.platforms.has('zoom')) {
-      if (!document.getElementById('zoom_client_id').value.trim() ||
-          !document.getElementById('zoom_client_secret').value.trim() ||
-          !document.getElementById('zoom_account_id').value.trim()) {
-        err.textContent = 'Please fill in all Zoom credentials.';
-        err.classList.add('visible'); return false;
+  // Deduplicate credentials across products
+  const seen = new Set();
+  const allCreds = [];
+  tier.products.forEach(pid => {
+    const p = PRODUCTS[pid];
+    p.creds.forEach((cred, i) => {
+      if(!seen.has(cred)) {
+        seen.add(cred);
+        allCreds.push({ key: cred, label: p.labels[i], product: p.name });
       }
-    }
-    if (state.platforms.has('meet')) {
-      const gEmail = document.getElementById('google_email_hidden').value.trim()
-                  || document.getElementById('google_email')?.value?.trim();
-      if (!gEmail) {
-        err.textContent = 'Please sign in with Google or enter your Google account email.';
-        err.classList.add('visible'); return false;
-      }
-    }
-    err.textContent = 'Please select at least one platform and fill in its credentials.';
-  }
+    });
+  });
 
-  if (step === 4) {
-    if (!document.getElementById('output_email').value.trim() ||
-        !document.getElementById('calendar_email').value.trim() ||
-        !document.getElementById('timezone').value) {
-      err.classList.add('visible'); return false;
-    }
-  }
+  // Group by product
+  tier.products.forEach(pid => {
+    const p = PRODUCTS[pid];
+    const uniqueCreds = p.creds.filter((c,i,a) => a.indexOf(c) === i);
 
-  return true;
-}
+    const section = document.createElement('div');
+    section.className = 'form-section';
 
-// ─── Tier selection ───────────────────────────────────
-function selectTier(tier) {
-  state.tier = tier;
-  ['starter','growth','scale'].forEach(t => {
-    document.getElementById(`tc-${t}`).classList.toggle('selected', t === tier);
+    const title = document.createElement('div');
+    title.className = 'form-section-title';
+    title.textContent = pid + ' ' + p.name;
+    section.appendChild(title);
+
+    const fields = document.createElement('div');
+    fields.className = 'form-fields';
+
+    p.creds.forEach((cred, i) => {
+      const row = document.createElement('div');
+      row.className = 'form-row single';
+      row.innerHTML = `<div class="field">
+        <label>${p.labels[i]}</label>
+        <input type="password" id="cred_${cred}" placeholder="Paste ${p.labels[i]} here" autocomplete="off">
+        <div class="field-hint">${getCredHint(cred)}</div>
+      </div>`;
+      fields.appendChild(row);
+    });
+
+    section.appendChild(fields);
+    container.appendChild(section);
   });
 }
 
-// ─── Platform toggles ─────────────────────────────────
-function togglePlatform(platform) {
-  const toggle = document.getElementById(`pt-${platform}`);
-  const creds = document.getElementById(`creds-${platform}`);
-  if (state.platforms.has(platform)) {
-    state.platforms.delete(platform);
-    toggle.classList.remove('active');
-    if (creds) creds.classList.remove('visible');
-  } else {
-    state.platforms.add(platform);
-    toggle.classList.add('active');
-    if (creds) creds.classList.add('visible');
-  }
+function getCredHint(key) {
+  const hints = {
+    zoom_client_id: 'From Zoom Marketplace > Your App > App Credentials',
+    zoom_client_secret: 'From Zoom Marketplace > Your App > App Credentials',
+    google_oauth_token: 'Generated via Google Cloud Console OAuth2 flow',
+    openai_api_key: 'From platform.openai.com/api-keys — starts with sk-',
+    qdrant_api_key: 'From Qdrant Cloud dashboard > API keys',
+    qdrant_url: 'e.g. https://your-cluster.qdrant.io',
+    hubspot_api_key: 'From HubSpot Settings > Integrations > Private Apps',
+    form_webhook_secret: 'From your Typeform / Webflow form webhook settings',
+    blotato_api_key: 'From Blotato dashboard > Settings > API',
+    airtable_token: 'From airtable.com/create/tokens — Personal Access Token',
+    airtable_base_id: 'From Airtable URL: airtable.com/appXXXXXXXX — the appXXX part',
+    wordpress_url: 'Your WordPress site URL, e.g. https://yoursite.com',
+    wordpress_app_password: 'Users > Your Profile > Application Passwords in WP admin',
+    perplexity_api_key: 'From perplexity.ai/settings/api — starts with pplx-',
+    ga4_property_id: 'From GA4 > Admin > Property > Property Details',
+    meta_system_token: 'From Meta Business Suite > System Users > Generate Token',
+    whatsapp_phone_id: 'From Meta Developer Portal > WhatsApp > Getting Started',
+    calendly_api_key: 'From Calendly > Integrations > API & Webhooks',
+  };
+  return hints[key] || '';
 }
 
-// ─── Review builder ───────────────────────────────────
 function buildReview() {
-  const tierNames = {starter:'Starter — $99/mo', growth:'Growth — $249/mo', scale:'Scale — $499/mo'};
-  const setupFees = {starter:'$299', growth:'$499', scale:'$999'};
-
-  document.getElementById('review-company').innerHTML = `
-    <div class="rb-row"><span class="rb-key">Company</span><span class="rb-val">${v('company_name')}</span></div>
-    <div class="rb-row"><span class="rb-key">Contact</span><span class="rb-val">${v('contact_name')}</span></div>
-    <div class="rb-row"><span class="rb-key">Email</span><span class="rb-val">${v('contact_email')}</span></div>
-    <div class="rb-row"><span class="rb-key">Industry</span><span class="rb-val">${v('industry')}</span></div>
+  const tier = TIERS[selectedTier];
+  document.getElementById('reviewPlan').innerHTML = `
+    <div class="review-row"><span class="review-row-label">Plan</span><span class="review-row-val">${tier.name}</span></div>
+    <div class="review-row"><span class="review-row-label">Monthly</span><span class="review-row-val">$${tier.mrr}/mo</span></div>
+    <div class="review-row"><span class="review-row-label">Setup fee (once)</span><span class="review-row-val">$${tier.setup}</span></div>
+    <div class="review-row"><span class="review-row-label">Due today</span><span class="review-row-val">$${tier.mrr + tier.setup}</span></div>
   `;
-
-  document.getElementById('review-plan').innerHTML = `
-    <div class="rb-row"><span class="rb-key">Plan</span><span class="rb-val">${tierNames[state.tier] || '—'}</span></div>
-    <div class="rb-row"><span class="rb-key">Setup fee</span><span class="rb-val">${setupFees[state.tier] || '—'} (invoiced separately)</span></div>
+  document.getElementById('reviewAccount').innerHTML = `
+    <div class="review-row"><span class="review-row-label">Name</span><span class="review-row-val">${document.getElementById('firstName').value} ${document.getElementById('lastName').value}</span></div>
+    <div class="review-row"><span class="review-row-label">Email</span><span class="review-row-val">${document.getElementById('email').value}</span></div>
+    <div class="review-row"><span class="review-row-label">Company</span><span class="review-row-val">${document.getElementById('company').value}</span></div>
   `;
-
-  const platformNames = {zoom:'Zoom', meet:'Google Meet'};
-  const platformsHtml = [...state.platforms].map(p =>
-    `<div class="rb-row"><span class="rb-key">${platformNames[p]}</span><span class="rb-val">Connected ✓</span></div>`
+  document.getElementById('reviewProducts').innerHTML = tier.products.map(pid =>
+    `<div class="review-row"><span class="review-row-label">${pid}</span><span class="review-row-val">${PRODUCTS[pid].name}</span></div>`
   ).join('');
-  document.getElementById('review-platforms').innerHTML = platformsHtml;
-
-  document.getElementById('review-outputs').innerHTML = `
-    <div class="rb-row"><span class="rb-key">Summary email</span><span class="rb-val">${v('output_email')}</span></div>
-    <div class="rb-row"><span class="rb-key">Calendar</span><span class="rb-val">${v('calendar_email')}</span></div>
-    <div class="rb-row"><span class="rb-key">Timezone</span><span class="rb-val">${v('timezone')}</span></div>
-    <div class="rb-row"><span class="rb-key">Follow-up lead time</span><span class="rb-val">${v('followup_days')} day(s) after meeting</span></div>
-  `;
 }
 
-function v(id) {
-  return document.getElementById(id)?.value?.trim() || '—';
+function collectCredentials() {
+  const tier = TIERS[selectedTier];
+  const creds = {};
+  tier.products.forEach(pid => {
+    PRODUCTS[pid].creds.forEach(key => {
+      const el = document.getElementById('cred_' + key);
+      if(el) creds[key] = el.value;
+    });
+  });
+  return creds;
 }
 
-// ─── Submit ───────────────────────────────────────────
 async function submitForm() {
-  const btn = document.getElementById('submit-btn');
-  btn.classList.add('btn-loading');
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = 'Submitting…';
   btn.disabled = true;
 
   const payload = {
-    submitted_at: new Date().toISOString(),
-    company: {
-      name: v('company_name'),
-      contact_name: v('contact_name'),
-      contact_email: v('contact_email'),
-      contact_phone: v('contact_phone'),
-      industry: v('industry'),
+    tier: selectedTier,
+    client: {
+      firstName: document.getElementById('firstName').value,
+      lastName: document.getElementById('lastName').value,
+      email: document.getElementById('email').value,
+      company: document.getElementById('company').value,
+      industry: document.getElementById('industry').value,
+      teamSize: document.getElementById('teamSize').value,
     },
-    plan: {
-      tier: state.tier,
-      platforms: [...state.platforms],
-    },
-    credentials: {
-      zoom: state.platforms.has('zoom') ? {
-        client_id: v('zoom_client_id'),
-        client_secret: v('zoom_client_secret'),
-        account_id: v('zoom_account_id'),
-      } : null,
-      google_email: state.platforms.has('meet') ? (v('google_email_hidden') || v('google_email')) : null,
-    },
-    outputs: {
-      summary_email: v('output_email'),
-      cc_email: v('output_cc'),
-      calendar_email: v('calendar_email'),
-      timezone: v('timezone'),
-      followup_days: parseInt(v('followup_days')),
-    },
+    products: TIERS[selectedTier].products,
+    credentials: collectCredentials(),
+    timestamp: new Date().toISOString()
   };
 
   try {
-    const res = await fetch(WEBHOOK_URL, {
+    await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
-
-    if (res.ok || res.status === 200) {
-      document.getElementById('confirm-email').textContent = payload.company.contact_email;
-      goTo(6);
-    } else {
-      throw new Error('Non-200 response');
-    }
-  } catch (e) {
-    document.getElementById('err-5').classList.add('visible');
-    btn.classList.remove('btn-loading');
+    goTo(4);
+  } catch(err) {
+    const errEl = document.getElementById('submit-errors');
+    errEl.textContent = 'Submission failed: ' + err.message;
+    errEl.style.display = 'block';
+    btn.textContent = 'Submit →';
     btn.disabled = false;
   }
 }
 </script>
+
+
 </body>
 </html>

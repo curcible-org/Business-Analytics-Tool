@@ -1,0 +1,350 @@
+{
+  "name": "ONBOARDING — Client Receiver & Workspace Provisioner",
+  "nodes": [
+
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "onboarding",
+        "options": {
+          "responseMode": "responseNode"
+        }
+      },
+      "id": "webhook-receive",
+      "name": "Webhook — Receive Onboarding",
+      "type": "n8n-nodes-base.webhook",
+      "position": [0, 300],
+      "notes": "URL: https://YOUR-N8N.railway.app/webhook/onboarding — paste this into N8N_WEBHOOK_URL in onboarding/index.html"
+    },
+
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"received\", \"message\": \"Processing your workspace...\" }",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-immediately",
+      "name": "Respond 200 Immediately",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [200, 200],
+      "notes": "Return 200 right away so the browser doesn't time out. Processing continues async."
+    },
+
+    {
+      "parameters": {
+        "jsCode": "// Build a clean client record from the inbound payload\nconst body = $input.first().json.body;\n\nconst clientId = 'client_' + Date.now();\n\nconst TIER_PRODUCTS = {\n  starter: ['P07', 'P01'],\n  growth:  ['P07', 'P01', 'P03', 'P04', 'P02'],\n  scale:   ['P07', 'P01', 'P03', 'P04', 'P02', 'P05', 'P06', 'P08']\n};\n\nconst TIER_PRICES = {\n  starter: { mrr: 99,  setup: 299 },\n  growth:  { mrr: 249, setup: 499 },\n  scale:   { mrr: 499, setup: 999 }\n};\n\nconst tier = body.tier || 'starter';\n\nreturn [{\n  json: {\n    clientId,\n    tier,\n    mrr: TIER_PRICES[tier].mrr,\n    setup: TIER_PRICES[tier].setup,\n    products: TIER_PRODUCTS[tier],\n    firstName: body.client.firstName,\n    lastName:  body.client.lastName,\n    email:     body.client.email,\n    company:   body.client.company,\n    industry:  body.client.industry  || '',\n    teamSize:  body.client.teamSize  || '',\n    credentials: body.credentials   || {},\n    receivedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "code-parse-payload",
+      "name": "Code — Parse & Enrich Payload",
+      "type": "n8n-nodes-base.code",
+      "position": [200, 400]
+    },
+
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": { "value": "{{CURCIBLE_SHEETS_ID}}", "mode": "id" },
+        "sheetName": { "value": "Clients", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Client ID":    "={{ $json.clientId }}",
+            "First Name":   "={{ $json.firstName }}",
+            "Last Name":    "={{ $json.lastName }}",
+            "Email":        "={{ $json.email }}",
+            "Company":      "={{ $json.company }}",
+            "Industry":     "={{ $json.industry }}",
+            "Team Size":    "={{ $json.teamSize }}",
+            "Tier":         "={{ $json.tier }}",
+            "MRR":          "={{ $json.mrr }}",
+            "Products":     "={{ $json.products.join(', ') }}",
+            "Status":       "Provisioning",
+            "Signed Up At": "={{ $json.receivedAt }}",
+            "Activated At": ""
+          }
+        },
+        "options": {}
+      },
+      "id": "sheets-create-client",
+      "name": "Sheets — Create Client Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "credentials": { "googleSheetsOAuth2Api": { "id": "{{CURCIBLE_GOOGLE_CRED_ID}}", "name": "Curcible Google OAuth2" } },
+      "position": [400, 400]
+    },
+
+    {
+      "parameters": {
+        "jsCode": "// Build n8n credential objects for each credential the client provided\n// Uses the n8n REST API to create them programmatically\n\nconst client = $('Code — Parse & Enrich Payload').first().json;\nconst creds   = client.credentials;\nconst id      = client.clientId;\n\n// Map credential keys → n8n credential type + data shape\nconst CRED_MAP = {\n  google_oauth_token: {\n    type: 'googleOAuth2Api',\n    name: `${id} — Google OAuth2`,\n    data: { accessToken: creds.google_oauth_token }\n  },\n  openai_api_key: {\n    type: 'openAiApi',\n    name: `${id} — OpenAI`,\n    data: { apiKey: creds.openai_api_key }\n  },\n  zoom_client_id: {\n    type: 'zoomOAuth2Api',\n    name: `${id} — Zoom OAuth2`,\n    data: { clientId: creds.zoom_client_id, clientSecret: creds.zoom_client_secret }\n  },\n  hubspot_api_key: {\n    type: 'hubspotApi',\n    name: `${id} — HubSpot`,\n    data: { apiKey: creds.hubspot_api_key }\n  },\n  airtable_token: {\n    type: 'airtableTokenApi',\n    name: `${id} — Airtable`,\n    data: { accessToken: creds.airtable_token }\n  },\n  blotato_api_key: {\n    type: 'httpHeaderAuth',\n    name: `${id} — Blotato`,\n    data: { name: 'Authorization', value: `Bearer ${creds.blotato_api_key}` }\n  },\n  wordpress_app_password: {\n    type: 'httpBasicAuth',\n    name: `${id} — WordPress`,\n    data: { user: creds.wordpress_username || 'admin', password: creds.wordpress_app_password }\n  },\n  perplexity_api_key: {\n    type: 'httpHeaderAuth',\n    name: `${id} — Perplexity`,\n    data: { name: 'Authorization', value: `Bearer ${creds.perplexity_api_key}` }\n  },\n  qdrant_api_key: {\n    type: 'httpHeaderAuth',\n    name: `${id} — Qdrant`,\n    data: { name: 'api-key', value: creds.qdrant_api_key }\n  },\n  meta_system_token: {\n    type: 'httpHeaderAuth',\n    name: `${id} — Meta`,\n    data: { name: 'Authorization', value: `Bearer ${creds.meta_system_token}` }\n  },\n  calendly_api_key: {\n    type: 'httpHeaderAuth',\n    name: `${id} — Calendly`,\n    data: { name: 'Authorization', value: `Bearer ${creds.calendly_api_key}` }\n  }\n};\n\n// Only build credentials that the client actually provided\nconst toCreate = Object.entries(CRED_MAP)\n  .filter(([key]) => creds[key] && creds[key].trim() !== '')\n  .map(([, val]) => ({ json: val }));\n\nreturn toCreate.length > 0 ? toCreate : [{ json: { skipped: true } }];"
+      },
+      "id": "code-build-creds",
+      "name": "Code — Build Credential Objects",
+      "type": "n8n-nodes-base.code",
+      "position": [600, 400]
+    },
+
+    {
+      "parameters": {
+        "url": "={{$env.N8N_HOST_URL}}/api/v1/credentials",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-N8N-API-KEY", "value": "={{$env.N8N_API_KEY}}" },
+            { "name": "Content-Type",  "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={\n  \"name\": {{ JSON.stringify($json.name) }},\n  \"type\": {{ JSON.stringify($json.type) }},\n  \"data\": {{ JSON.stringify($json.data) }}\n}",
+        "options": {}
+      },
+      "id": "n8n-api-create-cred",
+      "name": "n8n API — Create Credential",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [800, 400],
+      "notes": "Calls n8n's own REST API to store credentials encrypted in the vault. Requires N8N_API_KEY env var set in Railway."
+    },
+
+    {
+      "parameters": {
+        "jsCode": "// Collect all created credential IDs and map them back to type\n// so downstream workflow-activation nodes can reference them\n\nconst items = $input.all();\nconst credMap = {};\n\nfor (const item of items) {\n  if (item.json.id && item.json.type) {\n    credMap[item.json.type] = item.json.id;\n  }\n}\n\nconst client = $('Code — Parse & Enrich Payload').first().json;\n\nreturn [{ json: { ...client, credentialIds: credMap } }];"
+      },
+      "id": "code-collect-cred-ids",
+      "name": "Code — Collect Credential IDs",
+      "type": "n8n-nodes-base.code",
+      "position": [1000, 400]
+    },
+
+    {
+      "parameters": {
+        "jsCode": "// For each product in the client's tier, find the template workflow\n// and build the activation payload\n\nconst client = $input.first().json;\n\n// Template workflow IDs — replace with actual IDs from your n8n instance\n// Find these at: GET /api/v1/workflows\nconst WORKFLOW_TEMPLATES = {\n  P07: '{{TEMPLATE_WORKFLOW_ID_P07}}',\n  P01: '{{TEMPLATE_WORKFLOW_ID_P01}}',\n  P03: '{{TEMPLATE_WORKFLOW_ID_P03}}',\n  P04: '{{TEMPLATE_WORKFLOW_ID_P04}}',\n  P02: '{{TEMPLATE_WORKFLOW_ID_P02}}',\n  P05: '{{TEMPLATE_WORKFLOW_ID_P05}}',\n  P06: '{{TEMPLATE_WORKFLOW_ID_P06}}',\n  P08: '{{TEMPLATE_WORKFLOW_ID_P08}}'\n};\n\nconst activations = client.products.map(pid => ({\n  json: {\n    clientId:   client.clientId,\n    productId:  pid,\n    templateId: WORKFLOW_TEMPLATES[pid],\n    credentialIds: client.credentialIds,\n    clientEmail: client.email,\n    company: client.company\n  }\n}));\n\nreturn activations;"
+      },
+      "id": "code-prepare-activations",
+      "name": "Code — Prepare Workflow Activations",
+      "type": "n8n-nodes-base.code",
+      "position": [1200, 400]
+    },
+
+    {
+      "parameters": {
+        "url": "={{$env.N8N_HOST_URL}}/api/v1/workflows/{{$json.templateId}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-N8N-API-KEY", "value": "={{$env.N8N_API_KEY}}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n8n-api-get-template",
+      "name": "n8n API — Get Template Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1400, 400]
+    },
+
+    {
+      "parameters": {
+        "jsCode": "// Duplicate the template workflow for this client:\n// 1. Rename it with client ID\n// 2. Swap credential IDs in all nodes\n// 3. Replace {{CLIENT_ID}} placeholders in webhook paths\n\nconst item = $input.first().json;\nconst template = item;  // full workflow object from n8n API\nconst meta = $('Code — Prepare Workflow Activations').first().json;\n\n// Deep clone and rename\nconst clientWorkflow = JSON.parse(JSON.stringify(template));\nclientWorkflow.name = `[${meta.clientId}] ${template.name}`;\ndelete clientWorkflow.id;  // remove so n8n creates a new one\nclientWorkflow.active = true;\n\n// Credential type → ID mapping from what we created\nconst credIds = meta.credentialIds;\nconst TYPE_MAP = {\n  googleOAuth2Api:   credIds['googleOAuth2Api'],\n  openAiApi:         credIds['openAiApi'],\n  zoomOAuth2Api:     credIds['zoomOAuth2Api'],\n  hubspotApi:        credIds['hubspotApi'],\n  airtableTokenApi:  credIds['airtableTokenApi'],\n  httpHeaderAuth:    credIds['httpHeaderAuth'],\n  httpBasicAuth:     credIds['httpBasicAuth']\n};\n\n// Walk all nodes and swap credential IDs\nif (clientWorkflow.nodes) {\n  clientWorkflow.nodes = clientWorkflow.nodes.map(node => {\n    if (node.credentials) {\n      for (const [credType, credObj] of Object.entries(node.credentials)) {\n        if (TYPE_MAP[credType]) {\n          node.credentials[credType] = {\n            id: TYPE_MAP[credType],\n            name: node.credentials[credType].name\n          };\n        }\n      }\n    }\n    // Replace CLIENT_ID placeholders in webhook paths and HTTP URLs\n    if (node.parameters) {\n      const paramStr = JSON.stringify(node.parameters)\n        .replace(/\\{\\{CLIENT_ID\\}\\}/g, meta.clientId)\n        .replace(/\\{\\{CLIENT_EMAIL\\}\\}/g, meta.clientEmail);\n      node.parameters = JSON.parse(paramStr);\n    }\n    return node;\n  });\n}\n\nreturn [{ json: { workflow: clientWorkflow, clientId: meta.clientId, productId: meta.productId } }];"
+      },
+      "id": "code-clone-workflow",
+      "name": "Code — Clone & Patch Workflow",
+      "type": "n8n-nodes-base.code",
+      "position": [1600, 400]
+    },
+
+    {
+      "parameters": {
+        "url": "={{$env.N8N_HOST_URL}}/api/v1/workflows",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-N8N-API-KEY", "value": "={{$env.N8N_API_KEY}}" },
+            { "name": "Content-Type",  "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ JSON.stringify($json.workflow) }}",
+        "options": {}
+      },
+      "id": "n8n-api-create-workflow",
+      "name": "n8n API — Create Client Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1800, 400]
+    },
+
+    {
+      "parameters": {
+        "url": "={{$env.N8N_HOST_URL}}/api/v1/workflows/{{$json.id}}/activate",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-N8N-API-KEY", "value": "={{$env.N8N_API_KEY}}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n8n-api-activate",
+      "name": "n8n API — Activate Workflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [2000, 400]
+    },
+
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": { "value": "{{CURCIBLE_SHEETS_ID}}", "mode": "id" },
+        "sheetName": { "value": "Clients", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Client ID":    "={{ $('Code — Collect Credential IDs').first().json.clientId }}",
+            "Status":       "Active",
+            "Activated At": "={{ $now.toISO() }}"
+          }
+        },
+        "options": { "locationDefine": "specifyRangeA1" }
+      },
+      "id": "sheets-update-active",
+      "name": "Sheets — Mark Client Active",
+      "type": "n8n-nodes-base.googleSheets",
+      "credentials": { "googleSheetsOAuth2Api": { "id": "{{CURCIBLE_GOOGLE_CRED_ID}}", "name": "Curcible Google OAuth2" } },
+      "position": [2200, 300],
+      "notes": "Matches the row by Client ID and updates Status + Activated At columns"
+    },
+
+    {
+      "parameters": {
+        "sendTo": "={{ $('Code — Parse & Enrich Payload').first().json.email }}",
+        "subject": "You're live on Curcible.",
+        "emailType": "html",
+        "message": "=<div style=\"font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1C1618\">\n  <div style=\"background:#1C1618;padding:20px 28px\">\n    <span style=\"font-family:'Georgia',serif;font-size:18px;color:#F9F7F8\">C<span style='color:#6A4858'>ur</span>cible<span style='color:#6A4858'>.</span></span>\n  </div>\n  <div style=\"padding:32px 28px;background:#FDFBFC;border:1px solid rgba(28,22,24,.1)\">\n\n    <p style=\"font-family:monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#847278;margin-bottom:8px\">Workspace Active</p>\n    <p style=\"font-family:Georgia,serif;font-size:24px;font-weight:400;margin-bottom:16px\">You're live, {{ $('Code — Parse & Enrich Payload').first().json.firstName }}.</p>\n\n    <p style=\"font-size:13px;color:#36262C;line-height:1.7;margin-bottom:24px\">Your Curcible workspace is active. The following automations are now running for <strong>{{ $('Code — Parse & Enrich Payload').first().json.company }}</strong>:</p>\n\n    <table style=\"width:100%;border-collapse:collapse;margin-bottom:24px\">\n      <tr style=\"background:#F2EEF0\">\n        <td style=\"padding:8px 12px;font-family:monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#847278\">Product</td>\n        <td style=\"padding:8px 12px;font-family:monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#847278\">What it does</td>\n      </tr>\n      {{ $('Code — Parse & Enrich Payload').first().json.products.map(p => {\n        const names = {\n          P07: ['MeetCore™', 'Meeting summaries + action items delivered by email'],\n          P01: ['InboxCore™', 'Email triage, draft replies, daily digest'],\n          P03: ['LeadCore™', 'Lead qualification + CRM push within 2 min'],\n          P04: ['PostCore™', 'Social content published from your Airtable calendar'],\n          P02: ['ContentCore™', 'SEO blog articles from a keyword in under 3 min'],\n          P05: ['ReportCore™', 'Monday morning analytics digest'],\n          P06: ['KnowCore™', 'WhatsApp AI chatbot answering customer questions'],\n          P08: ['SchedCore™', 'Booking confirmations + reminders automated']\n        };\n        const [name, desc] = names[p] || [p, ''];\n        return `<tr style=\"border-bottom:1px solid rgba(28,22,24,.06)\"><td style=\"padding:10px 12px;font-size:13px;font-weight:600;color:#1C1618\">${name}</td><td style=\"padding:10px 12px;font-size:12px;color:#847278\">${desc}</td></tr>`;\n      }).join('') }}\n    </table>\n\n    <p style=\"font-size:13px;color:#36262C;line-height:1.7;margin-bottom:8px\">Your <strong>{{ $('Code — Parse & Enrich Payload').first().json.tier.charAt(0).toUpperCase() + $('Code — Parse & Enrich Payload').first().json.tier.slice(1) }} plan</strong> is billed at <strong>${{ $('Code — Parse & Enrich Payload').first().json.mrr }}/month</strong>.</p>\n\n    <p style=\"font-size:13px;color:#36262C;line-height:1.7;margin-bottom:28px\">If anything looks off or you need to adjust a credential, reply to this email.</p>\n\n    <div style=\"border-top:1px solid rgba(28,22,24,.08);padding-top:20px\">\n      <p style=\"font-size:12px;color:#CCBEC2;margin:0\">Curcible · <a href=\"mailto:support@curcible.com\" style=\"color:#6A4858;text-decoration:none\">support@curcible.com</a></p>\n    </div>\n  </div>\n</div>",
+        "options": {}
+      },
+      "id": "gmail-send-confirmation",
+      "name": "Gmail — Send You're Live Email",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CURCIBLE_GMAIL_CRED_ID}}", "name": "Curcible Gmail" } },
+      "position": [2200, 450]
+    },
+
+    {
+      "parameters": {
+        "sendTo": "{{CURCIBLE_OWNER_EMAIL}}",
+        "subject": "=New client onboarded: {{ $('Code — Parse & Enrich Payload').first().json.company }} ({{ $('Code — Parse & Enrich Payload').first().json.tier }})",
+        "message": "=New client onboarded.\n\nClient ID: {{ $('Code — Parse & Enrich Payload').first().json.clientId }}\nName: {{ $('Code — Parse & Enrich Payload').first().json.firstName }} {{ $('Code — Parse & Enrich Payload').first().json.lastName }}\nEmail: {{ $('Code — Parse & Enrich Payload').first().json.email }}\nCompany: {{ $('Code — Parse & Enrich Payload').first().json.company }}\nTier: {{ $('Code — Parse & Enrich Payload').first().json.tier }} (${{ $('Code — Parse & Enrich Payload').first().json.mrr }}/mo)\nProducts: {{ $('Code — Parse & Enrich Payload').first().json.products.join(', ') }}\nTime: {{ $('Code — Parse & Enrich Payload').first().json.receivedAt }}\n\nAll workflows activated automatically.",
+        "options": {}
+      },
+      "id": "gmail-notify-owner",
+      "name": "Gmail — Notify Curcible Owner",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CURCIBLE_GMAIL_CRED_ID}}", "name": "Curcible Gmail" } },
+      "position": [2200, 600]
+    }
+
+  ],
+
+  "connections": {
+    "Webhook — Receive Onboarding": {
+      "main": [[
+        { "node": "Respond 200 Immediately",       "type": "main", "index": 0 },
+        { "node": "Code — Parse & Enrich Payload", "type": "main", "index": 0 }
+      ]]
+    },
+    "Code — Parse & Enrich Payload": {
+      "main": [[{ "node": "Sheets — Create Client Row", "type": "main", "index": 0 }]]
+    },
+    "Sheets — Create Client Row": {
+      "main": [[{ "node": "Code — Build Credential Objects", "type": "main", "index": 0 }]]
+    },
+    "Code — Build Credential Objects": {
+      "main": [[{ "node": "n8n API — Create Credential", "type": "main", "index": 0 }]]
+    },
+    "n8n API — Create Credential": {
+      "main": [[{ "node": "Code — Collect Credential IDs", "type": "main", "index": 0 }]]
+    },
+    "Code — Collect Credential IDs": {
+      "main": [[{ "node": "Code — Prepare Workflow Activations", "type": "main", "index": 0 }]]
+    },
+    "Code — Prepare Workflow Activations": {
+      "main": [[{ "node": "n8n API — Get Template Workflow", "type": "main", "index": 0 }]]
+    },
+    "n8n API — Get Template Workflow": {
+      "main": [[{ "node": "Code — Clone & Patch Workflow", "type": "main", "index": 0 }]]
+    },
+    "Code — Clone & Patch Workflow": {
+      "main": [[{ "node": "n8n API — Create Client Workflow", "type": "main", "index": 0 }]]
+    },
+    "n8n API — Create Client Workflow": {
+      "main": [[{ "node": "n8n API — Activate Workflow", "type": "main", "index": 0 }]]
+    },
+    "n8n API — Activate Workflow": {
+      "main": [[
+        { "node": "Sheets — Mark Client Active",          "type": "main", "index": 0 },
+        { "node": "Gmail — Send You're Live Email",     "type": "main", "index": 0 },
+        { "node": "Gmail — Notify Curcible Owner",      "type": "main", "index": 0 }
+      ]]
+    }
+  },
+
+  "settings": { "executionOrder": "v1" },
+  "meta": { "curcible_workflow": "onboarding-receiver", "version": "1.0.0" },
+
+  "_SETUP_GUIDE": {
+    "ENVIRONMENT_VARIABLES": {
+      "N8N_HOST_URL": "https://your-n8n.railway.app  — no trailing slash",
+      "N8N_API_KEY": "Generate in n8n: Settings > API > Create API Key"
+    },
+    "PLACEHOLDERS_TO_REPLACE": [
+      "{{CURCIBLE_SHEETS_ID}} — Google Sheets spreadsheet ID (the long string in the URL: docs.google.com/spreadsheets/d/THIS_PART/edit)",
+      "{{CURCIBLE_GOOGLE_CRED_ID}} — n8n credential ID for Curcible's own Google OAuth2 (used for both Sheets + Gmail)",
+      "{{CURCIBLE_GMAIL_CRED_ID}} — n8n credential ID for Curcible's own Gmail (support@curcible.com) — can be same as CURCIBLE_GOOGLE_CRED_ID",
+      "{{CURCIBLE_OWNER_EMAIL}} — your email to receive new client notifications",
+      "{{TEMPLATE_WORKFLOW_ID_P07}} — n8n workflow ID of your P07 template (find via GET /api/v1/workflows)",
+      "{{TEMPLATE_WORKFLOW_ID_P01}} — same for P01",
+      "{{TEMPLATE_WORKFLOW_ID_P03}} — same for P03",
+      "{{TEMPLATE_WORKFLOW_ID_P04}} — same for P04",
+      "{{TEMPLATE_WORKFLOW_ID_P02}} — same for P02",
+      "{{TEMPLATE_WORKFLOW_ID_P05}} — same for P05",
+      "{{TEMPLATE_WORKFLOW_ID_P06}} — same for P06",
+      "{{TEMPLATE_WORKFLOW_ID_P08}} — same for P08"
+    ],
+    "GOOGLE_SHEETS_SETUP": {
+      "sheet_name": "Clients",
+      "columns_row_1": [
+        "Client ID", "First Name", "Last Name", "Email", "Company",
+        "Industry", "Team Size", "Tier", "MRR", "Products",
+        "Status", "Signed Up At", "Activated At"
+      ],
+      "notes": "Create a new Google Sheet, rename Sheet1 to 'Clients', add these headers in row 1 exactly as written. The workflow matches on Client ID to update the row status."
+    },
+    "ACTIVATION_FLOW_EXPLAINED": [
+      "1. Onboarding form POSTs JSON to /webhook/onboarding",
+      "2. Workflow responds 200 immediately (prevents browser timeout)",
+      "3. Payload is parsed and a client record is appended to your Google Sheet (Clients tab)",
+      "4. Each credential the client provided is created in n8n's encrypted vault via the n8n REST API",
+      "5. For each product in the client's tier, the template workflow is fetched",
+      "6. The template is cloned: renamed, credential IDs swapped, CLIENT_ID placeholders replaced",
+      "7. The cloned workflow is saved and activated via n8n API",
+      "8. Google Sheet row is updated: Status → Active, Activated At → now",
+      "9. Client receives 'You're live' email listing their active products",
+      "10. You receive an internal notification"
+    ],
+    "IMPORTANT_NOTES": [
+      "Enable the n8n REST API in: Settings > API > Enable API",
+      "The workflow handles all 8 products — only the ones in the client's tier are activated",
+      "Template workflows must be imported first (use the P0X-*.json files) and set to INACTIVE before use as templates",
+      "The loop over products (steps 5–7) uses n8n's standard item processing — each product triggers its own Get/Clone/Create/Activate chain",
+      "Credentials with multiple keys (e.g. Zoom needs both client_id and client_secret) are handled in Code — Build Credential Objects"
+    ]
+  }
+}
