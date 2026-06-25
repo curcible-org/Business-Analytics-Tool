@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PostCore™ — Auto-Publish to 4 Social Platforms Simultaneously</title>
+  <meta name="description" content="One topic. Four platforms. One workflow. PostCore generates platform-native posts, creates a DALL-E 3 image, and publishes to Twitter/X, LinkedIn, Instagram, and Facebook simultaneously." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <script src="https://gumroad.com/js/gumroad.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+  <style>
+    :root{--paper:#F9F7F8;--warm-paper:#FDFBFC;--parchment:#F2EEF0;--ink:#1C1618;--ink-mid:#36262C;--stone:#847278;--ghost:#CCBEC2;--plum:#6A4858;--plum-mid:#7D5569;--plum-pale:rgba(106,72,88,0.07);--plum-pale2:rgba(106,72,88,0.13);--border:rgba(28,22,24,0.10);--border-strong:rgba(28,22,24,0.22);--rule:rgba(28,22,24,0.06);--serif:'DM Serif Display',Georgia,serif;--mono:'DM Mono',monospace;--sans:'DM Sans',system-ui,sans-serif;--radius:3px}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.7;font-size:16px;-webkit-font-smoothing:antialiased}
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 3.5rem;height:60px;background:rgba(249,247,248,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+    .wordmark{font-family:var(--sans);font-size:15px;font-weight:500;letter-spacing:-0.01em;color:var(--ink);text-decoration:none}.wordmark span{color:var(--plum)}
+    .nav-right{display:flex;align-items:center;gap:2rem}
+    .nav-link{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--stone);text-decoration:none;transition:color .15s}.nav-link:hover{color:var(--ink)}
+    .nav-cta{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--warm-paper);background:var(--ink);border:none;padding:8px 18px;border-radius:var(--radius);cursor:pointer;text-decoration:none;transition:background .15s}.nav-cta:hover{background:var(--ink-mid)}
+    .hero{padding:9rem 3.5rem 6rem;max-width:900px;margin:0 auto}
+    .hero-tag{display:inline-block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--stone);background:var(--parchment);border:1px solid var(--border);padding:5px 10px;border-radius:var(--radius);margin-bottom:2rem}
+    .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(2.6rem,5vw,3.8rem);letter-spacing:-0.025em;line-height:1.1;color:var(--ink);margin-bottom:1.5rem;max-width:760px}.hero h1 em{font-style:normal;color:var(--plum)}
+    .hero-sub{font-size:1.05rem;color:var(--stone);max-width:520px;margin-bottom:2.5rem;line-height:1.65}
+    .hero-actions{display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap}
+    .btn-primary{display:inline-block;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--warm-paper);background:var(--ink);padding:14px 28px;border-radius:var(--radius);text-decoration:none;border:none;cursor:pointer;transition:background .15s}.btn-primary:hover{background:var(--plum)}
+    .hero-note{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ghost)}
+    .stat-strip{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--warm-paper);display:grid;grid-template-columns:repeat(3,1fr)}
+    .stat-item{padding:2.5rem 3.5rem;border-right:1px solid var(--border)}.stat-item:last-child{border-right:none}
+    .stat-num{font-family:var(--serif);font-size:2.2rem;letter-spacing:-0.025em;color:var(--ink);margin-bottom:.25rem}.stat-num span{color:var(--plum)}
+    .stat-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--stone)}
+    section{padding:6rem 3.5rem;max-width:1100px;margin:0 auto}
+    .section-tinted{background:var(--parchment);max-width:100%;padding:6rem 0}.section-tinted .section-inner{max-width:1100px;margin:0 auto;padding:0 3.5rem}
+    .section-tag{display:inline-block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--stone);background:var(--parchment);border:1px solid var(--border);padding:5px 10px;border-radius:var(--radius);margin-bottom:1.25rem}.section-tinted .section-tag{background:var(--paper)}
+    h2{font-family:var(--serif);font-weight:400;font-size:clamp(1.8rem,3.5vw,2.5rem);letter-spacing:-0.025em;line-height:1.15;color:var(--ink);margin-bottom:1rem}
+    .section-sub{font-size:1rem;color:var(--stone);max-width:480px;margin-bottom:3rem;line-height:1.65}
+    .problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:3rem}
+    .problem-card{background:var(--warm-paper);padding:2rem 1.75rem}
+    .problem-icon{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--plum);margin-bottom:.75rem}
+    .problem-card h3{font-family:var(--sans);font-weight:500;font-size:.95rem;color:var(--ink);margin-bottom:.5rem;letter-spacing:-0.01em}
+    .problem-card p{font-size:.9rem;color:var(--stone);line-height:1.6}
+    .problem-conclusion{font-family:var(--serif);font-size:1.3rem;color:var(--ink-mid);letter-spacing:-0.02em;line-height:1.4;padding:1.75rem 2rem;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--warm-paper)}
+    .solution-layout{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+    .solution-steps{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .solution-step{background:var(--warm-paper);padding:1.5rem 1.75rem;display:flex;gap:1rem;align-items:flex-start}
+    .step-num{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--ghost);padding-top:3px;min-width:24px}
+    .step-body h4{font-family:var(--sans);font-weight:500;font-size:.9rem;color:var(--ink);margin-bottom:.25rem}
+    .step-body p{font-size:.875rem;color:var(--stone);line-height:1.55}
+    .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .feature-card{background:var(--paper);padding:2.25rem 2rem}
+    .feature-tag{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--plum);margin-bottom:1rem}
+    .feature-card h3{font-family:var(--sans);font-weight:500;font-size:1rem;color:var(--ink);margin-bottom:.6rem;letter-spacing:-0.01em}
+    .feature-card p{font-size:.875rem;color:var(--stone);line-height:1.6}
+    .testimonial-wrap{border:1px solid var(--border-strong);border-radius:var(--radius);padding:3rem;background:var(--warm-paper)}
+    .testimonial-quote{font-family:var(--serif);font-size:clamp(1.1rem,2vw,1.4rem);color:var(--ink);letter-spacing:-0.02em;line-height:1.5;margin-bottom:2rem}
+    .testimonial-meta{display:flex;align-items:center;gap:1rem}
+    .testimonial-avatar{width:36px;height:36px;border-radius:50%;background:var(--plum-pale2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:var(--plum)}
+    .testimonial-name{font-family:var(--sans);font-weight:500;font-size:.875rem;color:var(--ink)}
+    .testimonial-title{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--stone)}
+    .faq-list{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .faq-item{background:var(--warm-paper);padding:1.75rem 2rem;border-bottom:1px solid var(--rule)}.faq-item:last-child{border-bottom:none}
+    .faq-q{font-family:var(--sans);font-weight:500;font-size:.95rem;color:var(--ink);margin-bottom:.5rem;letter-spacing:-0.01em}
+    .faq-a{font-size:.9rem;color:var(--stone);line-height:1.65}
+    .cta-section{text-align:center;padding:6rem 3.5rem;max-width:700px;margin:0 auto}.cta-section h2{margin-bottom:1rem}.cta-section p{color:var(--stone);margin-bottom:2.5rem}
+    .cta-meta{display:flex;align-items:center;justify-content:center;gap:1.5rem;flex-wrap:wrap;margin-top:1.25rem}.cta-meta span{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ghost)}
+    footer{border-top:1px solid var(--border);padding:2.5rem 3.5rem;display:flex;align-items:center;justify-content:space-between}
+    .footer-note{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ghost)}
+    @media(max-width:768px){nav{padding:0 1.5rem}.nav-right .nav-link{display:none}.hero{padding:7rem 1.5rem 4rem}section{padding:4rem 1.5rem}.section-tinted .section-inner{padding:0 1.5rem}.stat-strip{grid-template-columns:1fr}.stat-item{border-right:none;border-bottom:1px solid var(--border);padding:2rem 1.5rem}.stat-item:last-child{border-bottom:none}.problem-grid{grid-template-columns:1fr}.solution-layout{grid-template-columns:1fr;gap:2rem}.features-grid{grid-template-columns:1fr}.testimonial-wrap{padding:2rem 1.5rem}.cta-section{padding:4rem 1.5rem}footer{flex-direction:column;gap:1rem;padding:2rem 1.5rem}}
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#" class="wordmark">C<span>ur</span>cible<span>.</span></a>
+    <div class="nav-right">
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+      <a href="https://curcible.gumroad.com/l/postcore" data-gumroad-overlay-checkout="true" class="nav-cta">Get PostCore — $79</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <span class="hero-tag">PostCore™ — Social Media Auto-Publisher</span>
+    <h1>One topic.<br /><em>Four platforms. Simultaneously.</em></h1>
+    <p class="hero-sub">PostCore generates platform-native posts for Twitter/X, LinkedIn, Instagram, and Facebook — creates a DALL-E 3 image and publishes everything at once.</p>
+    <div class="hero-actions">
+      <a href="https://curcible.gumroad.com/l/postcore" data-gumroad-overlay-checkout="true" class="btn-primary">Get PostCore — $79 one-time</a>
+      <span class="hero-note">No subscription &nbsp;·&nbsp; Setup in 3–5 hours</span>
+    </div>
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat-item">
+      <div class="stat-num">4<span> platforms</span></div>
+      <div class="stat-label">Published simultaneously</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">$<span>0.10</span></div>
+      <div class="stat-label">Per full publishing run</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">$<span>79</span></div>
+      <div class="stat-label">One-time. No seat limits.</div>
+    </div>
+  </div>
+
+  <section>
+    <span class="section-tag">The problem</span>
+    <h2>You know you need to post.<br />You just never have time to do it.</h2>
+    <p class="section-sub">Consistent social presence is proven to drive awareness and inbound — but maintaining it manually is a part-time job most teams can't afford.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">01 — Format</div>
+        <h3>Every platform needs different content.</h3>
+        <p>A LinkedIn post is not a tweet. An Instagram caption is not a Facebook update. Repurposing the same text across all four looks lazy and kills engagement.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">02 — Time</div>
+        <h3>Writing for 4 platforms takes hours per week.</h3>
+        <p>Research the topic. Write 4 versions. Source or generate an image. Schedule across platforms. That's 2–3 hours per post day — time most teams don't have.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">03 — Consistency</div>
+        <h3>Posting drops when the team is busy.</h3>
+        <p>Social consistency is the first thing cut when a project heats up. Your audience notices. Algorithms notice. Months of momentum disappear in two missed weeks.</p>
+      </div>
+    </div>
+    <div class="problem-conclusion">
+      Consistent social presence doesn't require a social media manager. It requires a workflow.
+    </div>
+  </section>
+
+  <div class="section-tinted" id="how">
+    <div class="section-inner">
+      <span class="section-tag">How it works</span>
+      <h2>Topic in. Four platform-native posts out.</h2>
+      <p class="section-sub">Trigger on demand or let the built-in schedule run automatically — PostCore handles the rest.</p>
+      <div class="solution-layout">
+        <div class="solution-steps">
+          <div class="solution-step">
+            <span class="step-num">01</span>
+            <div class="step-body">
+              <h4>Send a topic via webhook or schedule</h4>
+              <p>Trigger on demand from a form or Notion. Or let the default schedule run — Mon/Wed/Fri 9am. Configurable to any cron expression.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">02</span>
+            <div class="step-body">
+              <h4>GPT-4o writes 4 platform-native posts</h4>
+              <p>Twitter/X (character-limited, punchy), LinkedIn (professional narrative), Instagram (visual caption + hashtags), Facebook (conversational). All from one topic.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">03</span>
+            <div class="step-body">
+              <h4>DALL-E 3 generates the image</h4>
+              <p>A featured image matched to the topic and your brand aesthetic — generated automatically each run.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">04</span>
+            <div class="step-body">
+              <h4>All 4 platforms published simultaneously</h4>
+              <p>Twitter/X API v2, LinkedIn UGC API, Instagram Graph API, Facebook Graph API — all fire in parallel.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">05</span>
+            <div class="step-body">
+              <h4>Slack confirmation + Airtable log</h4>
+              <p>Slack notifies the team with a post summary. Every run logged to Airtable with theme, posts, image URL, and timestamp.</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p style="font-family:var(--serif);font-size:1.35rem;letter-spacing:-0.02em;line-height:1.5;color:var(--ink-mid);margin-bottom:2rem;">Set it up once. Post consistently forever.</p>
+          <p style="font-size:.9rem;color:var(--stone);line-height:1.7;margin-bottom:1.5rem;">PostCore is delivered as an import-ready n8n workflow. Connect your platform credentials, set your brand voice prompt, and it runs automatically on schedule.</p>
+          <p style="font-size:.9rem;color:var(--stone);line-height:1.7;">Each platform node is independent — disable any platform without affecting the others.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="features">
+    <span class="section-tag">Features</span>
+    <h2>Built for teams that need consistent social presence without a social team.</h2>
+    <p class="section-sub">Every feature targets posting consistency and platform quality at the same time.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-tag">Generation</div>
+        <h3>Platform-Native Post Writing</h3>
+        <p>GPT-4o writes each post to the format and conventions of its platform — character limits, hashtag norms, tone expectations. Not repurposed copy, native content.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Visual</div>
+        <h3>DALL-E 3 Image per Run</h3>
+        <p>Every publishing run includes a freshly generated image matched to the topic. Configurable style presets — editorial, product-style, abstract, and lifestyle.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Schedule</div>
+        <h3>Dual Trigger — Webhook + Cron</h3>
+        <p>Run on demand (webhook) or automatically on a schedule (default Mon/Wed/Fri 9am). Change the cron expression anytime without touching the workflow structure.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Flexibility</div>
+        <h3>Platform-Independent Nodes</h3>
+        <p>Each platform is a separate node. Disable Twitter without affecting LinkedIn. Add TikTok later. The architecture is modular by design.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Alerts</div>
+        <h3>Slack Publish Confirmation</h3>
+        <p>Every run sends a Slack notification with the topic, post summary, and image URL. Your team stays informed without logging into 4 different platforms.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Logging</div>
+        <h3>Airtable Run History</h3>
+        <p>Every publishing run logged to Airtable — topic, all 4 posts, image URL, platform statuses, and timestamp. Full audit trail without a spreadsheet.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-tinted">
+    <div class="section-inner">
+      <span class="section-tag">Results</span>
+      <div class="testimonial-wrap">
+        <p class="testimonial-quote">"We used to post maybe twice a week on one platform. PostCore runs three times a week across all four — and the content is actually better than what we were writing manually because it's properly formatted for each platform. Our LinkedIn engagement doubled in 6 weeks."</p>
+        <div class="testimonial-meta">
+          <div class="testimonial-avatar">AL</div>
+          <div>
+            <div class="testimonial-name">Alex L.</div>
+            <div class="testimonial-title">Co-Founder · E-commerce · 8 employees</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="faq">
+    <span class="section-tag">FAQ</span>
+    <h2>Common questions.</h2>
+    <p class="section-sub">Everything you need to know before purchasing.</p>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">Which platforms does PostCore support?</div>
+        <p class="faq-a">Twitter/X (API v2), LinkedIn (UGC API), Instagram Business (Graph API), and Facebook Pages (Graph API). Each platform requires its own API credentials — setup guides for all four are included in the README.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I post to only some platforms, not all four?</div>
+        <p class="faq-a">Yes. Each platform is a separate node in the workflow. Disable any node and it won't fire on that run. You can start with two platforms and add the others later without rebuilding anything.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">How do I control the brand voice and content style?</div>
+        <p class="faq-a">Via the GPT-4o prompt, configured once during setup. You define your brand voice, content pillars, and audience. Three pre-written brand voice examples are in the README. You can also supply example posts for the model to match.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I review posts before they go live?</div>
+        <p class="faq-a">The current workflow publishes directly. If you need an approval step, you can add a Slack interactive message node (documented in the README as an optional add-on) that holds publication until you approve.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What does it cost to run?</div>
+        <p class="faq-a">Approximately $0.05–0.10 per run for GPT-4o post generation + $0.04 per image (DALL-E 3). At 3 runs/week, running cost is roughly $5–7/month — paid directly to OpenAI.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-tinted" id="get">
+    <div class="cta-section">
+      <span class="section-tag" style="background:var(--paper);">Get PostCore™</span>
+      <h2>Post consistently.<br />Without the effort.</h2>
+      <p>PostCore publishes to 4 platforms simultaneously — platform-native posts, DALL-E image, Slack confirmation. One purchase. Runs on schedule, forever.</p>
+      <a href="https://curcible.gumroad.com/l/postcore" data-gumroad-overlay-checkout="true" class="btn-primary">Get PostCore — $79 one-time</a>
+      <div class="cta-meta">
+        <span>No subscription</span><span>·</span><span>Setup in 3–5 hours</span><span>·</span><span>No seat limits</span><span>·</span><span>Delivered as n8n workflow</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="#" class="wordmark">C<span>ur</span>cible<span>.</span></a>
+    <span class="footer-note">PostCore™ is a Curcible product &nbsp;·&nbsp; One-time purchase &nbsp;·&nbsp; © 2026</span>
+  </footer>
+
+</body>
+</html>

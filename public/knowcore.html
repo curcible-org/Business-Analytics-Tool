@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KnowCore™ — WhatsApp AI Chatbot with RAG for SMBs</title>
+  <meta name="description" content="A WhatsApp assistant that knows your business. Pinecone RAG, intent classification, human escalation, and full conversation logging — without a support team." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <script src="https://gumroad.com/js/gumroad.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+  <style>
+    :root{--paper:#F9F7F8;--warm-paper:#FDFBFC;--parchment:#F2EEF0;--ink:#1C1618;--ink-mid:#36262C;--stone:#847278;--ghost:#CCBEC2;--plum:#6A4858;--plum-mid:#7D5569;--plum-pale:rgba(106,72,88,0.07);--plum-pale2:rgba(106,72,88,0.13);--border:rgba(28,22,24,0.10);--border-strong:rgba(28,22,24,0.22);--rule:rgba(28,22,24,0.06);--serif:'DM Serif Display',Georgia,serif;--mono:'DM Mono',monospace;--sans:'DM Sans',system-ui,sans-serif;--radius:3px}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.7;font-size:16px;-webkit-font-smoothing:antialiased}
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 3.5rem;height:60px;background:rgba(249,247,248,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+    .wordmark{font-family:var(--sans);font-size:15px;font-weight:500;letter-spacing:-0.01em;color:var(--ink);text-decoration:none}.wordmark span{color:var(--plum)}
+    .nav-right{display:flex;align-items:center;gap:2rem}
+    .nav-link{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--stone);text-decoration:none;transition:color .15s}.nav-link:hover{color:var(--ink)}
+    .nav-cta{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--warm-paper);background:var(--ink);border:none;padding:8px 18px;border-radius:var(--radius);cursor:pointer;text-decoration:none;transition:background .15s}.nav-cta:hover{background:var(--ink-mid)}
+    .hero{padding:9rem 3.5rem 6rem;max-width:900px;margin:0 auto}
+    .hero-tag{display:inline-block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--stone);background:var(--parchment);border:1px solid var(--border);padding:5px 10px;border-radius:var(--radius);margin-bottom:2rem}
+    .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(2.6rem,5vw,3.8rem);letter-spacing:-0.025em;line-height:1.1;color:var(--ink);margin-bottom:1.5rem;max-width:760px}.hero h1 em{font-style:normal;color:var(--plum)}
+    .hero-sub{font-size:1.05rem;color:var(--stone);max-width:520px;margin-bottom:2.5rem;line-height:1.65}
+    .hero-actions{display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap}
+    .btn-primary{display:inline-block;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--warm-paper);background:var(--ink);padding:14px 28px;border-radius:var(--radius);text-decoration:none;border:none;cursor:pointer;transition:background .15s}.btn-primary:hover{background:var(--plum)}
+    .hero-note{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ghost)}
+    .stat-strip{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--warm-paper);display:grid;grid-template-columns:repeat(3,1fr)}
+    .stat-item{padding:2.5rem 3.5rem;border-right:1px solid var(--border)}.stat-item:last-child{border-right:none}
+    .stat-num{font-family:var(--serif);font-size:2.2rem;letter-spacing:-0.025em;color:var(--ink);margin-bottom:.25rem}.stat-num span{color:var(--plum)}
+    .stat-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--stone)}
+    section{padding:6rem 3.5rem;max-width:1100px;margin:0 auto}
+    .section-tinted{background:var(--parchment);max-width:100%;padding:6rem 0}.section-tinted .section-inner{max-width:1100px;margin:0 auto;padding:0 3.5rem}
+    .section-tag{display:inline-block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--stone);background:var(--parchment);border:1px solid var(--border);padding:5px 10px;border-radius:var(--radius);margin-bottom:1.25rem}.section-tinted .section-tag{background:var(--paper)}
+    h2{font-family:var(--serif);font-weight:400;font-size:clamp(1.8rem,3.5vw,2.5rem);letter-spacing:-0.025em;line-height:1.15;color:var(--ink);margin-bottom:1rem}
+    .section-sub{font-size:1rem;color:var(--stone);max-width:480px;margin-bottom:3rem;line-height:1.65}
+    .problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:3rem}
+    .problem-card{background:var(--warm-paper);padding:2rem 1.75rem}
+    .problem-icon{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--plum);margin-bottom:.75rem}
+    .problem-card h3{font-family:var(--sans);font-weight:500;font-size:.95rem;color:var(--ink);margin-bottom:.5rem;letter-spacing:-0.01em}
+    .problem-card p{font-size:.9rem;color:var(--stone);line-height:1.6}
+    .problem-conclusion{font-family:var(--serif);font-size:1.3rem;color:var(--ink-mid);letter-spacing:-0.02em;line-height:1.4;padding:1.75rem 2rem;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--warm-paper)}
+    .solution-layout{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+    .solution-steps{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .solution-step{background:var(--warm-paper);padding:1.5rem 1.75rem;display:flex;gap:1rem;align-items:flex-start}
+    .step-num{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--ghost);padding-top:3px;min-width:24px}
+    .step-body h4{font-family:var(--sans);font-weight:500;font-size:.9rem;color:var(--ink);margin-bottom:.25rem}
+    .step-body p{font-size:.875rem;color:var(--stone);line-height:1.55}
+    .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .feature-card{background:var(--paper);padding:2.25rem 2rem}
+    .feature-tag{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--plum);margin-bottom:1rem}
+    .feature-card h3{font-family:var(--sans);font-weight:500;font-size:1rem;color:var(--ink);margin-bottom:.6rem;letter-spacing:-0.01em}
+    .feature-card p{font-size:.875rem;color:var(--stone);line-height:1.6}
+    .testimonial-wrap{border:1px solid var(--border-strong);border-radius:var(--radius);padding:3rem;background:var(--warm-paper)}
+    .testimonial-quote{font-family:var(--serif);font-size:clamp(1.1rem,2vw,1.4rem);color:var(--ink);letter-spacing:-0.02em;line-height:1.5;margin-bottom:2rem}
+    .testimonial-meta{display:flex;align-items:center;gap:1rem}
+    .testimonial-avatar{width:36px;height:36px;border-radius:50%;background:var(--plum-pale2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:var(--plum)}
+    .testimonial-name{font-family:var(--sans);font-weight:500;font-size:.875rem;color:var(--ink)}
+    .testimonial-title{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--stone)}
+    .faq-list{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .faq-item{background:var(--warm-paper);padding:1.75rem 2rem;border-bottom:1px solid var(--rule)}.faq-item:last-child{border-bottom:none}
+    .faq-q{font-family:var(--sans);font-weight:500;font-size:.95rem;color:var(--ink);margin-bottom:.5rem;letter-spacing:-0.01em}
+    .faq-a{font-size:.9rem;color:var(--stone);line-height:1.65}
+    .cta-section{text-align:center;padding:6rem 3.5rem;max-width:700px;margin:0 auto}.cta-section h2{margin-bottom:1rem}.cta-section p{color:var(--stone);margin-bottom:2.5rem}
+    .cta-meta{display:flex;align-items:center;justify-content:center;gap:1.5rem;flex-wrap:wrap;margin-top:1.25rem}.cta-meta span{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ghost)}
+    footer{border-top:1px solid var(--border);padding:2.5rem 3.5rem;display:flex;align-items:center;justify-content:space-between}
+    .footer-note{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ghost)}
+    @media(max-width:768px){nav{padding:0 1.5rem}.nav-right .nav-link{display:none}.hero{padding:7rem 1.5rem 4rem}section{padding:4rem 1.5rem}.section-tinted .section-inner{padding:0 1.5rem}.stat-strip{grid-template-columns:1fr}.stat-item{border-right:none;border-bottom:1px solid var(--border);padding:2rem 1.5rem}.stat-item:last-child{border-bottom:none}.problem-grid{grid-template-columns:1fr}.solution-layout{grid-template-columns:1fr;gap:2rem}.features-grid{grid-template-columns:1fr}.testimonial-wrap{padding:2rem 1.5rem}.cta-section{padding:4rem 1.5rem}footer{flex-direction:column;gap:1rem;padding:2rem 1.5rem}}
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#" class="wordmark">C<span>ur</span>cible<span>.</span></a>
+    <div class="nav-right">
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+      <a href="https://curcible.gumroad.com/l/knowcore" data-gumroad-overlay-checkout="true" class="nav-cta">Get KnowCore — $99</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <span class="hero-tag">KnowCore™ — WhatsApp AI Chatbot + RAG</span>
+    <h1>A WhatsApp assistant<br /><em>that knows your business.</em></h1>
+    <p class="hero-sub">KnowCore answers customer questions on WhatsApp using your own knowledge base — with Pinecone RAG, intent classification, human escalation, and full conversation logging.</p>
+    <div class="hero-actions">
+      <a href="https://curcible.gumroad.com/l/knowcore" data-gumroad-overlay-checkout="true" class="btn-primary">Get KnowCore — $99 one-time</a>
+      <span class="hero-note">No subscription &nbsp;·&nbsp; Setup in 4–6 hours</span>
+    </div>
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat-item">
+      <div class="stat-num">5<span> intents</span></div>
+      <div class="stat-label">AI-classified per message</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">$<span>0.03</span></div>
+      <div class="stat-label">Per message handled</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">$<span>99</span></div>
+      <div class="stat-label">One-time. No seat limits.</div>
+    </div>
+  </div>
+
+  <section>
+    <span class="section-tag">The problem</span>
+    <h2>You're answering the same WhatsApp questions<br />50 times a week.</h2>
+    <p class="section-sub">High-volume WhatsApp inquiries are one of the biggest time drains for service businesses — and the questions are almost always the same ones.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">01 — Volume</div>
+        <h3>50+ identical questions every day.</h3>
+        <p>Hours, prices, availability, services, location — the same 10 questions, over and over. Each one takes 2–3 minutes to reply to manually. That's hours per day.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">02 — Consistency</div>
+        <h3>Different staff give different answers.</h3>
+        <p>When customers get inconsistent information depending on who picks up the phone, trust erodes. Complaints increase. Refunds follow.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">03 — Cost</div>
+        <h3>A full-time support hire costs $3,000–5,000/mo.</h3>
+        <p>Most SMBs can't justify a dedicated support person for WhatsApp — but the messages don't stop coming just because you can't staff it.</p>
+      </div>
+    </div>
+    <div class="problem-conclusion">
+      Most customer questions have known answers. Automate the known ones. Escalate the rest.
+    </div>
+  </section>
+
+  <div class="section-tinted" id="how">
+    <div class="section-inner">
+      <span class="section-tag">How it works</span>
+      <h2>Message in. Accurate answer out. Human escalation when needed.</h2>
+      <p class="section-sub">KnowCore uses your own knowledge base — not generic AI — to answer every question accurately.</p>
+      <div class="solution-layout">
+        <div class="solution-steps">
+          <div class="solution-step">
+            <span class="step-num">01</span>
+            <div class="step-body">
+              <h4>Customer sends a WhatsApp message</h4>
+              <p>KnowCore receives incoming messages via Twilio WhatsApp Business. No app install required for the customer.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">02</span>
+            <div class="step-body">
+              <h4>GPT-4o-mini classifies the intent</h4>
+              <p>Fast, cheap classification into 5 intents: question, complaint, booking, sales, or escalate — before the expensive model runs.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">03</span>
+            <div class="step-body">
+              <h4>Pinecone retrieves relevant KB chunks</h4>
+              <p>Vector search returns the top 5 most relevant chunks from your knowledge base — your FAQs, product info, policies, and procedures.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">04</span>
+            <div class="step-body">
+              <h4>GPT-4o generates a grounded response</h4>
+              <p>Answers only from your knowledge base context — no hallucinations. Multilingual: detects and responds in the customer's language.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">05</span>
+            <div class="step-body">
+              <h4>Human escalation if confidence is low</h4>
+              <p>If the model isn't confident or the user requests a human, a Slack alert fires immediately. All conversations logged to Airtable.</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p style="font-family:var(--serif);font-size:1.35rem;letter-spacing:-0.02em;line-height:1.5;color:var(--ink-mid);margin-bottom:2rem;">Your knowledge base answers. You only handle exceptions.</p>
+          <p style="font-size:.9rem;color:var(--stone);line-height:1.7;margin-bottom:1.5rem;">KnowCore is delivered as an import-ready n8n workflow + Python ingestion script. Load your knowledge base once — it answers accurately from that point forward.</p>
+          <p style="font-size:.9rem;color:var(--stone);line-height:1.7;">Compatible with Supabase pgvector, Weaviate, or Qdrant as Pinecone alternatives.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="features">
+    <span class="section-tag">Features</span>
+    <h2>Built for businesses fielding 50+ repetitive WhatsApp inquiries per day.</h2>
+    <p class="section-sub">Every feature targets accuracy, consistency, and safe escalation.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-tag">RAG</div>
+        <h3>Pinecone Knowledge Base</h3>
+        <p>Answers are grounded exclusively in your knowledge base — your FAQs, product info, policies, and service details. No hallucinations. No generic AI answers. Your content, your accuracy.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Intent</div>
+        <h3>5-Intent Classification</h3>
+        <p>GPT-4o-mini classifies every message as question, complaint, booking, sales, or escalate — fast and cheaply — before GPT-4o runs. Different intent paths handled differently.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Language</div>
+        <h3>Automatic Multilingual Support</h3>
+        <p>GPT-4o detects the customer's language and responds in kind. No configuration required. Works across all languages GPT-4o supports — out of the box.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Escalation</div>
+        <h3>Smart Human Handoff</h3>
+        <p>If confidence falls below threshold, the intent is "escalate", or the customer says "speak to a human" — a Slack alert fires immediately. No customer left unanswered.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Safety</div>
+        <h3>Fallback Response</h3>
+        <p>If no knowledge base match is found, KnowCore responds with "I don't have that information" and escalates — never guesses. Accurate silence beats confident wrongness.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Logging</div>
+        <h3>Full Conversation Audit</h3>
+        <p>Every message pair logged to Airtable — intent, confidence, response, session ID, and timestamp. Full visibility into what your customers are asking and how the bot is performing.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-tinted">
+    <div class="section-inner">
+      <span class="section-tag">Results</span>
+      <div class="testimonial-wrap">
+        <p class="testimonial-quote">"We were spending 4 hours a day answering the same WhatsApp questions about our clinic's hours, services, and booking process. KnowCore handles 85% of them automatically now. Our front desk focuses on patients in the building, not messages on a phone."</p>
+        <div class="testimonial-meta">
+          <div class="testimonial-avatar">NP</div>
+          <div>
+            <div class="testimonial-name">Nina P.</div>
+            <div class="testimonial-title">Practice Manager · Medical Clinic · 18 staff</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="faq">
+    <span class="section-tag">FAQ</span>
+    <h2>Common questions.</h2>
+    <p class="section-sub">Everything you need to know before purchasing.</p>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">How do I load my knowledge base?</div>
+        <p class="faq-a">KnowCore includes a Python ingestion script that reads your documents (PDFs, Word files, plain text, FAQ spreadsheets), chunks them, and uploads embeddings to Pinecone. Setup takes 30–60 minutes depending on the size of your knowledge base. A step-by-step guide is included.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Will it make up answers if it doesn't know something?</div>
+        <p class="faq-a">No. KnowCore uses a strict RAG prompt — GPT-4o is instructed to answer only from the retrieved knowledge base context. If no relevant content is found, it responds with a fallback message and escalates to your team via Slack. Accuracy over confidence.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Does it require WhatsApp Business API access?</div>
+        <p class="faq-a">Yes. KnowCore uses Twilio's WhatsApp Business integration, which requires a Twilio account and WhatsApp Business API approval. The README includes the full approval and setup process — it typically takes 1–3 days for WhatsApp Business verification.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I use a different vector database instead of Pinecone?</div>
+        <p class="faq-a">Yes. The README includes adaptation guides for Supabase pgvector, Weaviate, and Qdrant. The vector search node is modular — swap the HTTP request target without changing any other part of the workflow.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Why is KnowCore priced at $99 instead of $79?</div>
+        <p class="faq-a">KnowCore is the most complex workflow in the suite — it includes a RAG knowledge base, dual-model pipeline (GPT-4o-mini + GPT-4o), Twilio WhatsApp integration, and a Python KB ingestion script. Setup is 4–6 hours versus 1–2 hours for simpler workflows.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-tinted" id="get">
+    <div class="cta-section">
+      <span class="section-tag" style="background:var(--paper);">Get KnowCore™</span>
+      <h2>Answer 80% of your WhatsApp questions<br />without lifting a finger.</h2>
+      <p>KnowCore handles repetitive customer inquiries from your knowledge base, escalates the rest to your team, and logs everything. One purchase. Runs 24/7.</p>
+      <a href="https://curcible.gumroad.com/l/knowcore" data-gumroad-overlay-checkout="true" class="btn-primary">Get KnowCore — $99 one-time</a>
+      <div class="cta-meta">
+        <span>No subscription</span><span>·</span><span>Setup in 4–6 hours</span><span>·</span><span>No seat limits</span><span>·</span><span>Delivered as n8n workflow</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="#" class="wordmark">C<span>ur</span>cible<span>.</span></a>
+    <span class="footer-note">KnowCore™ is a Curcible product &nbsp;·&nbsp; One-time purchase &nbsp;·&nbsp; © 2026</span>
+  </footer>
+
+</body>
+</html>

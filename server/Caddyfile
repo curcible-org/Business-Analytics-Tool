@@ -1,0 +1,28 @@
+{
+    email admin@curcible.com
+}
+
+n8n.curcible.com {
+    reverse_proxy n8n:5678 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    encode gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options nosniff
+        X-Frame-Options SAMEORIGIN
+        -Server
+    }
+
+    log {
+        output file /data/logs/n8n_access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}

@@ -14,7 +14,7 @@
       "name": "Webhook — Receive Onboarding",
       "type": "n8n-nodes-base.webhook",
       "position": [0, 300],
-      "notes": "URL: https://YOUR-N8N.railway.app/webhook/onboarding — paste this into N8N_WEBHOOK_URL in onboarding/index.html"
+      "notes": "URL: https://n8n.curcible.com/webhook/onboarding — paste this into N8N_WEBHOOK_URL in onboarding/index.html"
     },
 
     {
@@ -301,7 +301,7 @@
 
   "_SETUP_GUIDE": {
     "ENVIRONMENT_VARIABLES": {
-      "N8N_HOST_URL": "https://your-n8n.railway.app  — no trailing slash",
+      "N8N_HOST_URL": "https://n8n.curcible.com  — no trailing slash",
       "N8N_API_KEY": "Generate in n8n: Settings > API > Create API Key"
     },
     "PLACEHOLDERS_TO_REPLACE": [

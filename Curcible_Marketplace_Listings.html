@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curcible — Workflow Marketplace Listings</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F9F7F8;--warm-paper:#FDFBFC;--parchment:#F2EEF0;--ink:#1C1618;--ink-mid:#36262C;--stone:#847278;--ghost:#CCBEC2;--plum:#6A4858;--plum-mid:#7D5569;--border:rgba(28,22,24,0.10);--border-strong:rgba(28,22,24,0.22);--rule:rgba(28,22,24,0.06)}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);font-size:14px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.nav{position:sticky;top:0;z-index:100;background:rgba(249,247,248,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 64px;display:flex;align-items:center;overflow-x:auto;scrollbar-width:none}
+.nav::-webkit-scrollbar{display:none}
+.nav-wm{font-family:'DM Serif Display',serif;font-size:15px;color:var(--ink);padding:11px 18px 11px 0;border-right:1px solid var(--border);margin-right:4px;flex-shrink:0}
+.nav-wm .pl{color:var(--plum)}
+.nav a{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.10em;text-transform:uppercase;color:var(--stone);text-decoration:none;padding:13px 12px;white-space:nowrap;flex-shrink:0;transition:color .15s}
+.nav a:hover{color:var(--ink)}
+.hero{background:var(--ink);padding:72px 64px 64px}
+.hero-eyebrow{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);margin-bottom:16px}
+.hero-title{font-family:'DM Serif Display',serif;font-size:clamp(36px,5vw,60px);line-height:1.0;letter-spacing:-.025em;color:var(--paper);font-weight:400;margin-bottom:16px}
+.hero-title em{font-style:italic;color:var(--ghost)}
+.hero-sub{font-size:14px;color:var(--stone);max-width:560px;line-height:1.7}
+.hero-nums{display:flex;gap:1px;margin-top:40px}
+.hn{background:rgba(249,247,248,.05);border:1px solid rgba(249,247,248,.08);padding:14px 20px;min-width:130px}
+.hn-n{font-family:'DM Serif Display',serif;font-size:28px;color:var(--paper)}
+.hn-l{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:rgba(249,247,248,.28)}
+.section{padding:52px 64px;border-bottom:1px solid var(--border)}
+.section-eyebrow{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);margin-bottom:10px}
+.section-title{font-family:'DM Serif Display',serif;font-size:28px;letter-spacing:-.02em;font-weight:400;margin-bottom:18px}
+.listing-card{border:1px solid var(--border);border-radius:3px;overflow:hidden;margin-bottom:1px}
+.lc-header{background:var(--ink);padding:16px 22px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.lc-left{display:flex;align-items:center;gap:14px}
+.lc-id{font-family:'DM Mono',monospace;font-size:9px;color:var(--plum-mid);background:rgba(125,85,105,.15);border:1px solid rgba(125,85,105,.25);padding:3px 9px;border-radius:2px;flex-shrink:0}
+.lc-name{font-family:'DM Serif Display',serif;font-size:18px;color:var(--paper);letter-spacing:-.015em}
+.lc-tagline{font-size:12px;color:rgba(249,247,248,.35);font-weight:300}
+.lc-right{text-align:right;flex-shrink:0}
+.lc-price{font-family:'DM Serif Display',serif;font-size:26px;color:#C9A8B8}
+.lc-complexity{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+.lc-body{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.lc-col{background:var(--warm-paper);padding:20px 22px}
+.lc-section-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--plum);background:var(--parchment);padding:4px 10px;border-radius:2px;display:inline-block;margin-bottom:14px}
+.lc-field-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);margin-bottom:4px;margin-top:12px}
+.lc-text{font-size:12.5px;color:var(--ink-mid);line-height:1.6}
+.lc-text.mono{font-family:'DM Mono',monospace;font-size:11px;color:var(--stone)}
+.lc-text.small{font-size:11.5px}
+.lc-text.stone{color:var(--stone)}
+.lc-text.bold{font-weight:600;color:var(--ink)}
+.lc-includes{list-style:none;display:flex;flex-direction:column;gap:4px;margin-top:4px}
+.lc-includes li{font-size:12px;color:var(--ink-mid);display:flex;gap:7px;line-height:1.5}
+.lc-includes li::before{content:'—';color:var(--ghost);flex-shrink:0;font-size:10px;margin-top:2px}
+.lc-price-tag{margin-top:16px;display:inline-block;background:rgba(45,106,79,.1);color:#2D6A4F;border:1px solid rgba(45,106,79,.2);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border-radius:2px}
+.bundle-cta{background:var(--ink);margin-top:32px;padding:28px 32px;border-radius:3px;display:flex;justify-content:space-between;align-items:center;gap:32px}
+.bc-text .bc-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--stone);margin-bottom:6px}
+.bc-text .bc-title{font-family:'DM Serif Display',serif;font-size:22px;color:var(--paper)}
+.bc-text .bc-sub{font-size:13px;color:var(--stone);margin-top:4px}
+.bc-price-block{text-align:right;flex-shrink:0}
+.bc-price{font-family:'DM Serif Display',serif;font-size:36px;color:#C9A8B8}
+.bc-vs{font-size:12px;color:var(--stone);text-decoration:line-through}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-wm">C<span class="pl">ur</span>cible<span class="pl">.</span></div>
+  <a href="#listings">Listings</a>
+  <a href="#p01">InboxCore</a><a href="#p02">ContentCore</a><a href="#p03">LeadCore</a>
+  <a href="#p04">PostCore</a><a href="#p05">ReportCore</a><a href="#p06">KnowCore</a>
+  <a href="#p07">MeetCore</a><a href="#p08">SchedCore</a>
+</nav>
+<div class="hero">
+  <div class="hero-eyebrow">Marketplace Listing Kit</div>
+  <h1 class="hero-title">Copy-ready listings<br><em>for every channel</em>.</h1>
+  <p class="hero-sub">n8n marketplace descriptions, Gumroad product pages, tags, complexity levels, and API cost estimates — for all 8 Curcible workflows.</p>
+  <div class="hero-nums">
+    <div class="hn"><div class="hn-n">8</div><div class="hn-l">Workflows</div></div>
+    <div class="hn"><div class="hn-n">$79–99</div><div class="hn-l">Per workflow</div></div>
+    <div class="hn"><div class="hn-n">$399</div><div class="hn-l">Full suite</div></div>
+  </div>
+</div>
+<section class="section" id="listings">
+  <div class="section-eyebrow">All workflows</div>
+  <h2 class="section-title">Individual listings</h2>
+    <div class="listing-card" id="p01">
+      <div class="lc-header">
+        <div class="lc-left">
+          <span class="lc-id">P01</span>
+          <div>
+            <div class="lc-name">InboxCore™</div>
+            <div class="lc-tagline">AI Email Triage & Auto-Reply</div>
+          </div>
+        </div>
+        <div class="lc-right">
+          <div class="lc-price">$79</div>
+          <div class="lc-complexity" style="color:#5aaa88">Beginner</div>
+        </div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-col">
+          <div class="lc-section-title">n8n Marketplace</div>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">Stop drowning in email. InboxCore classifies every inbound message into 6 categories, generates a context-aware auto-reply, applies Gmail labels, and syncs sales leads to HubSpot — all without human intervention.</p>
+          <div class="lc-field-label">Categories</div>
+          <p class="lc-text">Email Automation, AI / Machine Learning, CRM</p>
+          <div class="lc-field-label">Tags</div>
+          <p class="lc-text mono">gmail, email-triage, ai, openai, hubspot, auto-reply</p>
+          <div class="lc-field-label">Nodes used</div>
+          <p class="lc-text small">Gmail Trigger, OpenAI (GPT-4o), Switch, HubSpot, Notion, Slack, Gmail (reply), Airtable</p>
+          <div class="lc-field-label">Setup time</div>
+          <p class="lc-text">1–2 hours to configure</p>
+          <div class="lc-field-label">API cost estimate</div>
+          <p class="lc-text stone">OpenAI ~$0.02–0.05/email · HubSpot free tier sufficient</p>
+        </div>
+        <div class="lc-col">
+          <div class="lc-section-title">Gumroad Product Page</div>
+          <div class="lc-field-label">Headline</div>
+          <p class="lc-text bold">InboxCore™: AI Email Triage & Auto-Reply</p>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">Stop drowning in email. InboxCore classifies every inbound message into 6 categories, generates a context-aware auto-reply, applies Gmail labels, and syncs sales leads to HubSpot — all without human intervention.</p>
+          <div class="lc-field-label">Who it's for</div>
+          <p class="lc-text">Founders, solopreneurs, and small teams handling 50+ emails/day. Sales-led teams that need leads from email pushed to CRM automatically.</p>
+          <div class="lc-field-label">What's included</div>
+          <ul class="lc-includes"><li>n8n workflow JSON (import-ready)</li><li>Gmail OAuth setup guide</li><li>OpenAI prompt configuration sheet</li><li>HubSpot mapping guide</li><li>Notion support database template</li><li>Slack alert setup guide</li><li>README with full variable reference</li></ul>
+          <div class="lc-price-tag">List at $79</div>
+        </div>
+      </div>
+    </div>
+    <div class="listing-card" id="p02">
+      <div class="lc-header">
+        <div class="lc-left">
+          <span class="lc-id">P02</span>
+          <div>
+            <div class="lc-name">ContentCore™</div>
+            <div class="lc-tagline">Auto SEO Blog Writer</div>
+          </div>
+        </div>
+        <div class="lc-right">
+          <div class="lc-price">$79</div>
+          <div class="lc-complexity" style="color:#8B7355">Intermediate</div>
+        </div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-col">
+          <div class="lc-section-title">n8n Marketplace</div>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">Turn a keyword into a published draft in under 3 minutes. ContentCore researches the SERP, writes a 1,500-word SEO article with GPT-4o, generates a featured image with DALL-E 3, and pushes it to WordPress as a draft — ready for your final review.</p>
+          <div class="lc-field-label">Categories</div>
+          <p class="lc-text">Content Creation, SEO, AI / Machine Learning</p>
+          <div class="lc-field-label">Tags</div>
+          <p class="lc-text mono">seo, blog, content, wordpress, openai, dalle, serpapi</p>
+          <div class="lc-field-label">Nodes used</div>
+          <p class="lc-text small">Webhook, Set, HTTP Request (SerpAPI), OpenAI (GPT-4o), HTTP Request (DALL-E 3), Code, WordPress, Notion, Slack, Airtable</p>
+          <div class="lc-field-label">Setup time</div>
+          <p class="lc-text">2–3 hours to configure</p>
+          <div class="lc-field-label">API cost estimate</div>
+          <p class="lc-text stone">OpenAI GPT-4o ~$0.10–0.20/article · DALL-E 3 $0.04/image · SerpAPI free tier (100/mo)</p>
+        </div>
+        <div class="lc-col">
+          <div class="lc-section-title">Gumroad Product Page</div>
+          <div class="lc-field-label">Headline</div>
+          <p class="lc-text bold">ContentCore™: Auto SEO Blog Writer</p>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">Turn a keyword into a published draft in under 3 minutes. ContentCore researches the SERP, writes a 1,500-word SEO article with GPT-4o, generates a featured image with DALL-E 3, and pushes it to WordPress as a draft — ready for your final review.</p>
+          <div class="lc-field-label">Who it's for</div>
+          <p class="lc-text">Content marketers, SEO agencies, and SaaS companies running content programs. Anyone publishing 2+ blog posts per week.</p>
+          <div class="lc-field-label">What's included</div>
+          <ul class="lc-includes"><li>n8n workflow JSON</li><li>SerpAPI setup guide</li><li>WordPress REST API authentication guide</li><li>OpenAI brand voice prompt sheet (3 tone variants)</li><li>DALL-E image style preset sheet</li><li>Notion content calendar template</li><li>README</li></ul>
+          <div class="lc-price-tag">List at $79</div>
+        </div>
+      </div>
+    </div>
+    <div class="listing-card" id="p03">
+      <div class="lc-header">
+        <div class="lc-left">
+          <span class="lc-id">P03</span>
+          <div>
+            <div class="lc-name">LeadCore™</div>
+            <div class="lc-tagline">AI Lead Qualification & CRM Push</div>
+          </div>
+        </div>
+        <div class="lc-right">
+          <div class="lc-price">$79</div>
+          <div class="lc-complexity" style="color:#8B7355">Intermediate</div>
+        </div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-col">
+          <div class="lc-section-title">n8n Marketplace</div>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">Every inbound lead scored in seconds. LeadCore enriches contacts via Apollo.io, runs BANT + ICP scoring with GPT-4o, routes hot/warm/cold leads to the right HubSpot stage, and sends a personalised outreach email — automatically.</p>
+          <div class="lc-field-label">Categories</div>
+          <p class="lc-text">Sales, CRM, AI / Machine Learning</p>
+          <div class="lc-field-label">Tags</div>
+          <p class="lc-text mono">lead-qualification, crm, hubspot, apollo, bant, sales, openai</p>
+          <div class="lc-field-label">Nodes used</div>
+          <p class="lc-text small">Webhook, Set, HTTP Request (Apollo.io), Code, OpenAI (GPT-4o), Switch, HubSpot (Deal + Contact), Gmail, Airtable</p>
+          <div class="lc-field-label">Setup time</div>
+          <p class="lc-text">2–4 hours to configure</p>
+          <div class="lc-field-label">API cost estimate</div>
+          <p class="lc-text stone">Apollo.io free tier (50 credits/mo) or $49/mo · OpenAI GPT-4o ~$0.05/lead</p>
+        </div>
+        <div class="lc-col">
+          <div class="lc-section-title">Gumroad Product Page</div>
+          <div class="lc-field-label">Headline</div>
+          <p class="lc-text bold">LeadCore™: AI Lead Qualification & CRM Push</p>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">Every inbound lead scored in seconds. LeadCore enriches contacts via Apollo.io, runs BANT + ICP scoring with GPT-4o, routes hot/warm/cold leads to the right HubSpot stage, and sends a personalised outreach email — automatically.</p>
+          <div class="lc-field-label">Who it's for</div>
+          <p class="lc-text">B2B SaaS companies, sales teams, and agencies receiving inbound leads from web forms, LinkedIn, or events.</p>
+          <div class="lc-field-label">What's included</div>
+          <ul class="lc-includes"><li>n8n workflow JSON</li><li>Apollo.io API setup guide</li><li>ICP scoring prompt template (customisable)</li><li>HubSpot pipeline configuration guide</li><li>Outreach email prompt sheet (3 tones)</li><li>Airtable lead log template</li><li>README</li></ul>
+          <div class="lc-price-tag">List at $79</div>
+        </div>
+      </div>
+    </div>
+    <div class="listing-card" id="p04">
+      <div class="lc-header">
+        <div class="lc-left">
+          <span class="lc-id">P04</span>
+          <div>
+            <div class="lc-name">PostCore™</div>
+            <div class="lc-tagline">Social Media Auto-Publisher</div>
+          </div>
+        </div>
+        <div class="lc-right">
+          <div class="lc-price">$79</div>
+          <div class="lc-complexity" style="color:#8B7355">Intermediate</div>
+        </div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-col">
+          <div class="lc-section-title">n8n Marketplace</div>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">One topic, four platforms, one workflow. PostCore generates platform-native posts for Twitter/X, LinkedIn, Instagram, and Facebook using GPT-4o — each tuned to the platform's format — then creates a matching image with DALL-E 3 and publishes everything simultaneously.</p>
+          <div class="lc-field-label">Categories</div>
+          <p class="lc-text">Social Media, Content Creation, Marketing</p>
+          <div class="lc-field-label">Tags</div>
+          <p class="lc-text mono">social-media, twitter, linkedin, instagram, facebook, openai, dalle</p>
+          <div class="lc-field-label">Nodes used</div>
+          <p class="lc-text small">Webhook, Schedule Trigger, Set, OpenAI (GPT-4o), Code, HTTP Request (DALL-E 3), HTTP Request (Twitter/LinkedIn/IG/FB), Slack, Airtable</p>
+          <div class="lc-field-label">Setup time</div>
+          <p class="lc-text">3–5 hours to configure (multiple API setups)</p>
+          <div class="lc-field-label">API cost estimate</div>
+          <p class="lc-text stone">OpenAI ~$0.05–0.10/run · DALL-E 3 $0.04/image · Platform APIs free within rate limits</p>
+        </div>
+        <div class="lc-col">
+          <div class="lc-section-title">Gumroad Product Page</div>
+          <div class="lc-field-label">Headline</div>
+          <p class="lc-text bold">PostCore™: Social Media Auto-Publisher</p>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">One topic, four platforms, one workflow. PostCore generates platform-native posts for Twitter/X, LinkedIn, Instagram, and Facebook using GPT-4o — each tuned to the platform's format — then creates a matching image with DALL-E 3 and publishes everything simultaneously.</p>
+          <div class="lc-field-label">Who it's for</div>
+          <p class="lc-text">Marketing teams, content agencies, and founders who need a consistent social presence without dedicating hours to writing and scheduling.</p>
+          <div class="lc-field-label">What's included</div>
+          <ul class="lc-includes"><li>n8n workflow JSON</li><li>Twitter/X API v2 setup guide</li><li>LinkedIn OAuth setup guide</li><li>Meta (Instagram + Facebook) Graph API guide</li><li>Brand voice prompt sheet</li><li>DALL-E image style presets</li><li>README</li></ul>
+          <div class="lc-price-tag">List at $79</div>
+        </div>
+      </div>
+    </div>
+    <div class="listing-card" id="p05">
+      <div class="lc-header">
+        <div class="lc-left">
+          <span class="lc-id">P05</span>
+          <div>
+            <div class="lc-name">ReportCore™</div>
+            <div class="lc-tagline">Weekly Analytics Digest</div>
+          </div>
+        </div>
+        <div class="lc-right">
+          <div class="lc-price">$79</div>
+          <div class="lc-complexity" style="color:#8B7355">Intermediate</div>
+        </div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-col">
+          <div class="lc-section-title">n8n Marketplace</div>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">Every Monday at 8am, ReportCore pulls sessions from GA4, revenue from Stripe, and pipeline data from HubSpot. GPT-4o writes an executive narrative with highlights, concerns, and actionable recommendations — delivered to Slack, email, and Notion.</p>
+          <div class="lc-field-label">Categories</div>
+          <p class="lc-text">Analytics, Reporting, AI / Machine Learning</p>
+          <div class="lc-field-label">Tags</div>
+          <p class="lc-text mono">analytics, ga4, stripe, hubspot, weekly-report, digest, openai, slack</p>
+          <div class="lc-field-label">Nodes used</div>
+          <p class="lc-text small">Schedule Trigger, Manual Trigger, Set, HTTP Request (GA4/Stripe/HubSpot), Merge, Code, OpenAI (GPT-4o), Notion, Slack, Gmail, Airtable</p>
+          <div class="lc-field-label">Setup time</div>
+          <p class="lc-text">2–4 hours to configure</p>
+          <div class="lc-field-label">API cost estimate</div>
+          <p class="lc-text stone">OpenAI ~$0.10–0.15/report · GA4/HubSpot free · Stripe free to query</p>
+        </div>
+        <div class="lc-col">
+          <div class="lc-section-title">Gumroad Product Page</div>
+          <div class="lc-field-label">Headline</div>
+          <p class="lc-text bold">ReportCore™: Weekly Analytics Digest</p>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">Every Monday at 8am, ReportCore pulls sessions from GA4, revenue from Stripe, and pipeline data from HubSpot. GPT-4o writes an executive narrative with highlights, concerns, and actionable recommendations — delivered to Slack, email, and Notion.</p>
+          <div class="lc-field-label">Who it's for</div>
+          <p class="lc-text">Founders, operators, and marketing leads who want a clean weekly business pulse without building dashboards or writing reports manually.</p>
+          <div class="lc-field-label">What's included</div>
+          <ul class="lc-includes"><li>n8n workflow JSON</li><li>GA4 API setup guide</li><li>Stripe API setup guide</li><li>HubSpot API setup guide</li><li>Report narrative prompt sheet (customisable KPIs)</li><li>Notion report database template</li><li>Email HTML template</li><li>README</li></ul>
+          <div class="lc-price-tag">List at $79</div>
+        </div>
+      </div>
+    </div>
+    <div class="listing-card" id="p06">
+      <div class="lc-header">
+        <div class="lc-left">
+          <span class="lc-id">P06</span>
+          <div>
+            <div class="lc-name">KnowCore™</div>
+            <div class="lc-tagline">WhatsApp AI Chatbot + RAG</div>
+          </div>
+        </div>
+        <div class="lc-right">
+          <div class="lc-price">$99</div>
+          <div class="lc-complexity" style="color:#C9A8B8">Advanced</div>
+        </div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-col">
+          <div class="lc-section-title">n8n Marketplace</div>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">A WhatsApp AI assistant that actually knows your business. KnowCore classifies user intent, searches your knowledge base via vector similarity (Pinecone), generates grounded responses with GPT-4o, and escalates to a human agent on Slack when confidence is low.</p>
+          <div class="lc-field-label">Categories</div>
+          <p class="lc-text">Customer Service, AI / Machine Learning, Chatbots</p>
+          <div class="lc-field-label">Tags</div>
+          <p class="lc-text mono">whatsapp, chatbot, rag, pinecone, openai, twilio, customer-service</p>
+          <div class="lc-field-label">Nodes used</div>
+          <p class="lc-text small">Webhook, Set, OpenAI (GPT-4o-mini), HTTP Request (Pinecone), Code, OpenAI (GPT-4o), HTTP Request (Twilio), If, Slack, Airtable</p>
+          <div class="lc-field-label">Setup time</div>
+          <p class="lc-text">4–6 hours to configure + knowledge base ingestion time</p>
+          <div class="lc-field-label">API cost estimate</div>
+          <p class="lc-text stone">OpenAI ~$0.01–0.03/message · Twilio ~$0.005/WhatsApp message · Pinecone free tier</p>
+        </div>
+        <div class="lc-col">
+          <div class="lc-section-title">Gumroad Product Page</div>
+          <div class="lc-field-label">Headline</div>
+          <p class="lc-text bold">KnowCore™: WhatsApp AI Chatbot + RAG</p>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">A WhatsApp AI assistant that actually knows your business. KnowCore classifies user intent, searches your knowledge base via vector similarity (Pinecone), generates grounded responses with GPT-4o, and escalates to a human agent on Slack when confidence is low.</p>
+          <div class="lc-field-label">Who it's for</div>
+          <p class="lc-text">E-commerce stores, hospitality businesses, clinics, and any SMB fielding repetitive customer queries over WhatsApp.</p>
+          <div class="lc-field-label">What's included</div>
+          <ul class="lc-includes"><li>n8n workflow JSON</li><li>Twilio WhatsApp Business API setup guide</li><li>Pinecone vector database setup guide</li><li>Knowledge base ingestion script (Python)</li><li>Escalation routing guide</li><li>Airtable conversation log template</li><li>README</li></ul>
+          <div class="lc-price-tag">List at $99</div>
+        </div>
+      </div>
+    </div>
+    <div class="listing-card" id="p07">
+      <div class="lc-header">
+        <div class="lc-left">
+          <span class="lc-id">P07</span>
+          <div>
+            <div class="lc-name">MeetCore™</div>
+            <div class="lc-tagline">AI Meeting Summary & Follow-Up</div>
+          </div>
+        </div>
+        <div class="lc-right">
+          <div class="lc-price">$79</div>
+          <div class="lc-complexity" style="color:#8B7355">Intermediate</div>
+        </div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-col">
+          <div class="lc-section-title">n8n Marketplace</div>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">Your meetings, turned into action. MeetCore accepts a Zoom/Meet webhook or pasted transcript, runs AI analysis (summary, action items, decisions, sentiment), then simultaneously posts to Notion, Slack, Gmail, HubSpot, and Google Calendar.</p>
+          <div class="lc-field-label">Categories</div>
+          <p class="lc-text">Productivity, AI / Machine Learning, CRM</p>
+          <div class="lc-field-label">Tags</div>
+          <p class="lc-text mono">meeting, transcript, summary, openai, assemblyai, notion, slack, gmail, hubspot, calendar</p>
+          <div class="lc-field-label">Nodes used</div>
+          <p class="lc-text small">Webhook, Manual Trigger, Set, Switch, HTTP Request (AssemblyAI), Wait, OpenAI (GPT-4o), Code, Notion, Slack, Gmail, If, HubSpot, Google Calendar, Airtable</p>
+          <div class="lc-field-label">Setup time</div>
+          <p class="lc-text">2–4 hours to configure</p>
+          <div class="lc-field-label">API cost estimate</div>
+          <p class="lc-text stone">AssemblyAI ~$0.00025/sec of audio · OpenAI GPT-4o ~$0.05–0.15/meeting</p>
+        </div>
+        <div class="lc-col">
+          <div class="lc-section-title">Gumroad Product Page</div>
+          <div class="lc-field-label">Headline</div>
+          <p class="lc-text bold">MeetCore™: AI Meeting Summary & Follow-Up</p>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">Your meetings, turned into action. MeetCore accepts a Zoom/Meet webhook or pasted transcript, runs AI analysis (summary, action items, decisions, sentiment), then simultaneously posts to Notion, Slack, Gmail, HubSpot, and Google Calendar.</p>
+          <div class="lc-field-label">Who it's for</div>
+          <p class="lc-text">Teams running 5+ meetings per week. Sales teams who need CRM-logged call notes automatically. Ops leads who want meeting accountability baked in.</p>
+          <div class="lc-field-label">What's included</div>
+          <ul class="lc-includes"><li>n8n workflow JSON</li><li>AssemblyAI transcription setup guide</li><li>Zoom webhook configuration guide</li><li>All 6 output integration setup guides</li><li>AI analysis prompt sheet (customisable)</li><li>Notion meeting database template</li><li>README</li></ul>
+          <div class="lc-price-tag">List at $79</div>
+        </div>
+      </div>
+    </div>
+    <div class="listing-card" id="p08">
+      <div class="lc-header">
+        <div class="lc-left">
+          <span class="lc-id">P08</span>
+          <div>
+            <div class="lc-name">SchedCore™</div>
+            <div class="lc-tagline">AI Scheduling & Booking Automation</div>
+          </div>
+        </div>
+        <div class="lc-right">
+          <div class="lc-price">$79</div>
+          <div class="lc-complexity" style="color:#8B7355">Intermediate</div>
+        </div>
+      </div>
+      <div class="lc-body">
+        <div class="lc-col">
+          <div class="lc-section-title">n8n Marketplace</div>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">Booking requests handled end-to-end. SchedCore checks Google Calendar availability, recommends the optimal slot with GPT-4o, creates the event, sends confirmation email + SMS, and logs the engagement in HubSpot.</p>
+          <div class="lc-field-label">Categories</div>
+          <p class="lc-text">Scheduling, Productivity, AI / Machine Learning</p>
+          <div class="lc-field-label">Tags</div>
+          <p class="lc-text mono">scheduling, booking, calendar, calendly, twilio, sms, openai, hubspot</p>
+          <div class="lc-field-label">Nodes used</div>
+          <p class="lc-text small">Webhook (×2), Set, HTTP Request (Google Calendar), Code, OpenAI (GPT-4o), Google Calendar, Gmail, HTTP Request (Twilio), HubSpot, Slack, Airtable</p>
+          <div class="lc-field-label">Setup time</div>
+          <p class="lc-text">2–3 hours to configure</p>
+          <div class="lc-field-label">API cost estimate</div>
+          <p class="lc-text stone">OpenAI GPT-4o ~$0.02/booking · Twilio SMS ~$0.0079/message · Google Calendar API free</p>
+        </div>
+        <div class="lc-col">
+          <div class="lc-section-title">Gumroad Product Page</div>
+          <div class="lc-field-label">Headline</div>
+          <p class="lc-text bold">SchedCore™: AI Scheduling & Booking Automation</p>
+          <div class="lc-field-label">Description</div>
+          <p class="lc-text">Booking requests handled end-to-end. SchedCore checks Google Calendar availability, recommends the optimal slot with GPT-4o, creates the event, sends confirmation email + SMS, and logs the engagement in HubSpot.</p>
+          <div class="lc-field-label">Who it's for</div>
+          <p class="lc-text">Consultants, agencies, clinics, and service businesses fielding booking requests via forms, WhatsApp, or Calendly.</p>
+          <div class="lc-field-label">What's included</div>
+          <ul class="lc-includes"><li>n8n workflow JSON</li><li>Google Calendar OAuth setup guide</li><li>Twilio SMS setup guide</li><li>Calendly webhook configuration guide</li><li>Confirmation email HTML templates (3 meeting types)</li><li>HubSpot engagement guide</li><li>README</li></ul>
+          <div class="lc-price-tag">List at $79</div>
+        </div>
+      </div>
+    </div>
+  <div class="bundle-cta">
+    <div class="bc-text">
+      <div class="bc-label">Bundle offer</div>
+      <div class="bc-title">Complete Automation Suite</div>
+      <div class="bc-sub">All 8 workflows. One Gumroad product. 37% off individual pricing.</div>
+    </div>
+    <div class="bc-price-block">
+      <div class="bc-price">$399</div>
+      <div class="bc-vs">$632 individual</div>
+    </div>
+  </div>
+</section>
+</body>
+</html>

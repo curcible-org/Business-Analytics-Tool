@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>InboxCore™ — AI Email Triage & Auto-Reply for Busy Teams</title>
+  <meta name="description" content="Stop drowning in email. InboxCore classifies every inbound message, writes the reply, applies labels, and syncs to your CRM — automatically." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <script src="https://gumroad.com/js/gumroad.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+  <style>
+    :root {
+      --paper: #F9F7F8; --warm-paper: #FDFBFC; --parchment: #F2EEF0;
+      --ink: #1C1618; --ink-mid: #36262C; --stone: #847278; --ghost: #CCBEC2;
+      --plum: #6A4858; --plum-mid: #7D5569;
+      --plum-pale: rgba(106,72,88,0.07); --plum-pale2: rgba(106,72,88,0.13);
+      --border: rgba(28,22,24,0.10); --border-strong: rgba(28,22,24,0.22);
+      --rule: rgba(28,22,24,0.06);
+      --serif: 'DM Serif Display', Georgia, serif;
+      --mono: 'DM Mono', monospace;
+      --sans: 'DM Sans', system-ui, sans-serif;
+      --radius: 3px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--sans); background: var(--paper); color: var(--ink); line-height: 1.7; font-size: 16px; -webkit-font-smoothing: antialiased; }
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 3.5rem; height: 60px; background: rgba(249,247,248,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+    .wordmark { font-family: var(--sans); font-size: 15px; font-weight: 500; letter-spacing: -0.01em; color: var(--ink); text-decoration: none; }
+    .wordmark span { color: var(--plum); }
+    .nav-right { display: flex; align-items: center; gap: 2rem; }
+    .nav-link { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--stone); text-decoration: none; transition: color 0.15s; }
+    .nav-link:hover { color: var(--ink); }
+    .nav-cta { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--warm-paper); background: var(--ink); border: none; padding: 8px 18px; border-radius: var(--radius); cursor: pointer; text-decoration: none; transition: background 0.15s; }
+    .nav-cta:hover { background: var(--ink-mid); }
+    .hero { padding: 9rem 3.5rem 6rem; max-width: 900px; margin: 0 auto; }
+    .hero-tag { display: inline-block; font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--stone); background: var(--parchment); border: 1px solid var(--border); padding: 5px 10px; border-radius: var(--radius); margin-bottom: 2rem; }
+    .hero h1 { font-family: var(--serif); font-weight: 400; font-size: clamp(2.6rem, 5vw, 3.8rem); letter-spacing: -0.025em; line-height: 1.1; color: var(--ink); margin-bottom: 1.5rem; max-width: 760px; }
+    .hero h1 em { font-style: normal; color: var(--plum); }
+    .hero-sub { font-size: 1.05rem; color: var(--stone); max-width: 520px; margin-bottom: 2.5rem; line-height: 1.65; }
+    .hero-actions { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+    .btn-primary { display: inline-block; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--warm-paper); background: var(--ink); padding: 14px 28px; border-radius: var(--radius); text-decoration: none; border: none; cursor: pointer; transition: background 0.15s; }
+    .btn-primary:hover { background: var(--plum); }
+    .hero-note { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ghost); }
+    .stat-strip { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--warm-paper); display: grid; grid-template-columns: repeat(3, 1fr); }
+    .stat-item { padding: 2.5rem 3.5rem; border-right: 1px solid var(--border); }
+    .stat-item:last-child { border-right: none; }
+    .stat-num { font-family: var(--serif); font-size: 2.2rem; letter-spacing: -0.025em; color: var(--ink); margin-bottom: 0.25rem; }
+    .stat-num span { color: var(--plum); }
+    .stat-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--stone); }
+    section { padding: 6rem 3.5rem; max-width: 1100px; margin: 0 auto; }
+    .section-tinted { background: var(--parchment); max-width: 100%; padding: 6rem 0; }
+    .section-tinted .section-inner { max-width: 1100px; margin: 0 auto; padding: 0 3.5rem; }
+    .section-tag { display: inline-block; font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--stone); background: var(--parchment); border: 1px solid var(--border); padding: 5px 10px; border-radius: var(--radius); margin-bottom: 1.25rem; }
+    .section-tinted .section-tag { background: var(--paper); }
+    h2 { font-family: var(--serif); font-weight: 400; font-size: clamp(1.8rem, 3.5vw, 2.5rem); letter-spacing: -0.025em; line-height: 1.15; color: var(--ink); margin-bottom: 1rem; }
+    .section-sub { font-size: 1rem; color: var(--stone); max-width: 480px; margin-bottom: 3rem; line-height: 1.65; }
+    .problem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 3rem; }
+    .problem-card { background: var(--warm-paper); padding: 2rem 1.75rem; }
+    .problem-icon { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--plum); margin-bottom: 0.75rem; }
+    .problem-card h3 { font-family: var(--sans); font-weight: 500; font-size: 0.95rem; color: var(--ink); margin-bottom: 0.5rem; letter-spacing: -0.01em; }
+    .problem-card p { font-size: 0.9rem; color: var(--stone); line-height: 1.6; }
+    .problem-conclusion { font-family: var(--serif); font-size: 1.3rem; color: var(--ink-mid); letter-spacing: -0.02em; line-height: 1.4; padding: 1.75rem 2rem; border: 1px solid var(--border-strong); border-radius: var(--radius); background: var(--warm-paper); }
+    .solution-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    .solution-steps { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .solution-step { background: var(--warm-paper); padding: 1.5rem 1.75rem; display: flex; gap: 1rem; align-items: flex-start; }
+    .step-num { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ghost); padding-top: 3px; min-width: 24px; }
+    .step-body h4 { font-family: var(--sans); font-weight: 500; font-size: 0.9rem; color: var(--ink); margin-bottom: 0.25rem; }
+    .step-body p { font-size: 0.875rem; color: var(--stone); line-height: 1.55; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .feature-card { background: var(--paper); padding: 2.25rem 2rem; }
+    .feature-tag { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--plum); margin-bottom: 1rem; }
+    .feature-card h3 { font-family: var(--sans); font-weight: 500; font-size: 1rem; color: var(--ink); margin-bottom: 0.6rem; letter-spacing: -0.01em; }
+    .feature-card p { font-size: 0.875rem; color: var(--stone); line-height: 1.6; }
+    .testimonial-wrap { border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 3rem; background: var(--warm-paper); }
+    .testimonial-quote { font-family: var(--serif); font-size: clamp(1.1rem, 2vw, 1.4rem); color: var(--ink); letter-spacing: -0.02em; line-height: 1.5; margin-bottom: 2rem; }
+    .testimonial-meta { display: flex; align-items: center; gap: 1rem; }
+    .testimonial-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--plum-pale2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 11px; color: var(--plum); }
+    .testimonial-name { font-family: var(--sans); font-weight: 500; font-size: 0.875rem; color: var(--ink); }
+    .testimonial-title { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--stone); }
+    .faq-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .faq-item { background: var(--warm-paper); padding: 1.75rem 2rem; border-bottom: 1px solid var(--rule); }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q { font-family: var(--sans); font-weight: 500; font-size: 0.95rem; color: var(--ink); margin-bottom: 0.5rem; letter-spacing: -0.01em; }
+    .faq-a { font-size: 0.9rem; color: var(--stone); line-height: 1.65; }
+    .cta-section { text-align: center; padding: 6rem 3.5rem; max-width: 700px; margin: 0 auto; }
+    .cta-section h2 { margin-bottom: 1rem; }
+    .cta-section p { color: var(--stone); margin-bottom: 2.5rem; }
+    .cta-meta { display: flex; align-items: center; justify-content: center; gap: 1.5rem; flex-wrap: wrap; margin-top: 1.25rem; }
+    .cta-meta span { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ghost); }
+    footer { border-top: 1px solid var(--border); padding: 2.5rem 3.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .footer-note { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ghost); }
+    @media (max-width: 768px) {
+      nav { padding: 0 1.5rem; }
+      .nav-right .nav-link { display: none; }
+      .hero { padding: 7rem 1.5rem 4rem; }
+      section { padding: 4rem 1.5rem; }
+      .section-tinted .section-inner { padding: 0 1.5rem; }
+      .stat-strip { grid-template-columns: 1fr; }
+      .stat-item { border-right: none; border-bottom: 1px solid var(--border); padding: 2rem 1.5rem; }
+      .stat-item:last-child { border-bottom: none; }
+      .problem-grid { grid-template-columns: 1fr; }
+      .solution-layout { grid-template-columns: 1fr; gap: 2rem; }
+      .features-grid { grid-template-columns: 1fr; }
+      .testimonial-wrap { padding: 2rem 1.5rem; }
+      .cta-section { padding: 4rem 1.5rem; }
+      footer { flex-direction: column; gap: 1rem; padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#" class="wordmark">C<span>ur</span>cible<span>.</span></a>
+    <div class="nav-right">
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+      <a href="https://curcible.gumroad.com/l/inboxcore" data-gumroad-overlay-checkout="true" class="nav-cta">Get InboxCore — $79</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <span class="hero-tag">InboxCore™ — AI Email Triage & Auto-Reply</span>
+    <h1>Your inbox runs itself.<br /><em>You focus on what matters.</em></h1>
+    <p class="hero-sub">InboxCore classifies every inbound email, writes the reply, applies Gmail labels, and syncs to your CRM — without you touching it.</p>
+    <div class="hero-actions">
+      <a href="https://curcible.gumroad.com/l/inboxcore" data-gumroad-overlay-checkout="true" class="btn-primary">Get InboxCore — $79 one-time</a>
+      <span class="hero-note">No subscription &nbsp;·&nbsp; Setup in 1–2 hours</span>
+    </div>
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat-item">
+      <div class="stat-num">6<span> categories</span></div>
+      <div class="stat-label">AI triage classification</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">$<span>0.05</span></div>
+      <div class="stat-label">Per email processed</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">$<span>79</span></div>
+      <div class="stat-label">One-time. No seat limits.</div>
+    </div>
+  </div>
+
+  <section>
+    <span class="section-tag">The problem</span>
+    <h2>Email is eating your day.<br />One message at a time.</h2>
+    <p class="section-sub">Founders and small teams spend 2–3 hours per day in their inbox — most of it on messages that don't need them.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">01 — Volume</div>
+        <h3>Too much email, not enough time.</h3>
+        <p>50–100 emails per day. Most are noise. But you have to open every one to find out — and that takes hours you don't have.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">02 — Routing</div>
+        <h3>Leads and support get buried equally.</h3>
+        <p>Sales inquiries sit next to newsletters. Support requests go unanswered for hours. Nothing gets prioritised because everything looks the same.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">03 — CRM</div>
+        <h3>Manual CRM entry is a tax on every email.</h3>
+        <p>Every sales lead you identify has to be manually logged. That's 5 minutes per contact you'll probably forget to do by Friday.</p>
+      </div>
+    </div>
+    <div class="problem-conclusion">
+      You're not an email manager. Stop managing email.
+    </div>
+  </section>
+
+  <div class="section-tinted" id="how">
+    <div class="section-inner">
+      <span class="section-tag">How it works</span>
+      <h2>Every email classified, replied to, and routed — automatically.</h2>
+      <p class="section-sub">Connect Gmail. InboxCore handles the rest from the moment a message arrives.</p>
+      <div class="solution-layout">
+        <div class="solution-steps">
+          <div class="solution-step">
+            <span class="step-num">01</span>
+            <div class="step-body">
+              <h4>New email arrives in Gmail</h4>
+              <p>InboxCore polls your inbox every minute and picks up every new unread message automatically.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">02</span>
+            <div class="step-body">
+              <h4>GPT-4o classifies and scores it</h4>
+              <p>Urgent, sales, support, newsletter, spam, or general — assigned in seconds with an urgency score.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">03</span>
+            <div class="step-body">
+              <h4>Context-aware reply is written and sent</h4>
+              <p>GPT-4o drafts a reply tuned to your business context. Non-spam emails get an auto-reply immediately.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">04</span>
+            <div class="step-body">
+              <h4>Labels applied, leads synced to CRM</h4>
+              <p>Gmail label applied. Sales emails push a contact to HubSpot. Support emails create a Notion ticket.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">05</span>
+            <div class="step-body">
+              <h4>Urgent alerts fire to Slack</h4>
+              <p>Anything flagged urgent gets a Slack notification immediately. Everything else is logged silently to Airtable.</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p style="font-family: var(--serif); font-size: 1.35rem; letter-spacing: -0.02em; line-height: 1.5; color: var(--ink-mid); margin-bottom: 2rem;">Triage. Reply. Route. Log. All automatic.</p>
+          <p style="font-size: 0.9rem; color: var(--stone); line-height: 1.7; margin-bottom: 1.5rem;">InboxCore is delivered as an import-ready n8n workflow. Connect your Gmail OAuth, set your business context prompt, and every email from that point forward is handled without you.</p>
+          <p style="font-size: 0.9rem; color: var(--stone); line-height: 1.7;">Connects to HubSpot, Notion, Slack, and Airtable out of the box.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="features">
+    <span class="section-tag">Features</span>
+    <h2>Built for founders handling 50+ emails a day.</h2>
+    <p class="section-sub">Every feature targets inbox time — cutting it as close to zero as possible.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-tag">Triage</div>
+        <h3>6-Category AI Classifier</h3>
+        <p>Every email assigned to: urgent, sales, support, newsletter, spam, or general. Fully customisable prompt — adjust categories and criteria to match your business.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Reply</div>
+        <h3>Context-Aware Auto-Reply</h3>
+        <p>GPT-4o writes replies based on the email content and your business context. Not templates — actual responses. Tunable tone and voice.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">CRM</div>
+        <h3>HubSpot Contact Sync</h3>
+        <p>Sales emails automatically create or update a HubSpot contact. No manual CRM entry. No leads lost in a thread you forgot to log.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Support</div>
+        <h3>Notion Ticket Creation</h3>
+        <p>Support emails become Notion tickets instantly — with the original message, sender, and timestamp attached. No copy-paste required.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Alerts</div>
+        <h3>Slack Urgent Routing</h3>
+        <p>Anything classified as urgent fires a Slack alert to your chosen channel immediately. You only get interrupted when it matters.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Logging</div>
+        <h3>Full Airtable Audit Log</h3>
+        <p>Every processed email logged to Airtable — category, urgency score, reply sent, action taken. Full visibility without touching your inbox.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-tinted">
+    <div class="section-inner">
+      <span class="section-tag">Results</span>
+      <div class="testimonial-wrap">
+        <p class="testimonial-quote">"I was spending 2–3 hours every morning just triaging email before I could do any actual work. InboxCore cut that to under 15 minutes. Sales leads go straight to HubSpot, support tickets create themselves, and I only get a Slack ping when something genuinely needs me."</p>
+        <div class="testimonial-meta">
+          <div class="testimonial-avatar">SR</div>
+          <div>
+            <div class="testimonial-name">Sarah R.</div>
+            <div class="testimonial-title">Founder · B2B Services · 12 employees</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="faq">
+    <span class="section-tag">FAQ</span>
+    <h2>Common questions.</h2>
+    <p class="section-sub">Everything you need to know before purchasing.</p>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">Does InboxCore reply to every email automatically?</div>
+        <p class="faq-a">Yes — except spam and newsletters, which are labelled and archived silently. All other categories receive a context-aware auto-reply. You can adjust which categories trigger replies in the workflow configuration.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I customise the reply tone and categories?</div>
+        <p class="faq-a">Yes. The GPT-4o prompt is fully editable — you define your business context, tone of voice, and category definitions. Three example prompt variants (formal, conversational, concise) are included in the README.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Will it ever send a wrong reply?</div>
+        <p class="faq-a">InboxCore includes an approval mode option in the README — it drafts the reply as a Gmail draft instead of sending it automatically, so you can review before sending. Most teams start in draft mode for 1–2 weeks before switching to full auto-reply.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What CRM does it support?</div>
+        <p class="faq-a">HubSpot out of the box. The workflow uses standard HTTP requests for CRM sync, so it can be adapted to Salesforce, Pipedrive, or any CRM with an API. Guidance for adapting to other CRMs is included in the README.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Is this a subscription?</div>
+        <p class="faq-a">No. InboxCore is a one-time purchase — $79. You own the workflow. Running costs are approximately $0.02–0.05 per email processed (OpenAI GPT-4o), paid directly to OpenAI at your usage level.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-tinted" id="get">
+    <div class="cta-section">
+      <span class="section-tag" style="background: var(--paper);">Get InboxCore™</span>
+      <h2>Your inbox should work for you,<br />not the other way around.</h2>
+      <p>InboxCore handles triage, replies, CRM sync, and alerts — automatically. One purchase. Runs on every email, forever.</p>
+      <a href="https://curcible.gumroad.com/l/inboxcore" data-gumroad-overlay-checkout="true" class="btn-primary">Get InboxCore — $79 one-time</a>
+      <div class="cta-meta">
+        <span>No subscription</span>
+        <span>·</span>
+        <span>Setup in 1–2 hours</span>
+        <span>·</span>
+        <span>No seat limits</span>
+        <span>·</span>
+        <span>Delivered as n8n workflow</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="#" class="wordmark">C<span>ur</span>cible<span>.</span></a>
+    <span class="footer-note">InboxCore™ is a Curcible product &nbsp;·&nbsp; One-time purchase &nbsp;·&nbsp; © 2026</span>
+  </footer>
+
+</body>
+</html>

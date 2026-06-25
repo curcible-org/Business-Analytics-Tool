@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReportCore™ — Automated Weekly Analytics Digest for Growing Teams</title>
+  <meta name="description" content="Your Monday morning briefing, automated. ReportCore pulls GA4, Stripe, and HubSpot data every week, generates an executive narrative, and delivers to Notion, Slack, and Gmail." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <script src="https://gumroad.com/js/gumroad.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+  <style>
+    :root{--paper:#F9F7F8;--warm-paper:#FDFBFC;--parchment:#F2EEF0;--ink:#1C1618;--ink-mid:#36262C;--stone:#847278;--ghost:#CCBEC2;--plum:#6A4858;--plum-mid:#7D5569;--plum-pale:rgba(106,72,88,0.07);--plum-pale2:rgba(106,72,88,0.13);--border:rgba(28,22,24,0.10);--border-strong:rgba(28,22,24,0.22);--rule:rgba(28,22,24,0.06);--serif:'DM Serif Display',Georgia,serif;--mono:'DM Mono',monospace;--sans:'DM Sans',system-ui,sans-serif;--radius:3px}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+    body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.7;font-size:16px;-webkit-font-smoothing:antialiased}
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 3.5rem;height:60px;background:rgba(249,247,248,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+    .wordmark{font-family:var(--sans);font-size:15px;font-weight:500;letter-spacing:-0.01em;color:var(--ink);text-decoration:none}.wordmark span{color:var(--plum)}
+    .nav-right{display:flex;align-items:center;gap:2rem}
+    .nav-link{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--stone);text-decoration:none;transition:color .15s}.nav-link:hover{color:var(--ink)}
+    .nav-cta{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--warm-paper);background:var(--ink);border:none;padding:8px 18px;border-radius:var(--radius);cursor:pointer;text-decoration:none;transition:background .15s}.nav-cta:hover{background:var(--ink-mid)}
+    .hero{padding:9rem 3.5rem 6rem;max-width:900px;margin:0 auto}
+    .hero-tag{display:inline-block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--stone);background:var(--parchment);border:1px solid var(--border);padding:5px 10px;border-radius:var(--radius);margin-bottom:2rem}
+    .hero h1{font-family:var(--serif);font-weight:400;font-size:clamp(2.6rem,5vw,3.8rem);letter-spacing:-0.025em;line-height:1.1;color:var(--ink);margin-bottom:1.5rem;max-width:760px}.hero h1 em{font-style:normal;color:var(--plum)}
+    .hero-sub{font-size:1.05rem;color:var(--stone);max-width:520px;margin-bottom:2.5rem;line-height:1.65}
+    .hero-actions{display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap}
+    .btn-primary{display:inline-block;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--warm-paper);background:var(--ink);padding:14px 28px;border-radius:var(--radius);text-decoration:none;border:none;cursor:pointer;transition:background .15s}.btn-primary:hover{background:var(--plum)}
+    .hero-note{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ghost)}
+    .stat-strip{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--warm-paper);display:grid;grid-template-columns:repeat(3,1fr)}
+    .stat-item{padding:2.5rem 3.5rem;border-right:1px solid var(--border)}.stat-item:last-child{border-right:none}
+    .stat-num{font-family:var(--serif);font-size:2.2rem;letter-spacing:-0.025em;color:var(--ink);margin-bottom:.25rem}.stat-num span{color:var(--plum)}
+    .stat-label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--stone)}
+    section{padding:6rem 3.5rem;max-width:1100px;margin:0 auto}
+    .section-tinted{background:var(--parchment);max-width:100%;padding:6rem 0}.section-tinted .section-inner{max-width:1100px;margin:0 auto;padding:0 3.5rem}
+    .section-tag{display:inline-block;font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--stone);background:var(--parchment);border:1px solid var(--border);padding:5px 10px;border-radius:var(--radius);margin-bottom:1.25rem}.section-tinted .section-tag{background:var(--paper)}
+    h2{font-family:var(--serif);font-weight:400;font-size:clamp(1.8rem,3.5vw,2.5rem);letter-spacing:-0.025em;line-height:1.15;color:var(--ink);margin-bottom:1rem}
+    .section-sub{font-size:1rem;color:var(--stone);max-width:480px;margin-bottom:3rem;line-height:1.65}
+    .problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:3rem}
+    .problem-card{background:var(--warm-paper);padding:2rem 1.75rem}
+    .problem-icon{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--plum);margin-bottom:.75rem}
+    .problem-card h3{font-family:var(--sans);font-weight:500;font-size:.95rem;color:var(--ink);margin-bottom:.5rem;letter-spacing:-0.01em}
+    .problem-card p{font-size:.9rem;color:var(--stone);line-height:1.6}
+    .problem-conclusion{font-family:var(--serif);font-size:1.3rem;color:var(--ink-mid);letter-spacing:-0.02em;line-height:1.4;padding:1.75rem 2rem;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--warm-paper)}
+    .solution-layout{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center}
+    .solution-steps{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .solution-step{background:var(--warm-paper);padding:1.5rem 1.75rem;display:flex;gap:1rem;align-items:flex-start}
+    .step-num{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--ghost);padding-top:3px;min-width:24px}
+    .step-body h4{font-family:var(--sans);font-weight:500;font-size:.9rem;color:var(--ink);margin-bottom:.25rem}
+    .step-body p{font-size:.875rem;color:var(--stone);line-height:1.55}
+    .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .feature-card{background:var(--paper);padding:2.25rem 2rem}
+    .feature-tag{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--plum);margin-bottom:1rem}
+    .feature-card h3{font-family:var(--sans);font-weight:500;font-size:1rem;color:var(--ink);margin-bottom:.6rem;letter-spacing:-0.01em}
+    .feature-card p{font-size:.875rem;color:var(--stone);line-height:1.6}
+    .testimonial-wrap{border:1px solid var(--border-strong);border-radius:var(--radius);padding:3rem;background:var(--warm-paper)}
+    .testimonial-quote{font-family:var(--serif);font-size:clamp(1.1rem,2vw,1.4rem);color:var(--ink);letter-spacing:-0.02em;line-height:1.5;margin-bottom:2rem}
+    .testimonial-meta{display:flex;align-items:center;gap:1rem}
+    .testimonial-avatar{width:36px;height:36px;border-radius:50%;background:var(--plum-pale2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:var(--plum)}
+    .testimonial-name{font-family:var(--sans);font-weight:500;font-size:.875rem;color:var(--ink)}
+    .testimonial-title{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--stone)}
+    .faq-list{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+    .faq-item{background:var(--warm-paper);padding:1.75rem 2rem;border-bottom:1px solid var(--rule)}.faq-item:last-child{border-bottom:none}
+    .faq-q{font-family:var(--sans);font-weight:500;font-size:.95rem;color:var(--ink);margin-bottom:.5rem;letter-spacing:-0.01em}
+    .faq-a{font-size:.9rem;color:var(--stone);line-height:1.65}
+    .cta-section{text-align:center;padding:6rem 3.5rem;max-width:700px;margin:0 auto}.cta-section h2{margin-bottom:1rem}.cta-section p{color:var(--stone);margin-bottom:2.5rem}
+    .cta-meta{display:flex;align-items:center;justify-content:center;gap:1.5rem;flex-wrap:wrap;margin-top:1.25rem}.cta-meta span{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ghost)}
+    footer{border-top:1px solid var(--border);padding:2.5rem 3.5rem;display:flex;align-items:center;justify-content:space-between}
+    .footer-note{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--ghost)}
+    @media(max-width:768px){nav{padding:0 1.5rem}.nav-right .nav-link{display:none}.hero{padding:7rem 1.5rem 4rem}section{padding:4rem 1.5rem}.section-tinted .section-inner{padding:0 1.5rem}.stat-strip{grid-template-columns:1fr}.stat-item{border-right:none;border-bottom:1px solid var(--border);padding:2rem 1.5rem}.stat-item:last-child{border-bottom:none}.problem-grid{grid-template-columns:1fr}.solution-layout{grid-template-columns:1fr;gap:2rem}.features-grid{grid-template-columns:1fr}.testimonial-wrap{padding:2rem 1.5rem}.cta-section{padding:4rem 1.5rem}footer{flex-direction:column;gap:1rem;padding:2rem 1.5rem}}
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="#" class="wordmark">C<span>ur</span>cible<span>.</span></a>
+    <div class="nav-right">
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+      <a href="https://curcible.gumroad.com/l/reportcore" data-gumroad-overlay-checkout="true" class="nav-cta">Get ReportCore — $79</a>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <span class="hero-tag">ReportCore™ — Weekly Analytics Digest</span>
+    <h1>Your Monday briefing.<br /><em>Built while you slept.</em></h1>
+    <p class="hero-sub">ReportCore pulls GA4, Stripe, and HubSpot data every Monday at 8am, generates an executive narrative with GPT-4o, and delivers to Notion, Slack, and Gmail — automatically.</p>
+    <div class="hero-actions">
+      <a href="https://curcible.gumroad.com/l/reportcore" data-gumroad-overlay-checkout="true" class="btn-primary">Get ReportCore — $79 one-time</a>
+      <span class="hero-note">No subscription &nbsp;·&nbsp; Setup in 2–4 hours</span>
+    </div>
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat-item">
+      <div class="stat-num">3<span> sources</span></div>
+      <div class="stat-label">GA4 · Stripe · HubSpot</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">3<span> outputs</span></div>
+      <div class="stat-label">Notion · Slack · Gmail</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">$<span>79</span></div>
+      <div class="stat-label">One-time. No seat limits.</div>
+    </div>
+  </div>
+
+  <section>
+    <span class="section-tag">The problem</span>
+    <h2>Every Monday starts with the same question:<br />how did last week actually go?</h2>
+    <p class="section-sub">Most teams have the data — it's just buried across GA4, Stripe, and HubSpot with no one pulling it together.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">01 — Fragmentation</div>
+        <h3>Your metrics live in three different tools.</h3>
+        <p>Traffic in GA4. Revenue in Stripe. Pipeline in HubSpot. Getting a single view of last week requires opening all three, pulling numbers manually, and assembling them yourself.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">02 — Time</div>
+        <h3>Manual reporting takes 1–2 hours per week.</h3>
+        <p>Someone has to pull the data, format it, write the commentary, and send the report. That's 4–8 hours per month on a task that adds no strategic value.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">03 — Quality</div>
+        <h3>Numbers without narrative don't drive decisions.</h3>
+        <p>Raw metrics shared in Slack don't tell the team what to do. What matters: what improved, what dropped, why it happened, and what to do about it.</p>
+      </div>
+    </div>
+    <div class="problem-conclusion">
+      Weekly reporting should take zero hours. It's a workflow problem.
+    </div>
+  </section>
+
+  <div class="section-tinted" id="how">
+    <div class="section-inner">
+      <span class="section-tag">How it works</span>
+      <h2>Data in. Executive narrative out. Every Monday at 8am.</h2>
+      <p class="section-sub">ReportCore pulls from all three sources in parallel, aggregates the metrics, and writes the report — before your team logs on.</p>
+      <div class="solution-layout">
+        <div class="solution-steps">
+          <div class="solution-step">
+            <span class="step-num">01</span>
+            <div class="step-body">
+              <h4>Schedule triggers Monday at 8am</h4>
+              <p>Runs automatically every Monday. Also includes a Manual Trigger node for ad-hoc reports at any time.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">02</span>
+            <div class="step-body">
+              <h4>GA4, Stripe, and HubSpot fetched in parallel</h4>
+              <p>Sessions, users, bounce rate, and conversions from GA4. Revenue and charges from Stripe. Open deals, closed-won, and pipeline value from HubSpot.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">03</span>
+            <div class="step-body">
+              <h4>Metrics aggregated and formatted</h4>
+              <p>All three data sources merged into a clean object — period totals, WoW comparisons, and key ratios calculated automatically.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">04</span>
+            <div class="step-body">
+              <h4>GPT-4o writes the executive narrative</h4>
+              <p>Four sections: highlights (what went well), concerns (what needs attention), insights (3 observations), recommendations (3 specific actions).</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">05</span>
+            <div class="step-body">
+              <h4>Delivered to Notion, Slack, and Gmail</h4>
+              <p>Notion page created. Slack digest posted. HTML email sent to your distribution list. All three fire simultaneously.</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p style="font-family:var(--serif);font-size:1.35rem;letter-spacing:-0.02em;line-height:1.5;color:var(--ink-mid);margin-bottom:2rem;">Numbers and narrative. Every Monday. Zero effort.</p>
+          <p style="font-size:.9rem;color:var(--stone);line-height:1.7;margin-bottom:1.5rem;">ReportCore is delivered as an import-ready n8n workflow. Connect GA4, Stripe, and HubSpot credentials once — it runs every week automatically from that point.</p>
+          <p style="font-size:.9rem;color:var(--stone);line-height:1.7;">Extensible: add Shopify, Mixpanel, Airtable, or any data source with an API without rebuilding the workflow.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="features">
+    <span class="section-tag">Features</span>
+    <h2>Built for founders and ops leads who need the pulse without the work.</h2>
+    <p class="section-sub">Every feature targets reporting quality and delivery consistency simultaneously.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-tag">Data</div>
+        <h3>Parallel 3-Source Fetch</h3>
+        <p>GA4, Stripe, and HubSpot queried simultaneously — no sequential delay. All three data sources aggregated into one clean report object before GPT-4o runs.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Narrative</div>
+        <h3>GPT-4o Executive Report</h3>
+        <p>Not just numbers — a written narrative with highlights, concerns, data-driven insights, and specific recommended actions. Three prompt variants for different business types included.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Delivery</div>
+        <h3>3-Channel Simultaneous Delivery</h3>
+        <p>Notion page with full report. Slack message with key metrics and top insight. Gmail HTML digest to your distribution list. All fire on the same run.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Trigger</div>
+        <h3>Schedule + Manual Trigger</h3>
+        <p>Default Monday 8am schedule. Change to any cron expression. Manual Trigger node available for ad-hoc runs anytime — investor updates, board prep, client reports.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Extensibility</div>
+        <h3>Add Any Data Source</h3>
+        <p>The workflow aggregates data into a structured object. Add Shopify, Mixpanel, Airtable, or any API as an additional source node without changing the report or delivery logic.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Logging</div>
+        <h3>Airtable Report Archive</h3>
+        <p>Every weekly report logged to Airtable with metadata — period, key metrics, report title, and run timestamp. Build trend tracking over time without a BI tool.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-tinted">
+    <div class="section-inner">
+      <span class="section-tag">Results</span>
+      <div class="testimonial-wrap">
+        <p class="testimonial-quote">"I used to spend Monday morning pulling numbers from three tools and writing a summary for the team. ReportCore does it in 2 minutes while I'm having coffee. The GPT-4o narrative is actually better than what I was writing — it catches patterns I'd miss."</p>
+        <div class="testimonial-meta">
+          <div class="testimonial-avatar">MC</div>
+          <div>
+            <div class="testimonial-name">Mark C.</div>
+            <div class="testimonial-title">COO · B2B SaaS · 55 employees</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="faq">
+    <span class="section-tag">FAQ</span>
+    <h2>Common questions.</h2>
+    <p class="section-sub">Everything you need to know before purchasing.</p>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">What data sources does ReportCore support?</div>
+        <p class="faq-a">GA4 (sessions, users, bounce rate, conversions), Stripe (charges, revenue), and HubSpot (open deals, closed-won, pipeline value) out of the box. The README includes guides for adding Shopify, Mixpanel, and Airtable as additional sources.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I run it on-demand rather than just on Mondays?</div>
+        <p class="faq-a">Yes. ReportCore includes a Manual Trigger node alongside the schedule trigger. Run it any time for investor updates, board prep, or client reports. The schedule can also be changed to any cron expression — daily, bi-weekly, monthly.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">How does the GPT-4o narrative work?</div>
+        <p class="faq-a">The aggregated metrics are passed to GPT-4o with a structured prompt that requests four specific sections: highlights, concerns, insights, and recommendations. Three prompt variants are included — growth-stage startup, established business, and agency. All are fully editable.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Does it work if I don't use one of the three data sources?</div>
+        <p class="faq-a">Yes. Each data source is a separate node. Disable any node you don't use and the workflow runs cleanly on the remaining sources. You can start with just Stripe and add GA4/HubSpot later.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">What does it cost to run?</div>
+        <p class="faq-a">Approximately $0.10–0.15 per report for GPT-4o narrative generation. All data source API calls (GA4, Stripe, HubSpot) are free within normal usage limits. At 4 reports/month, running cost is under $0.60/month.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-tinted" id="get">
+    <div class="cta-section">
+      <span class="section-tag" style="background:var(--paper);">Get ReportCore™</span>
+      <h2>Know where you stand<br />every Monday. Automatically.</h2>
+      <p>ReportCore pulls GA4, Stripe, and HubSpot — writes the executive narrative — delivers to Notion, Slack, and Gmail. One purchase. Runs every week, forever.</p>
+      <a href="https://curcible.gumroad.com/l/reportcore" data-gumroad-overlay-checkout="true" class="btn-primary">Get ReportCore — $79 one-time</a>
+      <div class="cta-meta">
+        <span>No subscription</span><span>·</span><span>Setup in 2–4 hours</span><span>·</span><span>No seat limits</span><span>·</span><span>Delivered as n8n workflow</span>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <a href="#" class="wordmark">C<span>ur</span>cible<span>.</span></a>
+    <span class="footer-note">ReportCore™ is a Curcible product &nbsp;·&nbsp; One-time purchase &nbsp;·&nbsp; © 2026</span>
+  </footer>
+
+</body>
+</html>

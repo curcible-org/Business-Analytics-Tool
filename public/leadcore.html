@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeadCore™ — AI Lead Qualification for Lean Sales Teams</title>
+  <meta name="description" content="AI-powered lead scoring for small sales teams. No SDRs. No setup. No guesswork. Qualify every inbound lead in 2 minutes." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+  <script src="https://gumroad.com/js/gumroad.js"></script>
+
+  <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your Measurement ID -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+  <style>
+    :root {
+      --paper: #F9F7F8;
+      --warm-paper: #FDFBFC;
+      --parchment: #F2EEF0;
+      --ink: #1C1618;
+      --ink-mid: #36262C;
+      --stone: #847278;
+      --ghost: #CCBEC2;
+      --plum: #6A4858;
+      --plum-mid: #7D5569;
+      --plum-pale: rgba(106,72,88,0.07);
+      --plum-pale2: rgba(106,72,88,0.13);
+      --border: rgba(28,22,24,0.10);
+      --border-strong: rgba(28,22,24,0.22);
+      --rule: rgba(28,22,24,0.06);
+      --serif: 'DM Serif Display', Georgia, serif;
+      --mono: 'DM Mono', monospace;
+      --sans: 'DM Sans', system-ui, sans-serif;
+      --radius: 3px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--paper);
+      color: var(--ink);
+      line-height: 1.7;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 3.5rem;
+      height: 60px;
+      background: rgba(249,247,248,0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .wordmark {
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      text-decoration: none;
+    }
+
+    .wordmark span { color: var(--plum); }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .nav-link {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--stone);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .nav-link:hover { color: var(--ink); }
+
+    .nav-cta {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--warm-paper);
+      background: var(--ink);
+      border: none;
+      padding: 8px 18px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+
+    .nav-cta:hover { background: var(--ink-mid); }
+
+    /* HERO */
+    .hero {
+      padding: 9rem 3.5rem 6rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--stone);
+      background: var(--parchment);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: var(--radius);
+      margin-bottom: 2rem;
+    }
+
+    .hero h1 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(2.6rem, 5vw, 3.8rem);
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      color: var(--ink);
+      margin-bottom: 1.5rem;
+      max-width: 760px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--plum);
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--stone);
+      max-width: 520px;
+      margin-bottom: 2.5rem;
+      line-height: 1.65;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--warm-paper);
+      background: var(--ink);
+      padding: 14px 28px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-primary:hover { background: var(--plum); }
+
+    .hero-note {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ghost);
+    }
+
+    /* STAT STRIP */
+    .stat-strip {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--warm-paper);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .stat-item {
+      padding: 2.5rem 3.5rem;
+      border-right: 1px solid var(--border);
+    }
+
+    .stat-item:last-child { border-right: none; }
+
+    .stat-num {
+      font-family: var(--serif);
+      font-size: 2.2rem;
+      letter-spacing: -0.025em;
+      color: var(--ink);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-num span { color: var(--plum); }
+
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--stone);
+    }
+
+    /* SECTIONS */
+    section {
+      padding: 6rem 3.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-tinted {
+      background: var(--parchment);
+      max-width: 100%;
+      padding: 6rem 0;
+    }
+
+    .section-tinted .section-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 3.5rem;
+    }
+
+    .section-tag {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--stone);
+      background: var(--parchment);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: var(--radius);
+      margin-bottom: 1.25rem;
+    }
+
+    .section-tinted .section-tag {
+      background: var(--paper);
+    }
+
+    h2 {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      color: var(--ink);
+      margin-bottom: 1rem;
+    }
+
+    .section-sub {
+      font-size: 1rem;
+      color: var(--stone);
+      max-width: 480px;
+      margin-bottom: 3rem;
+      line-height: 1.65;
+    }
+
+    /* PROBLEM */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 3rem;
+    }
+
+    .problem-card {
+      background: var(--warm-paper);
+      padding: 2rem 1.75rem;
+    }
+
+    .problem-icon {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--plum);
+      margin-bottom: 0.75rem;
+    }
+
+    .problem-card h3 {
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    .problem-card p {
+      font-size: 0.9rem;
+      color: var(--stone);
+      line-height: 1.6;
+    }
+
+    .problem-conclusion {
+      font-family: var(--serif);
+      font-size: 1.3rem;
+      color: var(--ink-mid);
+      letter-spacing: -0.02em;
+      line-height: 1.4;
+      padding: 1.75rem 2rem;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      background: var(--warm-paper);
+    }
+
+    /* SOLUTION */
+    .solution-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .solution-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .solution-step {
+      background: var(--warm-paper);
+      padding: 1.5rem 1.75rem;
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--ghost);
+      padding-top: 3px;
+      min-width: 24px;
+    }
+
+    .step-body h4 {
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: var(--ink);
+      margin-bottom: 0.25rem;
+    }
+
+    .step-body p {
+      font-size: 0.875rem;
+      color: var(--stone);
+      line-height: 1.55;
+    }
+
+    /* FEATURES */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .feature-card {
+      background: var(--paper);
+      padding: 2.25rem 2rem;
+    }
+
+    .feature-tag {
+      font-family: var(--mono);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--plum);
+      margin-bottom: 1rem;
+    }
+
+    .feature-card h3 {
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 1rem;
+      color: var(--ink);
+      margin-bottom: 0.6rem;
+      letter-spacing: -0.01em;
+    }
+
+    .feature-card p {
+      font-size: 0.875rem;
+      color: var(--stone);
+      line-height: 1.6;
+    }
+
+    /* TESTIMONIAL */
+    .testimonial-wrap {
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      padding: 3rem;
+      background: var(--warm-paper);
+      position: relative;
+    }
+
+    .testimonial-quote {
+      font-family: var(--serif);
+      font-size: clamp(1.1rem, 2vw, 1.4rem);
+      color: var(--ink);
+      letter-spacing: -0.02em;
+      line-height: 1.5;
+      margin-bottom: 2rem;
+    }
+
+    .testimonial-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .testimonial-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--plum-pale2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--plum);
+    }
+
+    .testimonial-name {
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 0.875rem;
+      color: var(--ink);
+    }
+
+    .testimonial-title {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--stone);
+    }
+
+    /* FAQ */
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .faq-item {
+      background: var(--warm-paper);
+      padding: 1.75rem 2rem;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .faq-item:last-child { border-bottom: none; }
+
+    .faq-q {
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 0.95rem;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    .faq-a {
+      font-size: 0.9rem;
+      color: var(--stone);
+      line-height: 1.65;
+    }
+
+    /* BOTTOM CTA */
+    .cta-section {
+      text-align: center;
+      padding: 6rem 3.5rem;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .cta-section h2 {
+      margin-bottom: 1rem;
+    }
+
+    .cta-section p {
+      color: var(--stone);
+      margin-bottom: 2.5rem;
+    }
+
+    .cta-meta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-top: 1.25rem;
+    }
+
+    .cta-meta span {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ghost);
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 3.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-note {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ghost);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      nav { padding: 0 1.5rem; }
+      .nav-right .nav-link { display: none; }
+      .hero { padding: 7rem 1.5rem 4rem; }
+      section { padding: 4rem 1.5rem; }
+      .section-tinted .section-inner { padding: 0 1.5rem; }
+      .stat-strip { grid-template-columns: 1fr; }
+      .stat-item { border-right: none; border-bottom: 1px solid var(--border); padding: 2rem 1.5rem; }
+      .stat-item:last-child { border-bottom: none; }
+      .problem-grid { grid-template-columns: 1fr; }
+      .solution-layout { grid-template-columns: 1fr; gap: 2rem; }
+      .features-grid { grid-template-columns: 1fr; }
+      .testimonial-wrap { padding: 2rem 1.5rem; }
+      .cta-section { padding: 4rem 1.5rem; }
+      footer { flex-direction: column; gap: 1rem; padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="wordmark">C<span>ur</span>cible<span>.</span></a>
+    <div class="nav-right">
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#features" class="nav-link">Features</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+      <a href="https://curcible.gumroad.com/l/leadcore-ai-lead-qualification" data-gumroad-overlay-checkout="true" class="nav-cta">Get LeadCore — $79</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <span class="hero-tag">LeadCore™ — AI Lead Qualification</span>
+    <h1>Stop calling bad leads.<br /><em>Start closing good ones.</em></h1>
+    <p class="hero-sub">AI-powered lead scoring for small sales teams. No SDRs. No setup. No guesswork.</p>
+    <div class="hero-actions">
+      <a href="https://curcible.gumroad.com/l/leadcore-ai-lead-qualification" data-gumroad-overlay-checkout="true" class="btn-primary">Get LeadCore — $79 one-time</a>
+      <span class="hero-note">No subscription &nbsp;·&nbsp; Setup in 30 minutes</span>
+    </div>
+  </div>
+
+  <!-- STAT STRIP -->
+  <div class="stat-strip">
+    <div class="stat-item">
+      <div class="stat-num">2<span>min</span></div>
+      <div class="stat-label">Per lead qualified</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">0<span>–100</span></div>
+      <div class="stat-label">AI score per lead</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">$<span>79</span></div>
+      <div class="stat-label">One-time. No seat limits.</div>
+    </div>
+  </div>
+
+  <!-- PROBLEM -->
+  <section>
+    <span class="section-tag">The problem</span>
+    <h2>Your pipeline is full.<br />Your calendar is wasted.</h2>
+    <p class="section-sub">Most SMB sales teams spend 40–60% of their call time on leads that were never going to close.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon">01 — Signal</div>
+        <h3>Too many leads, not enough signal.</h3>
+        <p>Your CRM collects them. No one scores them. Reps pick calls at random and hope for the best.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">02 — Speed</div>
+        <h3>Manual qualification is slow and inconsistent.</h3>
+        <p>Every rep does it differently. 15–20 minutes per lead. Hours disappear every week with nothing to show.</p>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon">03 — Scale</div>
+        <h3>No budget for a full SDR team.</h3>
+        <p>You're losing deals because nothing's being sorted — but hiring a $5K/mo SDR isn't an option yet.</p>
+      </div>
+    </div>
+    <div class="problem-conclusion">
+      You don't have a lead problem. You have a qualification problem.
+    </div>
+  </section>
+
+  <!-- SOLUTION -->
+  <div class="section-tinted" id="how">
+    <div class="section-inner">
+      <span class="section-tag">How it works</span>
+      <h2>Qualifies every lead in 2 minutes — automatically.</h2>
+      <p class="section-sub">Connect your lead source. LeadCore does the rest — before your rep picks up the phone.</p>
+      <div class="solution-layout">
+        <div class="solution-steps">
+          <div class="solution-step">
+            <span class="step-num">01</span>
+            <div class="step-body">
+              <h4>Lead comes in</h4>
+              <p>Web form, CRM import, spreadsheet upload — any source works. No integration project required.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">02</span>
+            <div class="step-body">
+              <h4>Apollo enriches the contact</h4>
+              <p>Company size, industry, seniority, tech stack — pulled automatically in seconds.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">03</span>
+            <div class="step-body">
+              <h4>AI runs BANT + ICP scoring</h4>
+              <p>GPT-4o scores 0–100 against your ideal customer profile. Grades: hot, warm, cold, disqualified.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">04</span>
+            <div class="step-body">
+              <h4>Reps get a ranked list</h4>
+              <p>Hot leads trigger a Slack alert and land in HubSpot as a deal. Cold leads are logged silently.</p>
+            </div>
+          </div>
+          <div class="solution-step">
+            <span class="step-num">05</span>
+            <div class="step-body">
+              <h4>Personalised outreach sent</h4>
+              <p>GPT-4o writes and sends a personalised first-touch email to every qualified lead. Automatically.</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p style="font-family: var(--serif); font-size: 1.35rem; letter-spacing: -0.02em; line-height: 1.5; color: var(--ink-mid); margin-bottom: 2rem;">No SDRs. No spreadsheets. No guessing.</p>
+          <p style="font-size: 0.9rem; color: var(--stone); line-height: 1.7; margin-bottom: 1.5rem;">LeadCore is delivered as an import-ready n8n workflow — connect your credentials, define your ICP, and it runs on every new lead from that point forward.</p>
+          <p style="font-size: 0.9rem; color: var(--stone); line-height: 1.7;">Compatible with HubSpot, Salesforce, Pipedrive, or any CRM with an HTTP API.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <span class="section-tag">Features</span>
+    <h2>Built for lean sales teams.</h2>
+    <p class="section-sub">Every feature exists to get the right leads in front of your reps faster.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-tag">Speed</div>
+        <h3>2-Minute Qualification</h3>
+        <p>Every inbound lead scored instantly. Reps start each day with a ranked list — highest-fit leads at the top. No manual review.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Accuracy</div>
+        <h3>Consistent Scoring Criteria</h3>
+        <p>No more rep-to-rep variation. LeadCore applies the same ICP criteria every time. No bias, no missed signals, no disagreements on what "qualified" means.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Setup</div>
+        <h3>Zero Technical Setup</h3>
+        <p>Works with your existing lead sources — web forms, CRMs, spreadsheets. No integration project. No developer required. Running in 30 minutes.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Enrichment</div>
+        <h3>Apollo.io Data Layer</h3>
+        <p>Every lead automatically enriched with company size, industry, department, seniority, and tech stack before scoring begins.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Routing</div>
+        <h3>4-Tier Lead Routing</h3>
+        <p>Hot leads → Slack alert + HubSpot deal. Warm leads → CRM contact. Cold leads → logged. Disqualified → archived. All automatic.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-tag">Outreach</div>
+        <h3>AI-Written First Touch</h3>
+        <p>GPT-4o writes and sends a personalised outreach email to every qualified lead — based on their actual company context, not a template.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIAL -->
+  <div class="section-tinted">
+    <div class="section-inner">
+      <span class="section-tag">Results</span>
+      <div class="testimonial-wrap">
+        <p class="testimonial-quote">"We were losing 3–4 hours per rep per week on leads that went nowhere. LeadCore cut that to near zero. Our reps now only call leads that are actually worth their time — close rate went up 40% in the first month."</p>
+        <div class="testimonial-meta">
+          <div class="testimonial-avatar">JM</div>
+          <div>
+            <div class="testimonial-name">James M.</div>
+            <div class="testimonial-title">Sales Manager · SaaS company · 28 employees</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <section id="faq">
+    <span class="section-tag">FAQ</span>
+    <h2>Common questions.</h2>
+    <p class="section-sub">Everything you need to know before purchasing.</p>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">What lead sources does LeadCore connect to?</div>
+        <p class="faq-a">Web forms, CSV uploads, CRM exports, and direct API calls via webhook. If you can export your leads, LeadCore can score them. No native integration required.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">How does it know what a "good" lead looks like?</div>
+        <p class="faq-a">You define your ICP criteria during setup — industry, company size, title, revenue range, tech stack. LeadCore applies those filters automatically to every new lead via a customisable GPT-4o scoring prompt.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">We already use HubSpot / Salesforce / Pipedrive. Will this work?</div>
+        <p class="faq-a">Yes. LeadCore works alongside your existing CRM — it doesn't replace it. Think of it as the filter layer between your lead source and your reps. Hot leads are pushed into your CRM automatically.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">How long does setup take?</div>
+        <p class="faq-a">Under 30 minutes for most teams. LeadCore is delivered as an import-ready n8n workflow with a step-by-step README and CREDENTIALS guide. No developer required.</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Is this a subscription?</div>
+        <p class="faq-a">No. LeadCore is a one-time purchase — $79. You own the workflow. No monthly fees, no seat limits, no usage caps. You pay OpenAI and Apollo.io directly at roughly $0.05 per lead processed.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOTTOM CTA -->
+  <div class="section-tinted" id="get">
+    <div class="cta-section">
+      <span class="section-tag" style="background: var(--paper);">Get LeadCore™</span>
+      <h2>Your reps should be closing,<br />not sorting.</h2>
+      <p>LeadCore puts the right leads in front of your team — every time, automatically. One purchase. Runs forever.</p>
+      <a href="https://curcible.gumroad.com/l/leadcore-ai-lead-qualification" data-gumroad-overlay-checkout="true" class="btn-primary">Get LeadCore — $79 one-time</a>
+      <div class="cta-meta">
+        <span>No subscription</span>
+        <span>·</span>
+        <span>Setup in 30 min</span>
+        <span>·</span>
+        <span>No seat limits</span>
+        <span>·</span>
+        <span>Delivered as n8n workflow</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <a href="#" class="wordmark">C<span>ur</span>cible<span>.</span></a>
+    <span class="footer-note">LeadCore™ is a Curcible product &nbsp;·&nbsp; One-time purchase &nbsp;·&nbsp; © 2026</span>
+  </footer>
+
+</body>
+</html>

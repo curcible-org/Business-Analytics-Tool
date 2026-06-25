@@ -20,7 +20,11 @@
       "Bash(Start-Process powershell *)",
       "PowerShell(Start-Process powershell -ArgumentList '-NoExit', '-Command', 'n8n start' -WindowStyle Normal)",
       "PowerShell(Copy-Item \"d:\\\\Business Analytics tool\\\\Curcible-Implementation\\\\onboarding\\\\index.html\" \"d:\\\\Business Analytics tool\\\\app\\\\index.html\")",
-      "PowerShell(Copy-Item \"d:\\\\Business Analytics tool\\\\Curcible-Implementation\\\\workflows\" \"d:\\\\Business Analytics tool\\\\app\\\\workflows\" -Recurse)"
+      "PowerShell(Copy-Item \"d:\\\\Business Analytics tool\\\\Curcible-Implementation\\\\workflows\" \"d:\\\\Business Analytics tool\\\\app\\\\workflows\" -Recurse)",
+      "Bash(Get-ChildItem -Path . -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(dir \"d:\\\\Business Analytics tool\" /b)",
+      "Bash(claude mcp *)"
     ]
   }
 }

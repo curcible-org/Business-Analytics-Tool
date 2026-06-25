@@ -19,6 +19,62 @@
   status = 200
   force  = true
 
+# Gumroad purchase webhook → n8n
+[[redirects]]
+  from   = "/api/v1/gumroad-webhook"
+  to     = "/.netlify/functions/gumroad-webhook"
+  status = 200
+  force  = true
+
+# Legacy product short-URLs → React routes
+[[redirects]]
+  from   = "/leadcore"
+  to     = "/products/leadcore"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from   = "/inboxcore"
+  to     = "/products/inboxcore"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from   = "/contentcore"
+  to     = "/products/contentcore"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from   = "/postcore"
+  to     = "/products/postcore"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from   = "/reportcore"
+  to     = "/products/reportcore"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from   = "/knowcore"
+  to     = "/products/knowcore"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from   = "/meetcore"
+  to     = "/products/meetcore"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from   = "/schedcore"
+  to     = "/products/schedcore"
+  status = 301
+  force  = true
+
 # SPA fallback — keep last
 [[redirects]]
   from   = "/*"

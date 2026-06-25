@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curcible — AI Automation Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #F9F7F8; --warm-paper: #FDFBFC; --parchment: #F2EEF0;
+  --ink: #1C1618; --ink-mid: #36262C; --stone: #847278; --ghost: #CCBEC2;
+  --plum: #6A4858; --plum-mid: #7D5569; --plum-pale: rgba(106,72,88,0.07); --plum-pale2: rgba(106,72,88,0.13);
+  --border: rgba(28,22,24,0.10); --border-strong: rgba(28,22,24,0.22); --rule: rgba(28,22,24,0.06);
+  --ok: #2D6A4F; --ok-dim: rgba(45,106,79,0.08); --ok-border: rgba(45,106,79,0.18);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--paper); color: var(--ink); font-size: 14px; line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+/* NAV */
+.nav { position: sticky; top: 0; z-index: 100; background: rgba(249,247,248,.96); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 0 64px; display: flex; align-items: center; gap: 0; overflow-x: auto; scrollbar-width: none; }
+.nav::-webkit-scrollbar { display: none; }
+.nav-wm { font-family: 'DM Serif Display', serif; font-size: 15px; color: var(--ink); padding: 11px 18px 11px 0; border-right: 1px solid var(--border); margin-right: 4px; flex-shrink: 0; text-decoration: none; }
+.nav-wm .pl { color: var(--plum); }
+.nav a.link { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .10em; text-transform: uppercase; color: var(--stone); text-decoration: none; padding: 13px 12px; white-space: nowrap; flex-shrink: 0; transition: color .15s; }
+.nav a.link:hover { color: var(--ink); }
+.nav-cta { margin-left: auto; flex-shrink: 0; background: var(--plum); color: #fff; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .10em; text-transform: uppercase; text-decoration: none; padding: 7px 16px; border-radius: 2px; transition: opacity .15s; }
+.nav-cta:hover { opacity: .85; }
+
+/* HERO */
+.hero { background: var(--ink); padding: 80px 64px 72px; display: grid; grid-template-columns: 1fr auto; gap: 48px; align-items: end; }
+.hero-eyebrow { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--stone); margin-bottom: 18px; }
+.hero-title { font-family: 'DM Serif Display', serif; font-size: clamp(40px, 5.5vw, 72px); line-height: 1.0; letter-spacing: -.025em; color: var(--paper); font-weight: 400; margin-bottom: 20px; }
+.hero-title em { font-style: italic; color: var(--ghost); }
+.hero-sub { font-size: 15px; color: var(--stone); max-width: 520px; line-height: 1.75; font-weight: 300; margin-bottom: 36px; }
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn-primary { background: var(--plum); color: #fff; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; padding: 12px 24px; border-radius: 2px; transition: opacity .15s; display: inline-block; }
+.btn-primary:hover { opacity: .85; }
+.btn-ghost { background: transparent; color: var(--ghost); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; text-decoration: none; padding: 11px 24px; border-radius: 2px; border: 1px solid rgba(249,247,248,.15); transition: border-color .15s; display: inline-block; }
+.btn-ghost:hover { border-color: rgba(249,247,248,.35); }
+.hero-nums { display: flex; flex-direction: column; gap: 1px; background: rgba(249,247,248,.06); flex-shrink: 0; }
+.cnum { background: rgba(249,247,248,.03); padding: 18px 28px; display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: baseline; min-width: 160px; }
+.cnum-n { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--paper); line-height: 1; }
+.cnum-l { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: rgba(249,247,248,.28); line-height: 1.4; }
+
+/* SECTION */
+.section { padding: 60px 64px; border-bottom: 1px solid var(--border); }
+.section.tinted { background: var(--parchment); }
+.section-eyebrow { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: var(--stone); margin-bottom: 10px; }
+.section-title { font-family: 'DM Serif Display', serif; font-size: 30px; letter-spacing: -.02em; font-weight: 400; margin-bottom: 10px; }
+.section-sub { font-size: 13.5px; color: var(--ink-mid); max-width: 600px; line-height: 1.7; margin-bottom: 36px; }
+
+/* HOW IT WORKS */
+.steps-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+.step-card { background: var(--warm-paper); padding: 28px 26px; }
+.step-card.accent { background: var(--ink); }
+.sc-num { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--stone); margin-bottom: 10px; }
+.step-card.accent .sc-num { color: rgba(249,247,248,.3); }
+.sc-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--ink); margin-bottom: 8px; }
+.step-card.accent .sc-title { color: var(--paper); }
+.sc-desc { font-size: 12.5px; color: var(--stone); line-height: 1.65; }
+.step-card.accent .sc-desc { color: rgba(249,247,248,.4); }
+
+/* PRODUCTS */
+.products-list { display: flex; flex-direction: column; gap: 1px; margin-top: 8px; }
+.prod { border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+.prod-header { background: var(--ink); padding: 20px 26px; display: grid; grid-template-columns: auto 1fr auto auto; gap: 16px; align-items: center; }
+.prod-id { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--plum-mid); background: rgba(125,85,105,.15); border: 1px solid rgba(125,85,105,.25); padding: 3px 9px; border-radius: 2px; font-weight: 500; flex-shrink: 0; }
+.prod-name { font-family: 'DM Serif Display', serif; font-size: 19px; color: var(--paper); letter-spacing: -.015em; }
+.complexity-tag { font-family: 'DM Mono', monospace; font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase; padding: 3px 9px; border-radius: 2px; flex-shrink: 0; }
+.ct-beginner { background: rgba(45,106,79,.15); color: #7BC4A0; border: 1px solid rgba(45,106,79,.25); }
+.ct-intermediate { background: rgba(139,115,85,.15); color: #C4A87B; border: 1px solid rgba(139,115,85,.25); }
+.ct-advanced { background: rgba(106,72,88,.15); color: #C9A8B8; border: 1px solid rgba(106,72,88,.25); }
+.prod-price { font-family: 'DM Serif Display', serif; font-size: 26px; color: #C9A8B8; flex-shrink: 0; }
+.prod-body { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); }
+.pb-col { background: var(--warm-paper); padding: 22px 24px; }
+.pb-label { font-family: 'DM Mono', monospace; font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--stone); margin-bottom: 10px; display: block; }
+.pb-col p { font-size: 13px; color: var(--ink-mid); line-height: 1.65; }
+.pb-col ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.pb-col li { font-size: 12.5px; color: var(--ink-mid); display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; }
+.pb-col li::before { content: '—'; color: var(--ghost); flex-shrink: 0; font-size: 10px; margin-top: 2px; }
+.prod-footer { background: var(--parchment); padding: 14px 26px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid var(--border); }
+.pf-creds { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.pf-label { font-family: 'DM Mono', monospace; font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--stone); flex-shrink: 0; }
+.cred-tag { font-family: 'DM Mono', monospace; font-size: 8.5px; padding: 2px 7px; background: var(--paper); border: 1px solid var(--border); border-radius: 2px; color: var(--ink-mid); }
+.buy-btn { background: var(--plum); color: #fff; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .10em; text-transform: uppercase; text-decoration: none; padding: 9px 20px; border-radius: 2px; flex-shrink: 0; transition: opacity .15s; white-space: nowrap; }
+.buy-btn:hover { opacity: .85; }
+
+/* BUNDLE */
+.bundle-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+.bundle-card { background: var(--warm-paper); padding: 32px 28px; }
+.bundle-card.featured { background: var(--ink); }
+.bc-tag { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--stone); margin-bottom: 10px; }
+.bundle-card.featured .bc-tag { color: rgba(249,247,248,.3); }
+.bc-name { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--ink); margin-bottom: 4px; }
+.bundle-card.featured .bc-name { color: var(--paper); }
+.bc-products { font-size: 12.5px; color: var(--stone); margin-bottom: 20px; }
+.bundle-card.featured .bc-products { color: rgba(249,247,248,.4); }
+.bc-savings { display: flex; flex-direction: column; gap: 7px; margin-bottom: 20px; }
+.bc-save-item { font-size: 13px; color: var(--ok); display: flex; gap: 8px; align-items: center; }
+.bundle-card.featured .bc-save-item { color: #8ecfa8; }
+.bc-save-item::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: currentColor; flex-shrink: 0; margin-top: 1px; }
+.bc-note { font-size: 12px; color: var(--stone); line-height: 1.6; margin-bottom: 20px; }
+.bundle-card.featured .bc-note { color: rgba(249,247,248,.35); }
+.bc-cta { display: inline-block; background: var(--plum); color: #fff; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .10em; text-transform: uppercase; text-decoration: none; padding: 9px 18px; border-radius: 2px; transition: opacity .15s; }
+.bc-cta:hover { opacity: .85; }
+.bundle-card .bc-cta { background: transparent; color: var(--plum); border: 1px solid var(--plum-pale2); }
+.bundle-card .bc-cta:hover { background: var(--plum-pale); }
+
+/* FAQ */
+.faq-list { display: flex; flex-direction: column; gap: 1px; margin-top: 8px; background: var(--border); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; }
+.faq-item { background: var(--warm-paper); padding: 22px 26px; }
+.faq-q { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+.faq-a { font-size: 13px; color: var(--ink-mid); line-height: 1.7; }
+
+/* CTA FOOTER */
+.cta-section { background: var(--ink); padding: 72px 64px; text-align: center; }
+.cta-title { font-family: 'DM Serif Display', serif; font-size: 42px; color: var(--paper); letter-spacing: -.02em; margin-bottom: 14px; }
+.cta-sub { font-size: 14px; color: var(--stone); margin-bottom: 32px; }
+.cta-email { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--plum-mid); letter-spacing: .08em; margin-top: 20px; }
+
+/* FOOTER */
+footer { padding: 28px 64px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.footer-wm { font-family: 'DM Serif Display', serif; font-size: 15px; color: var(--ink); }
+.footer-wm .pl { color: var(--plum); }
+.footer-links { display: flex; gap: 20px; }
+.footer-links a { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: .10em; text-transform: uppercase; color: var(--stone); text-decoration: none; }
+.footer-links a:hover { color: var(--ink); }
+
+@media (max-width: 900px) {
+  .nav { padding: 0 24px; }
+  .hero { grid-template-columns: 1fr; padding: 48px 24px; }
+  .hero-nums { flex-direction: row; }
+  .section { padding: 40px 24px; }
+  .steps-grid { grid-template-columns: 1fr; }
+  .prod-body { grid-template-columns: 1fr; }
+  .prod-header { grid-template-columns: auto 1fr; }
+  .prod-price { grid-column: 1/-1; }
+  .bundle-grid { grid-template-columns: 1fr; }
+  footer { padding: 24px; }
+  .cta-section { padding: 48px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="#" class="nav-wm">C<span class="pl">ur</span>cible<span class="pl">.</span></a>
+  <a href="#products" class="link">Products</a>
+  <a href="#bundles" class="link">Bundles</a>
+  <a href="#faq" class="link">FAQ</a>
+  <a href="#contact" class="link">Contact</a>
+  <a href="https://curcible.gumroad.com" target="_blank" class="nav-cta">Buy Workflows</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div>
+    <div class="hero-eyebrow">AI Automation Suite for SMBs</div>
+    <h1 class="hero-title">Automation,<br><em>forged.</em></h1>
+    <p class="hero-sub">8 production-grade n8n workflows covering every core business function. Import, configure, and run — no code required.</p>
+    <div class="hero-actions">
+      <a href="#products" class="btn-primary">Browse workflows</a>
+      <a href="https://curcible.gumroad.com" target="_blank" class="btn-ghost">Buy on Gumroad</a>
+    </div>
+  </div>
+  <div class="hero-nums">
+    <div class="cnum"><span class="cnum-n">8</span><span class="cnum-l">Workflows</span></div>
+    <div class="cnum"><span class="cnum-n">$79</span><span class="cnum-l">Starting at</span></div>
+    <div class="cnum"><span class="cnum-n">$399</span><span class="cnum-l">Full suite</span></div>
+    <div class="cnum"><span class="cnum-n">18+</span><span class="cnum-l">Integrations</span></div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="section tinted">
+  <div class="section-eyebrow">How it works</div>
+  <h2 class="section-title">Import. Configure. Automate.</h2>
+  <p class="section-sub">Each workflow is a ready-made n8n automation. You configure credentials, replace a handful of placeholders, and activate — typically under 2 hours.</p>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="sc-num">01 · Purchase</div>
+      <div class="sc-title">Buy & download</div>
+      <p class="sc-desc">Purchase on Gumroad. Download the zip containing the workflow JSON, README, and step-by-step credential guides.</p>
+    </div>
+    <div class="step-card accent">
+      <div class="sc-num">02 · Import</div>
+      <div class="sc-title">Import into n8n</div>
+      <p class="sc-desc">Open n8n → Settings → Import Workflow → select workflow.json. All nodes and connections load instantly.</p>
+    </div>
+    <div class="step-card">
+      <div class="sc-num">03 · Configure</div>
+      <div class="sc-title">Set credentials</div>
+      <p class="sc-desc">Follow CREDENTIALS.md to connect your APIs. Replace the YOUR_* placeholders. Most workflows are live in under 2 hours.</p>
+    </div>
+    <div class="step-card">
+      <div class="sc-num">04 · Test</div>
+      <div class="sc-title">Run a test</div>
+      <p class="sc-desc">Each workflow includes a test payload in README.md. Trigger it once to verify end-to-end execution.</p>
+    </div>
+    <div class="step-card accent">
+      <div class="sc-num">05 · Activate</div>
+      <div class="sc-title">Go live</div>
+      <p class="sc-desc">Flip the Active switch in n8n. Your automation runs continuously — on schedule, webhook, or both.</p>
+    </div>
+    <div class="step-card">
+      <div class="sc-num">06 · Support</div>
+      <div class="sc-title">We're here</div>
+      <p class="sc-desc">Stuck on a credential or node? Email info@curcible.com. We respond within 1 business day.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<section class="section" id="products">
+  <div class="section-eyebrow">Products</div>
+  <h2 class="section-title">8 workflows, one flat price each</h2>
+  <p class="section-sub">Every workflow is import-ready, fully documented, and includes step-by-step credential guides for every API required.</p>
+
+  <div class="products-list">
+
+    <!-- P01 -->
+    <div class="prod" id="p01">
+      <div class="prod-header">
+        <span class="prod-id">P01</span>
+        <span class="prod-name">InboxCore™ — AI Email Triage &amp; Auto-Reply</span>
+        <span class="complexity-tag ct-beginner">Beginner</span>
+        <span class="prod-price">$79</span>
+      </div>
+      <div class="prod-body">
+        <div class="pb-col">
+          <span class="pb-label">What it does</span>
+          <p>Classifies every inbound Gmail into 6 categories — urgent, sales, support, newsletter, spam, and general. Generates a context-aware auto-reply, applies Gmail labels, syncs sales leads to HubSpot, creates Notion support tickets, and fires Slack alerts for urgent messages.</p>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">What's included</span>
+          <ul>
+            <li>workflow.json — import-ready n8n file</li>
+            <li>README.md — setup steps and test payload</li>
+            <li>CREDENTIALS.md — API setup guide</li>
+            <li>6-category AI triage classifier</li>
+            <li>Auto-reply generation (GPT-4o)</li>
+            <li>HubSpot + Notion + Slack integrations</li>
+          </ul>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">Best for</span>
+          <ul>
+            <li>Founders handling 50+ emails/day</li>
+            <li>Sales teams needing leads auto-pushed to CRM</li>
+            <li>Support teams wanting tickets without manual triage</li>
+            <li>Setup time: 1–2 hours</li>
+            <li>API cost: ~$0.02–0.05/email</li>
+          </ul>
+        </div>
+      </div>
+      <div class="prod-footer">
+        <div class="pf-creds">
+          <span class="pf-label">Requires</span>
+          <span class="cred-tag">Gmail</span><span class="cred-tag">OpenAI</span><span class="cred-tag">HubSpot</span><span class="cred-tag">Notion</span><span class="cred-tag">Slack</span><span class="cred-tag">Airtable</span>
+        </div>
+        <a href="https://curcible.gumroad.com/l/inboxcore-ai-email-triage" target="_blank" class="buy-btn">Buy — $79</a>
+      </div>
+    </div>
+
+    <!-- P02 -->
+    <div class="prod" id="p02">
+      <div class="prod-header">
+        <span class="prod-id">P02</span>
+        <span class="prod-name">ContentCore™ — Auto SEO Blog Writer</span>
+        <span class="complexity-tag ct-intermediate">Intermediate</span>
+        <span class="prod-price">$79</span>
+      </div>
+      <div class="prod-body">
+        <div class="pb-col">
+          <span class="pb-label">What it does</span>
+          <p>Accepts a keyword via webhook, researches top SERP results with SerpAPI, writes a 1,500-word SEO-optimised article with GPT-4o tuned to your brand voice, generates a featured image with DALL-E 3, publishes to WordPress as a draft, and logs to a Notion content calendar.</p>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">What's included</span>
+          <ul>
+            <li>workflow.json — import-ready n8n file</li>
+            <li>README.md — brand voice configuration guide</li>
+            <li>CREDENTIALS.md — API setup guide</li>
+            <li>SerpAPI SERP research integration</li>
+            <li>GPT-4o article + DALL-E 3 image generation</li>
+            <li>WordPress + Notion auto-publish</li>
+          </ul>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">Best for</span>
+          <ul>
+            <li>Content marketers publishing 2+ posts/week</li>
+            <li>SEO agencies running content programs</li>
+            <li>SaaS teams building inbound traffic</li>
+            <li>Setup time: 2–3 hours</li>
+            <li>API cost: ~$0.14–0.24/article</li>
+          </ul>
+        </div>
+      </div>
+      <div class="prod-footer">
+        <div class="pf-creds">
+          <span class="pf-label">Requires</span>
+          <span class="cred-tag">OpenAI</span><span class="cred-tag">SerpAPI</span><span class="cred-tag">WordPress</span><span class="cred-tag">Notion</span><span class="cred-tag">Slack</span><span class="cred-tag">Airtable</span>
+        </div>
+        <a href="https://curcible.gumroad.com/l/contentcore-seo-blog-writer" target="_blank" class="buy-btn">Buy — $79</a>
+      </div>
+    </div>
+
+    <!-- P03 -->
+    <div class="prod" id="p03">
+      <div class="prod-header">
+        <span class="prod-id">P03</span>
+        <span class="prod-name">LeadCore™ — AI Lead Qualification &amp; CRM Push</span>
+        <span class="complexity-tag ct-intermediate">Intermediate</span>
+        <span class="prod-price">$79</span>
+      </div>
+      <div class="prod-body">
+        <div class="pb-col">
+          <span class="pb-label">What it does</span>
+          <p>Enriches every inbound lead with Apollo.io data, scores them using BANT + ICP criteria via GPT-4o, routes hot/warm/cold to the correct HubSpot stage, upserts the contact, and fires a personalised outreach email. All leads logged to Airtable.</p>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">What's included</span>
+          <ul>
+            <li>workflow.json — import-ready n8n file</li>
+            <li>README.md — ICP scoring customisation guide</li>
+            <li>CREDENTIALS.md — API setup guide</li>
+            <li>Apollo.io enrichment (company size, tech stack)</li>
+            <li>BANT + ICP AI scoring (customisable prompt)</li>
+            <li>HubSpot deal + contact upsert + outreach email</li>
+          </ul>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">Best for</span>
+          <ul>
+            <li>B2B SaaS receiving inbound demo requests</li>
+            <li>Sales teams needing leads scored before outreach</li>
+            <li>Agencies running lead gen for clients</li>
+            <li>Setup time: 2–4 hours</li>
+            <li>API cost: ~$0.05/lead</li>
+          </ul>
+        </div>
+      </div>
+      <div class="prod-footer">
+        <div class="pf-creds">
+          <span class="pf-label">Requires</span>
+          <span class="cred-tag">OpenAI</span><span class="cred-tag">Apollo.io</span><span class="cred-tag">HubSpot</span><span class="cred-tag">Gmail</span><span class="cred-tag">Airtable</span>
+        </div>
+        <a href="https://curcible.gumroad.com/l/leadcore-ai-lead-qualification" target="_blank" class="buy-btn">Buy — $79</a>
+      </div>
+    </div>
+
+    <!-- P04 -->
+    <div class="prod" id="p04">
+      <div class="prod-header">
+        <span class="prod-id">P04</span>
+        <span class="prod-name">PostCore™ — Social Media Auto-Publisher</span>
+        <span class="complexity-tag ct-intermediate">Intermediate</span>
+        <span class="prod-price">$79</span>
+      </div>
+      <div class="prod-body">
+        <div class="pb-col">
+          <span class="pb-label">What it does</span>
+          <p>Generates platform-native posts for Twitter/X, LinkedIn, Instagram, and Facebook from a single topic using GPT-4o — each tuned to that platform's format. Creates a matching DALL-E 3 image and publishes all four simultaneously. Runs on webhook or cron schedule.</p>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">What's included</span>
+          <ul>
+            <li>workflow.json — import-ready n8n file</li>
+            <li>README.md — brand voice + platform API guides</li>
+            <li>CREDENTIALS.md — API setup guide</li>
+            <li>GPT-4o platform-native post generation</li>
+            <li>DALL-E 3 image generation</li>
+            <li>Twitter/X + LinkedIn + Instagram + Facebook publish</li>
+          </ul>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">Best for</span>
+          <ul>
+            <li>Marketing teams needing daily social presence</li>
+            <li>Agencies managing multiple client accounts</li>
+            <li>Founders who want consistent posting without effort</li>
+            <li>Setup time: 3–5 hours (4 platform APIs)</li>
+            <li>API cost: ~$0.09–0.14/run</li>
+          </ul>
+        </div>
+      </div>
+      <div class="prod-footer">
+        <div class="pf-creds">
+          <span class="pf-label">Requires</span>
+          <span class="cred-tag">OpenAI</span><span class="cred-tag">Twitter/X</span><span class="cred-tag">LinkedIn</span><span class="cred-tag">Meta API</span><span class="cred-tag">Slack</span><span class="cred-tag">Airtable</span>
+        </div>
+        <a href="https://curcible.gumroad.com/l/postcore-social-media-publisher" target="_blank" class="buy-btn">Buy — $79</a>
+      </div>
+    </div>
+
+    <!-- P05 -->
+    <div class="prod" id="p05">
+      <div class="prod-header">
+        <span class="prod-id">P05</span>
+        <span class="prod-name">ReportCore™ — Weekly Analytics Digest</span>
+        <span class="complexity-tag ct-intermediate">Intermediate</span>
+        <span class="prod-price">$79</span>
+      </div>
+      <div class="prod-body">
+        <div class="pb-col">
+          <span class="pb-label">What it does</span>
+          <p>Every Monday at 8am: pulls GA4 sessions, Stripe revenue, and HubSpot pipeline in parallel, aggregates the metrics, generates an executive narrative with highlights, concerns, and 3 action recommendations via GPT-4o, and delivers to Notion, Slack, and Gmail.</p>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">What's included</span>
+          <ul>
+            <li>workflow.json — import-ready n8n file</li>
+            <li>README.md — KPI configuration guide</li>
+            <li>CREDENTIALS.md — API setup guide</li>
+            <li>GA4 + Stripe + HubSpot parallel data pull</li>
+            <li>GPT-4o executive narrative generation</li>
+            <li>Notion page + Slack digest + Gmail delivery</li>
+          </ul>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">Best for</span>
+          <ul>
+            <li>Founders who want weekly business pulse</li>
+            <li>Marketing leads tracking pipeline performance</li>
+            <li>Ops teams reporting to leadership weekly</li>
+            <li>Setup time: 2–4 hours</li>
+            <li>API cost: ~$0.10–0.15/report</li>
+          </ul>
+        </div>
+      </div>
+      <div class="prod-footer">
+        <div class="pf-creds">
+          <span class="pf-label">Requires</span>
+          <span class="cred-tag">OpenAI</span><span class="cred-tag">GA4</span><span class="cred-tag">Stripe</span><span class="cred-tag">HubSpot</span><span class="cred-tag">Notion</span><span class="cred-tag">Slack</span><span class="cred-tag">Gmail</span>
+        </div>
+        <a href="https://curcible.gumroad.com/l/reportcore-weekly-analytics-digest" target="_blank" class="buy-btn">Buy — $79</a>
+      </div>
+    </div>
+
+    <!-- P06 -->
+    <div class="prod" id="p06">
+      <div class="prod-header">
+        <span class="prod-id">P06</span>
+        <span class="prod-name">KnowCore™ — WhatsApp AI Chatbot + RAG</span>
+        <span class="complexity-tag ct-advanced">Advanced</span>
+        <span class="prod-price">$99</span>
+      </div>
+      <div class="prod-body">
+        <div class="pb-col">
+          <span class="pb-label">What it does</span>
+          <p>Receives WhatsApp messages via Twilio, classifies intent with GPT-4o-mini, searches a Pinecone vector database for relevant knowledge base content, generates a grounded GPT-4o response, replies via Twilio WhatsApp, and escalates to Slack when confidence is low.</p>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">What's included</span>
+          <ul>
+            <li>workflow.json — import-ready n8n file</li>
+            <li>README.md — knowledge base ingestion guide</li>
+            <li>CREDENTIALS.md — API setup guide</li>
+            <li>Pinecone RAG vector search</li>
+            <li>Intent classification (GPT-4o-mini)</li>
+            <li>Human escalation routing + conversation logging</li>
+          </ul>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">Best for</span>
+          <ul>
+            <li>E-commerce stores with repetitive queries</li>
+            <li>Hospitality and clinic booking inquiries</li>
+            <li>Any SMB with high WhatsApp inquiry volume</li>
+            <li>Setup time: 4–6 hours + KB ingestion</li>
+            <li>API cost: ~$0.01–0.03/message</li>
+          </ul>
+        </div>
+      </div>
+      <div class="prod-footer">
+        <div class="pf-creds">
+          <span class="pf-label">Requires</span>
+          <span class="cred-tag">OpenAI</span><span class="cred-tag">Twilio</span><span class="cred-tag">Pinecone</span><span class="cred-tag">Slack</span><span class="cred-tag">Airtable</span>
+        </div>
+        <a href="https://curcible.gumroad.com/l/knowcore-whatsapp-ai-chatbot-rag" target="_blank" class="buy-btn">Buy — $99</a>
+      </div>
+    </div>
+
+    <!-- P07 -->
+    <div class="prod" id="p07">
+      <div class="prod-header">
+        <span class="prod-id">P07</span>
+        <span class="prod-name">MeetCore™ — AI Meeting Summary &amp; Follow-Up</span>
+        <span class="complexity-tag ct-intermediate">Intermediate</span>
+        <span class="prod-price">$79</span>
+      </div>
+      <div class="prod-body">
+        <div class="pb-col">
+          <span class="pb-label">What it does</span>
+          <p>Accepts a Zoom/Meet webhook or direct transcript POST, optionally transcribes audio via AssemblyAI, extracts summary, action items, decisions, and sentiment with GPT-4o, then simultaneously delivers to Notion, Slack, Gmail, HubSpot, Google Calendar, and Airtable.</p>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">What's included</span>
+          <ul>
+            <li>workflow.json — import-ready n8n file</li>
+            <li>README.md — Zoom webhook setup guide</li>
+            <li>CREDENTIALS.md — API setup guide</li>
+            <li>AssemblyAI audio transcription (optional)</li>
+            <li>GPT-4o action item + decision extraction</li>
+            <li>6 parallel output integrations</li>
+          </ul>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">Best for</span>
+          <ul>
+            <li>Teams running 5+ meetings per week</li>
+            <li>Sales teams needing auto CRM-logged call notes</li>
+            <li>Ops leads who want meeting accountability</li>
+            <li>Setup time: 2–4 hours</li>
+            <li>API cost: ~$0.05–0.15/meeting</li>
+          </ul>
+        </div>
+      </div>
+      <div class="prod-footer">
+        <div class="pf-creds">
+          <span class="pf-label">Requires</span>
+          <span class="cred-tag">OpenAI</span><span class="cred-tag">AssemblyAI</span><span class="cred-tag">Notion</span><span class="cred-tag">Slack</span><span class="cred-tag">Gmail</span><span class="cred-tag">HubSpot</span><span class="cred-tag">Google Calendar</span>
+        </div>
+        <a href="https://curcible.gumroad.com/l/meetcore-ai-meeting-summary" target="_blank" class="buy-btn">Buy — $79</a>
+      </div>
+    </div>
+
+    <!-- P08 -->
+    <div class="prod" id="p08">
+      <div class="prod-header">
+        <span class="prod-id">P08</span>
+        <span class="prod-name">SchedCore™ — AI Scheduling &amp; Booking Automation</span>
+        <span class="complexity-tag ct-intermediate">Intermediate</span>
+        <span class="prod-price">$79</span>
+      </div>
+      <div class="prod-body">
+        <div class="pb-col">
+          <span class="pb-label">What it does</span>
+          <p>Receives booking requests from any webhook (form, Calendly, WhatsApp), checks Google Calendar free/busy for 7 business days, recommends the optimal slot with GPT-4o, creates a calendar event, sends confirmation email and SMS via Twilio, and updates HubSpot.</p>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">What's included</span>
+          <ul>
+            <li>workflow.json — import-ready n8n file</li>
+            <li>README.md — Calendly webhook setup guide</li>
+            <li>CREDENTIALS.md — API setup guide</li>
+            <li>Google Calendar free/busy availability check</li>
+            <li>GPT-4o AI slot recommendation</li>
+            <li>Email + SMS confirmation + HubSpot logging</li>
+          </ul>
+        </div>
+        <div class="pb-col">
+          <span class="pb-label">Best for</span>
+          <ul>
+            <li>Consultants fielding discovery call requests</li>
+            <li>Clinics managing appointment bookings</li>
+            <li>Agencies wanting post-Calendly automation</li>
+            <li>Setup time: 2–3 hours</li>
+            <li>API cost: ~$0.02/booking</li>
+          </ul>
+        </div>
+      </div>
+      <div class="prod-footer">
+        <div class="pf-creds">
+          <span class="pf-label">Requires</span>
+          <span class="cred-tag">OpenAI</span><span class="cred-tag">Google Calendar</span><span class="cred-tag">Gmail</span><span class="cred-tag">Twilio</span><span class="cred-tag">HubSpot</span><span class="cred-tag">Airtable</span>
+        </div>
+        <a href="https://curcible.gumroad.com/l/schedcore-ai-scheduling-booking" target="_blank" class="buy-btn">Buy — $79</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- BUNDLES -->
+<section class="section tinted" id="bundles">
+  <div class="section-eyebrow">Bundles</div>
+  <h2 class="section-title">Stack products, reduce cost</h2>
+  <p class="section-sub">Combine Curcible workflows for compounding savings. Discounts applied at checkout.</p>
+  <div class="bundle-grid">
+    <div class="bundle-card">
+      <div class="bc-tag">Bundle 01</div>
+      <div class="bc-name">Starter</div>
+      <div class="bc-products">Any 2 workflows</div>
+      <div class="bc-savings">
+        <div class="bc-save-item">20% off setup (DFY clients)</div>
+        <div class="bc-save-item">Standard retainer rate</div>
+      </div>
+      <p class="bc-note">Best for automating one core department — sales, content, or ops.</p>
+      <a href="https://curcible.gumroad.com" target="_blank" class="bc-cta">Browse workflows</a>
+    </div>
+    <div class="bundle-card featured">
+      <div class="bc-tag">Bundle 02 · Most popular</div>
+      <div class="bc-name">Growth</div>
+      <div class="bc-products">Any 4 workflows</div>
+      <div class="bc-savings">
+        <div class="bc-save-item">30% off setup (DFY clients)</div>
+        <div class="bc-save-item">20% off monthly retainer</div>
+      </div>
+      <p class="bc-note">Full-funnel automation across sales, content, and operations.</p>
+      <a href="https://curcible.gumroad.com" target="_blank" class="bc-cta">Browse workflows</a>
+    </div>
+    <div class="bundle-card">
+      <div class="bc-tag">Bundle 03</div>
+      <div class="bc-name">Complete Suite</div>
+      <div class="bc-products">All 8 workflows — $399</div>
+      <div class="bc-savings">
+        <div class="bc-save-item">Save $233 vs individual</div>
+        <div class="bc-save-item">40% off setup (DFY clients)</div>
+      </div>
+      <p class="bc-note">The complete Curcible stack. Every core business function automated.</p>
+      <a href="https://curcible.gumroad.com/l/curcible-complete-suite" target="_blank" class="bc-cta">Buy suite — $399</a>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq">
+  <div class="section-eyebrow">FAQ</div>
+  <h2 class="section-title">Common questions</h2>
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q">Do I need coding experience?</div>
+      <div class="faq-a">No. n8n is a visual workflow builder. You import the JSON, configure credentials using the step-by-step guides included, replace a handful of placeholder values, and activate. Most users are live within 1–4 hours depending on the workflow.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Do I need an n8n account?</div>
+      <div class="faq-a">Yes. n8n is free to self-host (download from n8n.io) or available as a cloud service from $20/mo. All workflows are compatible with both. Self-hosting is free and gives you full control.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What are the ongoing API costs?</div>
+      <div class="faq-a">API costs are billed directly to your accounts (OpenAI, Twilio, etc.) — not through Curcible. Each product page lists estimated costs per execution. Most workflows cost $0.02–0.20 per run depending on the AI model and data volume.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Can I customise the workflows?</div>
+      <div class="faq-a">Yes, fully. You own the workflow JSON and can modify any node, prompt, or integration. The AI prompts in particular are designed to be customised — README.md in each package explains which nodes to adjust for your brand voice and ICP.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">What if I get stuck during setup?</div>
+      <div class="faq-a">Email info@curcible.com with your order number. We respond within 1 business day. For faster resolution, include a screenshot of the error and the node name where you're stuck.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Is there a done-for-you option?</div>
+      <div class="faq-a">Yes. Curcible offers a DFY service where we configure, deploy, and maintain the workflow on your infrastructure. Setup fees start at $800 with flat monthly retainers from $250/mo. Email info@curcible.com to discuss.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section" id="contact">
+  <p style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--stone);margin-bottom:16px">Get started</p>
+  <h2 class="cta-title">Ready to automate?</h2>
+  <p class="cta-sub">Buy individual workflows on Gumroad or get the complete suite for $399.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <a href="https://curcible.gumroad.com" target="_blank" class="btn-primary">Browse on Gumroad</a>
+    <a href="mailto:info@curcible.com" class="btn-ghost">Contact for DFY</a>
+  </div>
+  <p class="cta-email">info@curcible.com</p>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-wm">C<span class="pl">ur</span>cible<span class="pl">.</span></div>
+  <div class="footer-links">
+    <a href="#products">Products</a>
+    <a href="#bundles">Bundles</a>
+    <a href="mailto:info@curcible.com">Contact</a>
+    <a href="https://curcible.gumroad.com" target="_blank">Gumroad</a>
+  </div>
+  <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--stone);letter-spacing:.08em">Automation, forged.</div>
+</footer>
+
+</body>
+</html>

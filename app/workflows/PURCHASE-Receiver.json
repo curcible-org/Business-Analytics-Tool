@@ -1,0 +1,140 @@
+{
+  "name": "PURCHASE — Gumroad Receiver & Delivery",
+  "nodes": [
+
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "curcible-purchase",
+        "options": { "responseMode": "responseNode" }
+      },
+      "id": "webhook-receive",
+      "name": "Webhook — Receive Purchase",
+      "type": "n8n-nodes-base.webhook",
+      "position": [0, 300],
+      "notes": "Register this URL in Gumroad: https://n8n.curcible.com/webhook/curcible-purchase\nAlso set as the Netlify PURCHASE_WEBHOOK in gumroad-webhook.mjs"
+    },
+
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"received\" }",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-ok",
+      "name": "Respond 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [200, 200]
+    },
+
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json.body || $input.first().json;\n\nconst PRODUCT_META = {\n  'leadcore': {\n    name:     'LeadCore™',\n    tagline:  'AI Lead Qualification & CRM Enrichment',\n    file:     'P03-LeadCore.json',\n    docs:     'https://curcible.com/docs/leadcore',\n    setup:    '1–2 hours',\n    price:    '$79'\n  },\n  'inboxcore': {\n    name:     'InboxCore™',\n    tagline:  'AI Email Triage & Auto-Reply',\n    file:     'P01-InboxCore.json',\n    docs:     'https://curcible.com/docs/inboxcore',\n    setup:    '1–2 hours',\n    price:    '$79'\n  },\n  'contentcore': {\n    name:     'ContentCore™',\n    tagline:  'Auto SEO Blog Writer',\n    file:     'P02-ContentCore.json',\n    docs:     'https://curcible.com/docs/contentcore',\n    setup:    '2–3 hours',\n    price:    '$79'\n  },\n  'postcore': {\n    name:     'PostCore™',\n    tagline:  'Social Media Auto-Publisher',\n    file:     'P04-PostCore.json',\n    docs:     'https://curcible.com/docs/postcore',\n    setup:    '3–5 hours',\n    price:    '$79'\n  },\n  'reportcore': {\n    name:     'ReportCore™',\n    tagline:  'Weekly Analytics Digest',\n    file:     'P05-ReportCore.json',\n    docs:     'https://curcible.com/docs/reportcore',\n    setup:    '2–4 hours',\n    price:    '$79'\n  },\n  'knowcore': {\n    name:     'KnowCore™',\n    tagline:  'WhatsApp AI Chatbot + RAG',\n    file:     'P06-KnowCore.json',\n    docs:     'https://curcible.com/docs/knowcore',\n    setup:    '4–6 hours',\n    price:    '$99'\n  },\n  'meetcore': {\n    name:     'MeetCore™',\n    tagline:  'AI Meeting Summary & Follow-Up',\n    file:     'P07-MeetCore.json',\n    docs:     'https://curcible.com/docs/meetcore',\n    setup:    '2–4 hours',\n    price:    '$79'\n  },\n  'schedcore': {\n    name:     'SchedCore™',\n    tagline:  'AI Scheduling & Booking Automation',\n    file:     'P08-SchedCore.json',\n    docs:     'https://curcible.com/docs/schedcore',\n    setup:    '2–3 hours',\n    price:    '$79'\n  }\n};\n\nconst permalink = (d.permalink || '').toLowerCase().trim();\nconst meta = PRODUCT_META[permalink];\n\nif (!meta) {\n  throw new Error(`Unknown product permalink: \"${permalink}\"`);\n}\n\n// Download URL: Gumroad serves the file if you upload it as a product attachment.\n// Alternatively, host the .json files at a stable URL (e.g. Cloudflare R2 or Netlify /public)\n// and set the DOWNLOAD_BASE_URL env var (e.g. https://curcible.com/downloads)\nconst downloadBase = $env.DOWNLOAD_BASE_URL || 'https://curcible.com/downloads';\n\nreturn [{\n  json: {\n    // Purchase data\n    sale_id:      d.sale_id,\n    email:        d.email,\n    full_name:    d.full_name || '',\n    first_name:   (d.full_name || '').split(' ')[0] || 'there',\n    permalink,\n    license_key:  d.license_key,\n    price_cents:  d.price_cents,\n    ip_country:   d.ip_country,\n    purchased_at: d.purchased_at || new Date().toISOString(),\n    is_test:      d.test === true,\n\n    // Product metadata\n    product_name:    meta.name,\n    product_tagline: meta.tagline,\n    product_file:    meta.file,\n    product_docs:    meta.docs,\n    setup_time:      meta.setup,\n    download_url:    `${downloadBase}/${meta.file}`\n  }\n}];"
+      },
+      "id": "code-parse",
+      "name": "Code — Parse & Enrich",
+      "type": "n8n-nodes-base.code",
+      "position": [200, 400]
+    },
+
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": { "value": "{{CURCIBLE_SHEETS_ID}}", "mode": "id" },
+        "sheetName": { "value": "Sales", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Sale ID":      "={{ $json.sale_id }}",
+            "Product":      "={{ $json.product_name }}",
+            "Email":        "={{ $json.email }}",
+            "Name":         "={{ $json.full_name }}",
+            "License Key":  "={{ $json.license_key }}",
+            "Price":        "={{ $json.price_cents }}",
+            "Country":      "={{ $json.ip_country }}",
+            "Test":         "={{ $json.is_test }}",
+            "Purchased At": "={{ $json.purchased_at }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "sheets-log-sale",
+      "name": "Sheets — Log Sale",
+      "type": "n8n-nodes-base.googleSheets",
+      "credentials": { "googleSheetsOAuth2Api": { "id": "{{CURCIBLE_GOOGLE_CRED_ID}}", "name": "Curcible Google OAuth2" } },
+      "position": [400, 300]
+    },
+
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.product_name }} — your workflow is ready",
+        "emailType": "html",
+        "message": "=<div style=\"font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1C1618\">\n  <div style=\"background:#1C1618;padding:20px 28px\">\n    <span style=\"font-family:'Georgia',serif;font-size:18px;color:#F9F7F8\">C<span style='color:#6A4858'>ur</span>cible<span style='color:#6A4858'>.</span></span>\n  </div>\n  <div style=\"padding:32px 28px;background:#FDFBFC;border:1px solid rgba(28,22,24,.1)\">\n\n    <p style=\"font-family:monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#847278;margin-bottom:8px\">Purchase confirmed</p>\n    <p style=\"font-family:Georgia,serif;font-size:24px;font-weight:400;margin-bottom:16px\">{{ $json.product_name }} is yours, {{ $json.first_name }}.</p>\n\n    <p style=\"font-size:13px;color:#36262C;line-height:1.7;margin-bottom:24px\">{{ $json.product_tagline }}. Setup takes {{ $json.setup_time }}.</p>\n\n    <table style=\"width:100%;border-collapse:collapse;margin-bottom:28px;background:#F2EEF0;border-radius:3px\">\n      <tr><td style=\"padding:12px 16px;font-family:monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#847278;width:40%\">Workflow file</td><td style=\"padding:12px 16px;font-size:13px;color:#1C1618\"><a href=\"{{ $json.download_url }}\" style=\"color:#6A4858;font-weight:600\">Download {{ $json.product_file }}</a></td></tr>\n      <tr style=\"border-top:1px solid rgba(28,22,24,.06)\"><td style=\"padding:12px 16px;font-family:monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#847278\">License key</td><td style=\"padding:12px 16px;font-family:monospace;font-size:12px;color:#1C1618;letter-spacing:.05em\">{{ $json.license_key }}</td></tr>\n      <tr style=\"border-top:1px solid rgba(28,22,24,.06)\"><td style=\"padding:12px 16px;font-family:monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#847278\">Setup guide</td><td style=\"padding:12px 16px;font-size:13px\"><a href=\"{{ $json.product_docs }}\" style=\"color:#6A4858\">{{ $json.product_docs }}</a></td></tr>\n    </table>\n\n    <p style=\"font-size:13px;color:#36262C;line-height:1.7;margin-bottom:6px\"><strong>How to install</strong></p>\n    <ol style=\"font-size:13px;color:#36262C;line-height:1.9;padding-left:18px;margin-bottom:28px\">\n      <li>Download the workflow .json file above</li>\n      <li>In n8n: Workflows → Import from file</li>\n      <li>Add your credentials in each node that requires them</li>\n      <li>Activate the workflow</li>\n      <li>Follow the setup guide for credential-specific steps</li>\n    </ol>\n\n    <p style=\"font-size:13px;color:#36262C;line-height:1.7;margin-bottom:28px\">Questions? Reply to this email — we respond within one business day.</p>\n\n    <div style=\"border-top:1px solid rgba(28,22,24,.08);padding-top:20px\">\n      <p style=\"font-size:12px;color:#CCBEC2;margin:0\">Curcible &nbsp;·&nbsp; <a href=\"mailto:support@curcible.com\" style=\"color:#6A4858;text-decoration:none\">support@curcible.com</a></p>\n    </div>\n  </div>\n</div>",
+        "options": {}
+      },
+      "id": "gmail-delivery",
+      "name": "Gmail — Send Delivery Email",
+      "type": "n8n-nodes-base.gmail",
+      "credentials": { "gmailOAuth2": { "id": "{{CURCIBLE_GMAIL_CRED_ID}}", "name": "Curcible Gmail" } },
+      "position": [400, 450]
+    },
+
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "resource": "message",
+        "channel": "{{CURCIBLE_SLACK_SALES_CHANNEL}}",
+        "text": "=:money_with_wings: *{{ $json.product_name }}* sold\n*{{ $json.full_name }}* ({{ $json.email }}) · {{ $json.ip_country }} · ${{ (parseInt($json.price_cents) / 100).toFixed(2) }}"
+      },
+      "id": "slack-notify",
+      "name": "Slack — Notify Sale",
+      "type": "n8n-nodes-base.slack",
+      "credentials": { "slackApi": { "id": "{{CURCIBLE_SLACK_CRED_ID}}", "name": "Curcible Slack" } },
+      "position": [400, 600]
+    }
+
+  ],
+
+  "connections": {
+    "Webhook — Receive Purchase": {
+      "main": [[
+        { "node": "Respond 200",         "type": "main", "index": 0 },
+        { "node": "Code — Parse & Enrich", "type": "main", "index": 0 }
+      ]]
+    },
+    "Code — Parse & Enrich": {
+      "main": [[
+        { "node": "Sheets — Log Sale",       "type": "main", "index": 0 },
+        { "node": "Gmail — Send Delivery Email", "type": "main", "index": 0 },
+        { "node": "Slack — Notify Sale",     "type": "main", "index": 0 }
+      ]]
+    }
+  },
+
+  "settings": { "executionOrder": "v1" },
+  "meta": { "curcible_workflow": "purchase-receiver", "version": "1.0.0" },
+
+  "_SETUP_GUIDE": {
+    "WEBHOOK_URL": "https://n8n.curcible.com/webhook/curcible-purchase",
+    "WHERE_TO_REGISTER": [
+      "Gumroad: each product → Edit → Advanced → Webhook URL → https://n8n.curcible.com/webhook/curcible-purchase",
+      "All 8 products use the SAME webhook URL — the permalink field routes them internally"
+    ],
+    "PLACEHOLDERS_TO_REPLACE": [
+      "{{CURCIBLE_SHEETS_ID}} — Google Sheets ID (docs.google.com/spreadsheets/d/THIS_PART/edit)",
+      "{{CURCIBLE_GOOGLE_CRED_ID}} — n8n credential ID for Curcible Google OAuth2",
+      "{{CURCIBLE_GMAIL_CRED_ID}} — n8n credential ID for Curcible Gmail (support@curcible.com)",
+      "{{CURCIBLE_SLACK_CRED_ID}} — n8n credential ID for Slack",
+      "{{CURCIBLE_SLACK_SALES_CHANNEL}} — Slack channel ID (e.g. C0XXXXXXX) for sale notifications"
+    ],
+    "ENV_VAR": {
+      "DOWNLOAD_BASE_URL": "Base URL where your workflow .json files are hosted (e.g. https://curcible.com/downloads). Upload the P0X-*.json files to Cloudflare R2, Netlify /public, or any stable CDN."
+    },
+    "GOOGLE_SHEETS_SETUP": {
+      "sheet_name": "Sales",
+      "columns_row_1": ["Sale ID", "Product", "Email", "Name", "License Key", "Price", "Country", "Test", "Purchased At"]
+    },
+    "SLACK_OPTIONAL": "Delete the Slack node and its connection if you don't want sale notifications."
+  }
+}
