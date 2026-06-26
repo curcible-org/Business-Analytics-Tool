@@ -86,7 +86,7 @@ Migration `0003_forge_billing.sql` applied to the live project (ref `rjgeedzpqcb
 **Live smoke test** (run after Netlify env is set + a deploy):
 ```
 curl -s https://<site>/api/v1/leads \
-  -H "Authorization: Bearer forge_1993c269dd94a738c8036569b38c82cd352fff496a5f8d4c" \
+  -H "Authorization: Bearer <YOUR_TENANT_API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"state":"Texas","country":"United States","product":"P08"}'
 ```

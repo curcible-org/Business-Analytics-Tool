@@ -69,7 +69,7 @@ Optional enrichment (improves email/phone columns): `FORGE_HUNTER_KEY`, `FORGE_A
 Then trigger a deploy. Smoke test (uses your seeded tenant key):
 ```
 curl -s https://forge-lead-intelligence.netlify.app/api/v1/leads \
-  -H "Authorization: Bearer forge_1993c269dd94a738c8036569b38c82cd352fff496a5f8d4c" \
+  -H "Authorization: Bearer <YOUR_TENANT_API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{"state":"Texas","country":"United States","product":"P08"}'
 ```

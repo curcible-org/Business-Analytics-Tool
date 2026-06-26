@@ -2,6 +2,13 @@
   command   = "npm run build"
   publish   = "dist"
 
+# These env keys hold NON-secret values that also legitimately appear in code
+# (public Supabase URL, the LLM provider/model names, the site origin), so
+# exclude them from Netlify secret scanning. Real secrets (service role, LLM,
+# Places, Stripe keys) are NOT listed here and remain scanned.
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_URL,VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY,FORGE_LLM_MODEL,FORGE_LLM_PROVIDER,FORGE_ALLOWED_ORIGINS,APP_URL,VITE_APP_PASS"
+
 [functions]
   directory    = "netlify/functions"
   node_bundler = "esbuild"
