@@ -1,17 +1,20 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import Sidebar from './components/Sidebar.jsx'
 import Hub from './views/Hub.jsx'
 import ForgeView from './views/ForgeView.jsx'
 import SettingsView from './views/SettingsView.jsx'
-import LoginView from './views/LoginView.jsx'
+import AuthView from './views/AuthView.jsx'
+import AccountView from './views/AccountView.jsx'
+import { supabase } from './config/supabase.js'
 import { PROVIDERS } from './config/providers.js'
 import { BLUEPRINT_PRODUCTS } from './config/products.js'
-import { callLLM, scorePlacesLeads } from './utils/llm.js'
+import { scorePlacesLeads } from './utils/llm.js'
 import { searchPlaces } from './utils/places.js'
 import { runFormatValidation } from './utils/validate.js'
-import { enrichWithClearbit, enrichWithHunter, enrichWithAbstractAPI, applyConfidence } from './utils/enrich.js'
+import { enrichWithHunter, enrichWithAbstractAPI, applyConfidence } from './utils/enrich.js'
 import { verifyReachability } from './utils/verify.js'
 import { loadEnrichUsage, saveEnrichUsage, remaining } from './utils/enrichUsage.js'
+import { SAMPLE_LEADS, SAMPLE_RUN_META } from './config/sampleLeads.js'
 
 const pad = n => String(n).padStart(2, '0')
 const wait = ms => new Promise(r => setTimeout(r, ms))
@@ -30,36 +33,34 @@ function saveUsage(providerKey, usage) {
   localStorage.setItem('forge_usage', JSON.stringify({ date: TODAY(), provider: providerKey, ...usage }))
 }
 
-// Nodes differ based on data source: Places (6 stages) vs LLM-only (5 stages)
-const NODES_LLM = [
-  { label: 'LLM Discovery',      iconId: 'cpu',      status: 'idle', statusText: 'Waiting…' },
-  { label: 'Format Validation',  iconId: 'check',    status: 'idle', statusText: 'Waiting…' },
-  { label: 'Identity Check',     iconId: 'building', status: 'idle', statusText: 'Waiting…' },
-  { label: 'Contact Enrichment', iconId: 'mail',     status: 'idle', statusText: 'Waiting…' },
-  { label: 'Reachability',       iconId: 'shield',   status: 'idle', statusText: 'Waiting…' },
-]
-
+// Single real pipeline: Google Places is the only lead source. The former
+// LLM-only "discovery" path invented businesses (fabricated PII) and was removed.
+// The Clearbit "Identity Check" stage was removed (dead dependency).
 const NODES_PLACES = [
   { label: 'Places Discovery',   iconId: 'map-pin',  status: 'idle', statusText: 'Waiting…' },
   { label: 'LLM Intelligence',   iconId: 'cpu',      status: 'idle', statusText: 'Waiting…' },
   { label: 'Format Validation',  iconId: 'check',    status: 'idle', statusText: 'Waiting…' },
-  { label: 'Identity Check',     iconId: 'building', status: 'idle', statusText: 'Waiting…' },
   { label: 'Contact Enrichment', iconId: 'mail',     status: 'idle', statusText: 'Waiting…' },
   { label: 'Reachability',       iconId: 'shield',   status: 'idle', statusText: 'Waiting…' },
 ]
 
 export default function App() {
-  // ── Auth ──────────────────────────────────────────────────────────────────
-  const [authed, setAuthed] = useState(() => !!localStorage.getItem('forge_session'))
+  // ── Auth (Supabase) ─────────────────────────────────────────────────────────
+  const [session, setSession] = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
 
-  function handleLogin() {
-    localStorage.setItem('forge_session', '1')
-    setAuthed(true)
-  }
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setAuthLoading(false)
+    })
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
+    return () => sub.subscription.unsubscribe()
+  }, [])
 
-  function handleLogout() {
-    localStorage.removeItem('forge_session')
-    setAuthed(false)
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    setSession(null)
   }
 
   // ── View ──────────────────────────────────────────────────────────────────
@@ -111,7 +112,7 @@ export default function App() {
   const [locationCountry, setLocationCountry]   = useState('United States')
   const [blueprintProduct, setBlueprintProduct] = useState(BLUEPRINT_PRODUCTS[0].id)
   const [phase, setPhase]     = useState('idle')
-  const [nodes, setNodes]     = useState(NODES_LLM)
+  const [nodes, setNodes]     = useState(NODES_PLACES)
   const [logs, setLogs]       = useState([])
   const [leads, setLeads]     = useState([])
   const [error, setError]     = useState('')
@@ -132,74 +133,73 @@ export default function App() {
     setNodes(prev => prev.map((n, idx) => idx === i ? { ...n, status, statusText } : n))
   }, [])
 
+  // ── Load static SAMPLE data (no real source configured) ───────────────────
+  // Replaces the former generative path. No external call, no fabricated PII —
+  // these rows are fictional, watermarked, and blocked from CSV export.
+  function loadSample() {
+    setError('')
+    setLogs([])
+    setNodes(NODES_PLACES.map(n => ({ ...n, status: 'done', statusText: 'Sample' })))
+    addLog('No Google Places key set — showing watermarked SAMPLE data. Add a Places key in Settings to run on real businesses.', true)
+    setLeads(SAMPLE_LEADS)
+    setRunMeta(SAMPLE_RUN_META)
+    setPhase('done')
+  }
+
   // ── Run pipeline ──────────────────────────────────────────────────────────
   async function run() {
     if (!locationState.trim())   { alert('Please enter a state or province.'); return }
     if (!locationCountry.trim()) { alert('Please enter a country.'); return }
+
+    // Google Places is the only real lead source. Without it, show sample data
+    // rather than asking an LLM to invent businesses.
+    if (!googlePlacesKey.trim()) { loadSample(); return }
     if (!apiKey.trim())          { alert('Please enter your LLM API key in Settings.'); return }
 
     const product        = BLUEPRINT_PRODUCTS.find(p => p.id === blueprintProduct)
-    const hasPlaces      = !!googlePlacesKey.trim()
-    const INIT_NODES     = hasPlaces ? NODES_PLACES : NODES_LLM
     const currentEnrichUsage = loadEnrichUsage()
     const hunterBudget   = remaining(currentEnrichUsage, 'hunter')
     const emailBudget    = remaining(currentEnrichUsage, 'abstract_email')
     const phoneBudget    = remaining(currentEnrichUsage, 'abstract_phone')
 
-    // Stage index map (shifts by 1 in Places mode)
-    const idx = hasPlaces
-      ? { places: 0, llm: 1, validate: 2, clearbit: 3, enrich: 4, reach: 5 }
-      : {           llm: 0, validate: 1, clearbit: 2, enrich: 3, reach: 4 }
+    // Stage index map — single real pipeline (no Identity/Clearbit stage).
+    const idx = { places: 0, llm: 1, validate: 2, enrich: 3, reach: 4 }
 
     setPhase('running')
     setLogs([])
     setLeads([])
     setError('')
-    setNodes(INIT_NODES)
+    setNodes(NODES_PLACES)
     setRunMeta(null)
 
     try {
       let raw    // raw leads before LLM scoring
       let usage = { totalTokens: 0 }
 
-      // ── Stage 0 (Places mode only): Google Places Discovery ───────────────
-      if (hasPlaces) {
-        setNode(idx.places, 'active', 'Fetching…')
-        addLog(`Google Places — fetching real businesses for ${product.name} in ${locationState}, ${locationCountry}…`)
+      // ── Stage 0: Google Places Discovery ──────────────────────────────────
+      setNode(idx.places, 'active', 'Fetching…')
+      addLog(`Google Places — fetching real businesses for ${product.name} in ${locationState}, ${locationCountry}…`)
 
-        const placesLeads = await searchPlaces({
-          state: locationState, country: locationCountry,
-          targetProduct: blueprintProduct, apiKey: googlePlacesKey,
-        })
+      const placesLeads = await searchPlaces({
+        state: locationState, country: locationCountry,
+        targetProduct: blueprintProduct, apiKey: googlePlacesKey,
+      })
 
-        setNode(idx.places, 'done', 'Complete')
-        addLog(`${placesLeads.length} real businesses fetched from Google Places.`, true)
-        await wait(200)
+      setNode(idx.places, 'done', 'Complete')
+      addLog(`${placesLeads.length} real businesses fetched from Google Places.`, true)
+      await wait(200)
 
-        // ── Stage 1 (Places mode): LLM Intelligence — score real businesses ─
-        setNode(idx.llm, 'active', 'Scoring…')
-        addLog(`Routing to ${PROVIDERS[providerKey].label} (${model})…`)
-        addLog(`Analyzing and scoring ${placesLeads.length} real businesses for ${product.name}…`)
+      // ── Stage 1: LLM Intelligence — score real businesses ─────────────────
+      setNode(idx.llm, 'active', 'Scoring…')
+      addLog(`Routing to ${PROVIDERS[providerKey].label} (${model})…`)
+      addLog(`Analyzing and scoring ${placesLeads.length} real businesses for ${product.name}…`)
 
-        const scored = await scorePlacesLeads({
-          leads: placesLeads, providerKey, model,
-          targetProduct: blueprintProduct, apiKey,
-        })
-        raw   = scored.leads
-        usage = scored.usage
-      } else {
-        // ── Stage 0 (LLM-only mode): LLM Discovery ───────────────────────────
-        setNode(idx.llm, 'active', 'Running…')
-        addLog(`Routing to ${PROVIDERS[providerKey].label} (${model})…`)
-        addLog(`Discovering leads for ${product.name} in ${locationState}, ${locationCountry}…`)
-
-        const result = await callLLM({
-          providerKey, model, state: locationState, country: locationCountry,
-          targetProduct: blueprintProduct, apiKey,
-        })
-        raw   = result.leads
-        usage = result.usage
-      }
+      const scored = await scorePlacesLeads({
+        leads: placesLeads, providerKey, model,
+        targetProduct: blueprintProduct, apiKey,
+      })
+      raw   = scored.leads
+      usage = scored.usage
 
       // Track LLM usage
       const newUsage = {
@@ -210,7 +210,7 @@ export default function App() {
       setUsageToday(newUsage)
 
       setNode(idx.llm, 'done', 'Complete')
-      addLog(`${raw.length} leads ${hasPlaces ? 'scored' : 'discovered'}.`, true)
+      addLog(`${raw.length} leads scored.`, true)
       await wait(200)
 
       // ── Format Validation ─────────────────────────────────────────────────
@@ -224,20 +224,9 @@ export default function App() {
       addLog(`Phones: ${validPhones}/${validated.filter(l => l.phone).length} valid  ·  Emails: ${validEmails}/${validated.filter(l => l.email).length} valid  ·  URLs: ${validUrls}/${validated.filter(l => l.website).length} valid`, true)
       await wait(200)
 
-      // ── Identity Check (Clearbit) ─────────────────────────────────────────
-      setNode(idx.clearbit, 'active', 'Checking…')
-      addLog(`Clearbit — company name → domain cross-check (free, no quota)…`)
-      const afterClearbit = await enrichWithClearbit(validated)
-      const cbMatch    = afterClearbit.filter(l => l.clearbit_match === 'match').length
-      const cbMismatch = afterClearbit.filter(l => l.clearbit_match === 'mismatch').length
-      const cbMissing  = afterClearbit.filter(l => l.clearbit_match === 'not_found').length
-      setNode(idx.clearbit, 'done', 'Complete')
-      addLog(`Clearbit: ${cbMatch} confirmed · ${cbMismatch} mismatch · ${cbMissing} not found`, true)
-      await wait(200)
-
       // ── Contact Enrichment ────────────────────────────────────────────────
       setNode(idx.enrich, 'active', 'Enriching…')
-      let enriched = afterClearbit
+      let enriched = validated
       let hunterUsedNow = 0, emailUsedNow = 0, phoneUsedNow = 0
 
       if (hunterApiKey.trim()) {
@@ -304,7 +293,7 @@ export default function App() {
       setLeads(qualified)
       setRunMeta({
         locationState, locationCountry, blueprintProduct, productName: product.name,
-        dataSource: hasPlaces ? 'places' : 'llm',
+        dataSource: 'places', isSample: false,
       })
       setPhase('done')
     } catch (err) {
@@ -313,8 +302,9 @@ export default function App() {
     }
   }
 
-  // ── Gate: show login if not authenticated ─────────────────────────────────
-  if (!authed) return <LoginView onLogin={handleLogin} />
+  // ── Gate: show auth if no session ───────────────────────────────────────────
+  if (authLoading) return null
+  if (!session) return <AuthView />
 
   return (
     <div className="app">
@@ -330,6 +320,8 @@ export default function App() {
 
       <main className="main">
         {currentView === 'home' && <Hub setCurrentView={setCurrentView} />}
+
+        {currentView === 'account' && <AccountView session={session} />}
 
         {currentView === 'forge' && (
           <ForgeView

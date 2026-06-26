@@ -26,6 +26,19 @@
   status = 200
   force  = true
 
+# Stripe billing
+[[redirects]]
+  from   = "/api/v1/billing/checkout"
+  to     = "/.netlify/functions/stripe-checkout"
+  status = 200
+  force  = true
+
+[[redirects]]
+  from   = "/api/v1/billing/webhook"
+  to     = "/.netlify/functions/stripe-webhook"
+  status = 200
+  force  = true
+
 # Legacy product short-URLs → React routes
 [[redirects]]
   from   = "/leadcore"

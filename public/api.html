@@ -376,8 +376,8 @@ hr { border: none; border-top: 1px solid var(--rule); margin: 32px 0; }
   <!-- Overview -->
   <section id="overview">
     <h1>Forge API</h1>
-    <p>Serverless lead intelligence API. Submit a location, a Blueprint product, and an LLM provider key — get back a list of hot, live, enriched leads with confidence scores, contact details, sale strategies, and Google Maps links.</p>
-    <p>All processing runs in a single synchronous call. The pipeline executes five stages: LLM discovery → format validation → Clearbit identity check → contact enrichment (Hunter.io optional) → reachability verification. Only hot leads with live websites are returned.</p>
+    <p>Serverless lead intelligence API. Submit a location and a Blueprint product — get back hot, reachable prospects scored against that product, with sale strategies, confidence scores, a place_id, and a Google Maps link. The API discovers real businesses from Google Places (the only lead source) and holds all provider keys server-side; callers never send LLM, Places, or enrichment keys.</p>
+    <p>All processing runs in a single synchronous call. The pipeline executes: Google Places discovery → LLM scoring → format validation → contact enrichment (Hunter.io + AbstractAPI, server-side) → reachability verification. Only hot leads whose websites resolve are returned. To respect Google Maps Platform terms, responses contain place_id + a place_id Maps link + Curcible-generated intelligence — not cached Places content (name/address/phone).</p>
   </section>
 
   <!-- Authentication -->
@@ -386,9 +386,9 @@ hr { border: none; border-top: 1px solid var(--rule); margin: 32px 0; }
     <p>Every request must include a <strong>Bearer token</strong> in the <code>Authorization</code> header. API keys are issued by Curcible.</p>
     <pre><span class="c"># Header</span>
 Authorization: Bearer YOUR_FORGE_API_KEY</pre>
-    <p>Requests without a valid key return <code>401 Unauthorized</code>. Keys are scoped per client and can be rotated on request.</p>
+    <p>Requests without a valid key return <code>401 Unauthorized</code>. Keys are issued per tenant, hashed at rest, rate-limited, quota-metered, and can be revoked or rotated.</p>
     <div class="warn-box">
-      <strong>Important:</strong> Your <code>FORGE_API_KEY</code> authenticates access to the Forge API itself. It is separate from the LLM provider keys, which you supply in the request body and are used solely to call the LLM on your behalf.
+      <strong>Important:</strong> Your API key authenticates access to the Forge API only. You do NOT send LLM, Places, or enrichment keys — these are held server-side by Curcible.
     </div>
   </section>
 

@@ -60,7 +60,9 @@ function IconMapPin() {
 }
 
 function WebVerifiedBadge({ status }) {
-  if (status === true)  return <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: '#2D6A4F', letterSpacing: '0.06em' }}>● LIVE</span>
+  // Browser check confirms the server answered (DNS/TCP/TLS), not an HTTP 200 —
+  // so the honest label is "RESOLVES", never "LIVE".
+  if (status === true)  return <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: '#2D6A4F', letterSpacing: '0.06em' }}>● RESOLVES</span>
   if (status === false) return <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: '#c0392b', letterSpacing: '0.06em' }}>✕ UNREACHABLE</span>
   return null
 }
@@ -110,13 +112,6 @@ function EmailSourceBadge({ source, deliverable }) {
       )}
     </span>
   )
-}
-
-function ClearbitBadge({ match }) {
-  if (!match || match === 'not_found') return null
-  if (match === 'match')    return <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: '#2D6A4F', letterSpacing: '0.06em' }}>✓ Clearbit</span>
-  if (match === 'mismatch') return <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: '#c0392b', letterSpacing: '0.06em' }}>⚠ Clearbit</span>
-  return null
 }
 
 function CopyButton({ text }) {
@@ -234,9 +229,9 @@ function LeadDrawer({ lead, targetProduct, onClose }) {
             <div className="drawer-name">{lead.name}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <div className="drawer-addr">{lead.address}</div>
-              {lead.address && (
+              {lead.maps_url && (
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${lead.name} ${lead.address}`)}`}
+                  href={lead.maps_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--plum)', textDecoration: 'none', letterSpacing: '0.06em', textTransform: 'uppercase', flexShrink: 0 }}>
@@ -276,20 +271,13 @@ function LeadDrawer({ lead, targetProduct, onClose }) {
           </div>
 
           {/* Confidence + Verification signals */}
-          {(lead.confidence != null || lead.clearbit_match || lead.web_verified != null) && (
+          {(lead.confidence != null || lead.web_verified != null) && (
             <DetailSection label="Verification">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {lead.confidence != null && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--stone)', textTransform: 'uppercase', letterSpacing: '0.1em', width: 70, flexShrink: 0 }}>Confidence</span>
                     <ConfidenceBar value={lead.confidence} />
-                  </div>
-                )}
-                {(lead.clearbit_match && lead.clearbit_match !== 'not_found') && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--stone)', textTransform: 'uppercase', letterSpacing: '0.1em', width: 70, flexShrink: 0 }}>Domain</span>
-                    <ClearbitBadge match={lead.clearbit_match} />
-                    {lead.clearbit_domain && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--ghost)' }}>{lead.clearbit_domain}</span>}
                   </div>
                 )}
                 {lead.web_verified != null && (
@@ -407,6 +395,7 @@ function LeadDrawer({ lead, targetProduct, onClose }) {
 
 export default function Results({ leads, meta }) {
   const [selected, setSelected] = useState(null)
+  const isSample = !!meta?.isSample
   const location = meta ? `${meta.locationState}, ${meta.locationCountry}` : ''
   const title = meta ? `${meta.productName} — ${location}` : 'Lead Sheet'
 
@@ -416,7 +405,7 @@ export default function Results({ leads, meta }) {
         <div>
           <h2>{title}</h2>
           <div className="res-meta">
-            <span>{leads.length} hot · live leads</span>
+            <span>{leads.length} hot · resolving leads</span>
             {meta?.blueprintProduct && (
               <>
                 <span style={{ color: 'var(--ghost)', margin: '0 6px' }}>·</span>
@@ -428,9 +417,15 @@ export default function Results({ leads, meta }) {
           </div>
         </div>
         <div className="res-controls">
-          <button className="export-btn" onClick={() => exportCSV(leads)}>
+          <button
+            className="export-btn"
+            onClick={() => exportCSV(leads)}
+            disabled={isSample}
+            title={isSample ? 'Sample data cannot be exported' : 'Export CSV'}
+            style={isSample ? { opacity: 0.45, cursor: 'not-allowed' } : {}}
+          >
             <IconDownload />
-            Export CSV
+            {isSample ? 'Export disabled (sample)' : 'Export CSV'}
           </button>
         </div>
       </div>

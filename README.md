@@ -9,7 +9,7 @@ Built on three open-source layers:
 | Layer | Repo | Role |
 |-------|------|------|
 | 🔍 Discovery | [local-client-prospector-skill](https://github.com/Kappaemme-git/local-client-prospector-skill) | Find businesses near a location, check website vs social-only |
-| 🕷️ Enrichment | [ScrapeGraphAI](https://github.com/ScrapeGraphAI/Scrapegraph-ai) | Deep-scrape each site: services, team, tech stack, contact info |
+| 🔎 Enrichment | Hunter.io + AbstractAPI | Discover & verify contact email; validate phone (independently sourced, not Places) |
 | ⚡ Inference | [free-llm-api-resources](https://github.com/cheahjs/free-llm-api-resources) | Route to free LLM APIs — zero inference cost |
 
 ---
@@ -17,7 +17,7 @@ Built on three open-source layers:
 ## What it does
 
 1. Enter a **location**, **business type**, and your **value proposition**
-2. The pipeline runs three stages — Prospector → ScrapeGraphAI → LLM Router
+2. The pipeline runs: Google Places discovery → LLM scoring → format validation → contact enrichment → reachability
 3. You get a scored lead sheet: **Hot / Warm / Low / Skip** with enriched data
 4. Filter by score, copy outreach angles, or export to CSV
 
@@ -26,7 +26,7 @@ Built on three open-source layers:
 ## Tech Stack
 
 - **React 18** + **Vite** — component-based UI with fast HMR
-- **No backend** — LLM API calls go directly from the browser
+- **Two run modes** — the app (free LLM tiers, your keys in-browser) and the hosted API (`/api/v1/leads`) which holds all keys server-side and uses per-tenant auth
 - **Netlify** — static hosting with instant deploys
 - **localStorage** — persists your provider choice and API key across sessions
 
@@ -120,21 +120,21 @@ Pick any one provider — all except Anthropic have free tiers.
                        ↓
          ┌─────────────────────────┐
          │  local-client-prospector│
-         │  Google Maps, Yelp, BBB │
+         │  Google Places (real)   │
          │  Website vs social check│
          └────────────┬────────────┘
                       ↓
          ┌─────────────────────────┐
-         │  ScrapeGraphAI          │
+         │  LLM scoring (real)     │
          │  SmartScraperMultiGraph │
          │  Services, tech, team,  │
          │  contact, copy quality  │
          └────────────┬────────────┘
                       ↓
          ┌─────────────────────────┐
-         │  Free LLM Router        │
+         │  Format validation      │
          │  Groq → AI Studio →     │
-         │  OpenRouter (fallback)  │
+         │  Hunter + AbstractAPI   │
          │  Lead scoring + angles  │
          └────────────┬────────────┘
                       ↓

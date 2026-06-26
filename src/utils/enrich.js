@@ -1,22 +1,8 @@
-// ─── Clearbit Autocomplete ────────────────────────────────────────────────────
-// Free, no account, no key. Confirms company name → domain.
-
-async function clearbitLookup(name) {
-  try {
-    const controller = new AbortController()
-    const timer = setTimeout(() => controller.abort(), 4000)
-    const res = await fetch(
-      `https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(name)}`,
-      { signal: controller.signal }
-    )
-    clearTimeout(timer)
-    if (!res.ok) return null
-    const data = await res.json()
-    return Array.isArray(data) && data.length ? data[0] : null // { name, domain }
-  } catch {
-    return null
-  }
-}
+// NOTE: The former Clearbit "identity check" stage was removed. Clearbit's free
+// autocomplete endpoint was discontinued for new users (2025-04-30) and silently
+// returned null, so the stage no-op'd while still emitting a clearbit_match
+// column and inflating confidence. Shipping a check that does nothing misleads
+// buyers, so it is gone. Domain matching is handled inline where needed.
 
 function extractDomain(url) {
   if (!url) return null
@@ -25,25 +11,6 @@ function extractDomain(url) {
   } catch {
     return url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].toLowerCase()
   }
-}
-
-export async function enrichWithClearbit(leads) {
-  return Promise.all(leads.map(async lead => {
-    const result = await clearbitLookup(lead.name)
-    if (!result?.domain) return { ...lead, clearbit_domain: null, clearbit_match: 'not_found' }
-
-    const leadDomain     = extractDomain(lead.website)
-    const clearbitDomain = result.domain.toLowerCase().replace(/^www\./, '')
-
-    let clearbit_match = 'not_found'
-    if (leadDomain) {
-      clearbit_match = (leadDomain === clearbitDomain || leadDomain.endsWith(`.${clearbitDomain}`))
-        ? 'match'
-        : 'mismatch'
-    }
-
-    return { ...lead, clearbit_domain: result.domain, clearbit_match }
-  }))
 }
 
 // ─── Hunter.io Domain Search ──────────────────────────────────────────────────
@@ -200,15 +167,16 @@ export async function enrichWithAbstractAPI(leads, emailApiKey, phoneApiKey, ema
 }
 
 // ─── Confidence Score ─────────────────────────────────────────────────────────
-// 0–5 points. Computed after all enrichment + reachability stages.
+// 0–5 points. Each point reflects a check that ACTUALLY RAN and passed — no
+// credit for stages that no-op'd. Computed after all enrichment + reachability.
 
 export function computeConfidence(lead) {
   let score = 0
-  if (lead.web_verified === true)         score++ // website resolves
-  if (lead.email_format_valid === true)   score++ // email is valid format
-  if (lead.email_deliverable === true)    score++ // SMTP confirmed
-  if (lead.phone_valid === true)          score++ // phone format valid
-  if (lead.clearbit_match === 'match')    score++ // Clearbit domain confirms name
+  if (lead.web_verified === true)              score++ // website reachable (real status)
+  if (lead.phone_valid === true)               score++ // phone format valid
+  if (lead.email_format_valid === true)        score++ // email is valid format
+  if (lead.email_source === 'hunter')          score++ // email independently sourced (Hunter)
+  if (lead.email_deliverable === true)         score++ // SMTP confirmed (AbstractAPI)
   return score
 }
 

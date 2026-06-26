@@ -1,20 +1,98 @@
 import { PROVIDERS } from '../config/providers.js'
 import { BLUEPRINT_PRODUCTS } from '../config/products.js'
 
-// Shared parser — strips markdown fences, extracts JSON array
+// Shared parser — strips markdown fences, extracts JSON array, tolerant of
+// trailing junk and a single truncated final object.
 function parseLeadsArray(txt) {
+  if (typeof txt !== 'string') throw new Error('Model returned no text.')
   const clean = txt.replace(/```json|```/gi, '').trim()
   const s = clean.indexOf('[')
   const e = clean.lastIndexOf(']')
   if (s === -1 || e === -1)
-    throw new Error('Model did not return a JSON array. Check your API key and try again.')
-  return JSON.parse(clean.slice(s, e + 1))
+    throw new Error('Model did not return a JSON array.')
+  const slice = clean.slice(s, e + 1)
+  try {
+    return JSON.parse(slice)
+  } catch {
+    // Salvage: keep only complete top-level objects, drop a trailing partial one.
+    const repaired = salvageArray(slice)
+    if (repaired) return repaired
+    throw new Error('Model returned malformed JSON.')
+  }
+}
+
+// Best-effort recovery of an array of objects from a partially-valid string.
+function salvageArray(slice) {
+  const objs = []
+  let depth = 0, start = -1, inStr = false, esc = false
+  for (let i = 0; i < slice.length; i++) {
+    const ch = slice[i]
+    if (inStr) {
+      if (esc) esc = false
+      else if (ch === '\\') esc = true
+      else if (ch === '"') inStr = false
+      continue
+    }
+    if (ch === '"') { inStr = true; continue }
+    if (ch === '{') { if (depth === 0) start = i; depth++ }
+    else if (ch === '}') {
+      depth--
+      if (depth === 0 && start !== -1) {
+        try { objs.push(JSON.parse(slice.slice(start, i + 1))) } catch {}
+        start = -1
+      }
+    }
+  }
+  return objs.length ? objs : null
+}
+
+const sleep = ms => new Promise(r => setTimeout(r, ms))
+
+// Single provider call. No multi-provider fallback (the app holds one key);
+// instead retries the same provider on transient failure / malformed output.
+async function callProvider({ p, model, apiKey, systemPrompt, userPrompt, temperature }) {
+  const body = p.fmt === 'anthropic'
+    ? { model, max_tokens: 8000, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] }
+    : { model, max_tokens: 8000, temperature, messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ] }
+
+  const res = await fetch(p.url, { method: 'POST', headers: p.headers(apiKey), body: JSON.stringify(body) })
+  const d = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    const e = new Error(d.error?.message || `HTTP ${res.status}`)
+    e.retryable = res.status === 429 || res.status >= 500
+    throw e
+  }
+  const raw = p.fmt === 'anthropic' ? d.content?.[0]?.text : d.choices?.[0]?.message?.content
+  const usage = p.fmt === 'anthropic'
+    ? { totalTokens: (d.usage?.input_tokens || 0) + (d.usage?.output_tokens || 0) }
+    : { totalTokens: d.usage?.total_tokens || 0 }
+  return { leads: parseLeadsArray(raw), usage }
+}
+
+async function callWithRetry(args, attempts = 3) {
+  let lastErr
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await callProvider(args)
+    } catch (e) {
+      lastErr = e
+      // Retry transient HTTP and malformed-JSON errors; fail fast on auth/4xx.
+      const retryable = e.retryable || /malformed|did not return/i.test(e.message)
+      if (!retryable || i === attempts - 1) break
+      await sleep(800 * (i + 1))
+    }
+  }
+  throw lastErr
 }
 
 // ─── Score real Places leads with the LLM ────────────────────────────────────
 // Takes raw Place leads (name, address, phone, website, industry, notes) and
 // asks the LLM to add score / pain_points / sale_strategy / etc.
-// Returns { leads: scored[], usage }
+// Returns { leads: scored[], usage }. Leads are merged back by places_id so a
+// model that renames a business can't mis-attach scores.
 
 export async function scorePlacesLeads({ leads, providerKey, model, targetProduct, apiKey }) {
   const tp = BLUEPRINT_PRODUCTS.find(p => p.id === targetProduct) || BLUEPRINT_PRODUCTS[0]
@@ -22,7 +100,7 @@ export async function scorePlacesLeads({ leads, providerKey, model, targetProduc
 
   const businessList = leads
     .map((l, i) => [
-      `${i + 1}. ${l.name}`,
+      `${i + 1}. [ref:${l.places_id || i}] ${l.name}`,
       `   Address: ${l.address}`,
       `   Phone:   ${l.phone || 'unknown'}`,
       `   Website: ${l.website || 'none'}`,
@@ -46,7 +124,7 @@ ${businessList}
 
 Return a JSON array with one object per business IN THE SAME ORDER. Each object must have ALL fields:
 {
-  "name": "exact business name as listed above",
+  "ref": "the [ref:...] value for this business, copied exactly",
   "score": "hot" | "warm" | "low",
   "buy_probability": integer 0-100,
   "industry": "concise industry label (e.g. HVAC, Hair Salon, Law Firm)",
@@ -70,164 +148,27 @@ buy_probability: hot=70-95, warm=40-69, low=15-39
 
 Return ONLY the JSON array. No markdown, no explanation.`
 
-  let raw
-  let usage = { totalTokens: 0 }
+  const { leads: scored, usage } = await callWithRetry({
+    p, model, apiKey, systemPrompt, userPrompt, temperature: 0.5,
+  })
 
-  if (p.fmt === 'anthropic') {
-    const res = await fetch(p.url, {
-      method: 'POST',
-      headers: p.headers(apiKey),
-      body: JSON.stringify({
-        model,
-        max_tokens: 8000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
-      }),
-    })
-    const d = await res.json()
-    if (!res.ok) throw new Error(d.error?.message || `HTTP ${res.status}`)
-    raw = d.content[0].text
-    if (d.usage) usage = { totalTokens: (d.usage.input_tokens || 0) + (d.usage.output_tokens || 0) }
-  } else {
-    const res = await fetch(p.url, {
-      method: 'POST',
-      headers: p.headers(apiKey),
-      body: JSON.stringify({
-        model,
-        max_tokens: 8000,
-        temperature: 0.5,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user',   content: userPrompt   },
-        ],
-      }),
-    })
-    const d = await res.json()
-    if (!res.ok) throw new Error(d.error?.message || `HTTP ${res.status}`)
-    raw = d.choices[0].message.content
-    if (d.usage) usage = { totalTokens: d.usage.total_tokens || 0 }
-  }
+  // Merge scored fields onto original place data, matched by ref (places_id),
+  // then index fallback. Never overwrites the authoritative Places fields.
+  const byRef = new Map()
+  scored.forEach((s, i) => {
+    const key = s.ref != null ? String(s.ref) : null
+    if (key) byRef.set(key, s)
+    byRef.set(`__idx_${i}`, s)
+  })
 
-  const scored = parseLeadsArray(raw)
-
-  // Merge scored fields onto original place data (preserves places_id, phone, address, etc.)
   const merged = leads.map((place, i) => {
-    // Try name match first, fall back to index
-    const match = scored.find(s => s.name === place.name) || scored[i] || {}
-    return { ...place, ...match, name: place.name }
+    const match =
+      byRef.get(String(place.places_id)) ||
+      byRef.get(`__idx_${i}`) ||
+      {}
+    const { ref, name, address, phone, website, ...scoreFields } = match
+    return { ...place, ...scoreFields }
   })
 
   return { leads: merged, usage }
-}
-
-const PRODUCT_LIST = BLUEPRINT_PRODUCTS
-  .map(p => `${p.id} — ${p.name}: ${p.desc}`)
-  .join('\n')
-
-function buildUserPrompt(state, country, targetProduct) {
-  const tp = BLUEPRINT_PRODUCTS.find(p => p.id === targetProduct) || BLUEPRINT_PRODUCTS[0]
-  return `You are a lead intelligence engine finding real prospects for a specific product.
-
-Target location: ${state}, ${country}
-Product to sell: ${tp.name} — ${tp.desc}
-
-Your task: identify business types in ${state}, ${country} that would genuinely benefit from "${tp.name}". Generate realistic leads for those businesses ONLY. Do NOT include businesses that already have strong coverage for this product or have no need for it. Omit any lead that would be a poor fit. Return between 10 and 20 leads — fewer is acceptable only if there are genuinely not enough relevant prospects.
-
-All 8 Blueprint products (for recommended_products field):
-${PRODUCT_LIST}
-
-Return a JSON array. Every object must have ALL of these fields:
-{
-  "name": "Business Name",
-  "address": "Street, City, ${state}, ${country}",
-  "phone": "+1 (XXX) XXX-XXXX",
-  "email": "contact@businessdomain.com or null",
-  "website": "https://..." or null,
-  "social_only": true or false,
-  "industry": "Short industry label e.g. Fitness & Gym / Medical Clinic / Hair Salon",
-  "score": "hot" | "warm" | "low",
-  "buy_probability": integer 0-100,
-  "website_quality": "One sentence on their web presence",
-  "services": ["service1","service2"],
-  "tech_stack": ["Wix"] or ["WordPress"] or [],
-  "pain_points": ["pain1","pain2"],
-  "problem_solved": "One sentence describing the specific business problem this lead has that ${tp.name} directly solves",
-  "sale_strategy": "2-3 sentences: how to sell ${tp.name} to THIS business based on their exact problem — entry point, angle, and close",
-  "recommended_products": ["P01","P04"],
-  "notes": "One line of context"
-}
-
-Scoring rules:
-- hot  → no website OR broken/outdated site, active business, strong pain-point match to the product
-- warm → basic site, clear room for improvement, genuine opportunity
-- low  → marginal opportunity, weak but real match
-
-Do NOT include "skip" leads — if a business is not a fit, simply exclude it.
-
-buy_probability:
-- hot  → 70–95
-- warm → 40–69
-- low  → 15–39
-Adjust within range based on business size, tech maturity, and product pain-point match.
-
-industry: concise label classifying the business sector (e.g. "Fitness & Gym", "Medical Clinic", "Dental Practice", "Hair Salon", "Real Estate Agency").
-
-problem_solved: one sentence describing the concrete business problem this lead is experiencing that ${tp.name} directly fixes. Focus on the problem, not the pitch (e.g. "Loses potential clients after hours because no one answers incoming emails or calls").
-
-sale_strategy: 2-3 sentences on exactly how to sell ${tp.name} to THIS specific business based on their exact problem_solved. Include: (1) the entry point — what specific pain to open with, (2) the positioning angle — how to frame the product for their context, (3) the close — what outcome to promise. Must differ meaningfully from other leads even if the product is the same.
-
-recommended_products: 2–4 product IDs that are the best fit. Highlight ${tp.id} if applicable.
-
-email: infer from business name/domain (info@, contact@, owner@). Use null only if no domain exists.
-
-Return ONLY the JSON array. No markdown, no explanation.`
-}
-
-// Legacy alias — internal to callLLM
-const parseLeads = parseLeadsArray
-
-export async function callLLM({ providerKey, model, state, country, targetProduct, apiKey }) {
-  const p = PROVIDERS[providerKey]
-  const system = `You are a lead intelligence engine. Output ONLY a raw JSON array — no markdown, no backticks, no preamble.`
-  const user = buildUserPrompt(state, country, targetProduct)
-
-  let raw
-  let usage = { totalTokens: 0 }
-
-  if (p.fmt === 'anthropic') {
-    const res = await fetch(p.url, {
-      method: 'POST',
-      headers: p.headers(apiKey),
-      body: JSON.stringify({
-        model,
-        max_tokens: 8000,
-        system,
-        messages: [{ role: 'user', content: user }],
-      }),
-    })
-    const d = await res.json()
-    if (!res.ok) throw new Error(d.error?.message || `HTTP ${res.status}`)
-    raw = d.content[0].text
-    if (d.usage) usage = { totalTokens: (d.usage.input_tokens || 0) + (d.usage.output_tokens || 0) }
-  } else {
-    const res = await fetch(p.url, {
-      method: 'POST',
-      headers: p.headers(apiKey),
-      body: JSON.stringify({
-        model,
-        max_tokens: 8000,
-        temperature: 0.75,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ],
-      }),
-    })
-    const d = await res.json()
-    if (!res.ok) throw new Error(d.error?.message || `HTTP ${res.status}`)
-    raw = d.choices[0].message.content
-    if (d.usage) usage = { totalTokens: d.usage.total_tokens || 0 }
-  }
-
-  return { leads: parseLeads(raw), usage }
 }

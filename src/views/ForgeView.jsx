@@ -29,10 +29,11 @@ export default function ForgeView({
   return (
     <>
       <div className="main-head">
-        <h1>Forge<em> — Lead Intelligence</em></h1>
+        <h1>Forge<em> &mdash; Lead Intelligence</em></h1>
         <p>
-          Finds businesses in your target market that need your Blueprint product, scores
-          them Hot / Warm / Low, and estimates buy probability. Runs on free LLM tiers.
+          Pulls real businesses from Google Places in your target market, scores them
+          Hot / Warm / Low against your Blueprint product, and estimates buy probability.
+          Without a Places key, Forge shows watermarked sample data.
         </p>
       </div>
 
@@ -66,7 +67,7 @@ export default function ForgeView({
           >
             {BLUEPRINT_PRODUCTS.map(p => (
               <option key={p.id} value={p.id}>
-                {p.id} — {p.name}: {p.desc}
+                {p.id} &mdash; {p.name}: {p.desc}
               </option>
             ))}
           </select>
@@ -79,7 +80,7 @@ export default function ForgeView({
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                   <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
                 </svg>
-                Running…
+                Running&hellip;
               </>
             ) : (
               <>
@@ -106,7 +107,7 @@ export default function ForgeView({
               </div>
             </div>
             <h3>No runs yet</h3>
-            <p>Enter a state, country, and Blueprint product — then run the pipeline.</p>
+            <p>Enter a state, country, and Blueprint product &mdash; then run the pipeline.</p>
           </div>
         )}
 
@@ -120,6 +121,21 @@ export default function ForgeView({
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
             {error}
+          </div>
+        )}
+
+        {phase === 'done' && runMeta?.isSample && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            margin: '16px 0 0', padding: '10px 14px',
+            background: 'var(--plum-pale)', border: '1px solid var(--plum-pale2)', borderRadius: 3,
+            fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.08em',
+            textTransform: 'uppercase', color: 'var(--plum)',
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            Sample data &mdash; fictional rows, not real businesses. Export disabled. Add a Google Places key in Settings to run on real prospects.
           </div>
         )}
 

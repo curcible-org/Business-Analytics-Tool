@@ -39,10 +39,20 @@ function IconSettings() {
   )
 }
 
+function IconAccount() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+  )
+}
+
 const NAV_ITEMS = [
   { id: 'home',     label: 'Home',      Icon: IconHome },
   { id: 'forge',    label: 'Forge',     Icon: IconForge },
   { id: 'plan',     label: 'Blueprint', Icon: IconBlueprint },
+  { id: 'account',  label: 'Account',   Icon: IconAccount },
   { id: 'settings', label: 'Settings',  Icon: IconSettings },
 ]
 
@@ -206,10 +216,6 @@ export default function Sidebar({
                   </div>
                 )
               })}
-              <div className="rate-row">
-                <span>Clearbit</span>
-                <b style={{ color: '#2D6A4F' }}>∞</b>
-              </div>
             </div>
           </div>
         </>
@@ -257,8 +263,6 @@ export default function Sidebar({
 
       <div className="sidebar-footer">
         <span className="sf-tag">libphonenumber</span>
-        <span className="sf-sep">·</span>
-        <span className="sf-tag">clearbit</span>
         <span className="sf-sep">·</span>
         <span className="sf-tag">hunter</span>
         <span className="sf-sep">·</span>

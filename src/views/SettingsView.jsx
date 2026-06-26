@@ -232,12 +232,6 @@ export default function SettingsView({
           </div>
         </div>
 
-        <div className="rate-box" style={{ marginTop: 14 }}>
-          <div className="rate-row">
-            <span>Clearbit Autocomplete</span>
-            <b style={{ color: '#2D6A4F' }}>Always on · no quota</b>
-          </div>
-        </div>
       </div>
 
       {/* ── Security ── */}

@@ -1464,3 +1464,53 @@ html, body {
   white-space: nowrap;
   max-width: 100px;
 }
+
+/* ── Auth + account (added with Supabase accounts) ───────────────────────────── */
+.login-shell {
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--paper, #F9F7F8);
+  padding: 24px;
+}
+.login-card {
+  width: 100%; max-width: 360px;
+  background: var(--warm-paper, #FDFBFC);
+  border: 1px solid var(--border, rgba(28,22,24,0.10));
+  border-radius: 3px;
+  padding: 32px 28px;
+}
+.login-label {
+  display: block;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.16em;
+  color: var(--stone, #847278);
+  margin-bottom: 6px;
+}
+.login-input {
+  width: 100%; height: 38px; padding: 0 12px;
+  background: var(--paper, #F9F7F8);
+  border: 1px solid var(--border, rgba(28,22,24,0.10));
+  border-radius: 3px;
+  color: var(--ink, #1C1618);
+  font-family: inherit; font-size: 13px;
+  box-sizing: border-box;
+}
+.login-input:focus { outline: none; border-color: var(--plum, #6A4858); }
+.login-error {
+  margin-top: 12px; padding: 8px 10px;
+  background: rgba(192,57,43,0.08); border: 1px solid rgba(192,57,43,0.25);
+  border-radius: 3px; color: #c0392b; font-size: 12px;
+}
+.login-notice {
+  margin-top: 12px; padding: 8px 10px;
+  background: var(--plum-pale, rgba(106,72,88,0.07));
+  border: 1px solid var(--plum-pale2, rgba(106,72,88,0.13));
+  border-radius: 3px; color: var(--plum, #6A4858); font-size: 12px;
+}
+.link-btn {
+  display: inline-block; margin-top: 16px;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-mono, monospace); font-size: 11px;
+  letter-spacing: 0.04em; color: var(--plum, #6A4858);
+  text-decoration: underline; padding: 0;
+}
