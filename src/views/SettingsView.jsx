@@ -22,6 +22,14 @@ function IconLogOut() {
   )
 }
 
+function IconX() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  )
+}
+
 export default function SettingsView({
   providerKey, setProviderKey,
   model, setModel,
@@ -32,12 +40,14 @@ export default function SettingsView({
   googlePlacesKey, setGooglePlacesKey,
   enrichUsage,
   onLogout,
+  onClose,
 }) {
   const [showKey, setShowKey]               = useState(false)
   const [showAbstractEmailKey, setShowAbstractEmailKey] = useState(false)
   const [showAbstractPhoneKey, setShowAbstractPhoneKey] = useState(false)
   const [showHunterKey, setShowHunterKey]   = useState(false)
   const [showPlacesKey, setShowPlacesKey]   = useState(false)
+  const [savedAt, setSavedAt]               = useState(null)
 
   const provider = PROVIDERS[providerKey]
 
@@ -47,12 +57,19 @@ export default function SettingsView({
     setModel(PROVIDERS[key].models[0].id)
   }
 
+  function handleSave() {
+    setSavedAt(new Date().toLocaleTimeString())
+    if (onClose) setTimeout(onClose, 400)
+  }
+
   return (
-    <div className="settings">
-      <div className="settings-head">
-        <h1>Settings</h1>
-        <p>Manage your LLM provider, API keys, and enrichment configuration.</p>
+    <>
+      <div className="so-head">
+        <span className="so-title">Settings</span>
+        <button className="so-close" onClick={onClose}><IconX /></button>
       </div>
+      <div className="so-body">
+      <div className="settings">
 
       {/* ── LLM Provider ── */}
       <div className="settings-section">
@@ -246,5 +263,11 @@ export default function SettingsView({
         </button>
       </div>
     </div>
+    </div>
+    <div className="so-footer">
+      <button className="so-save-btn" onClick={handleSave}>Save changes</button>
+      {savedAt && <div className="so-saved-ts">Saved at {savedAt}</div>}
+    </div>
+    </>
   )
 }

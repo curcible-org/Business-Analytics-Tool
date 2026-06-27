@@ -1,10 +1,11 @@
 import { useState, useCallback, useEffect } from 'react'
-import Sidebar from './components/Sidebar.jsx'
+import TopNav from './components/TopNav.jsx'
 import Hub from './views/Hub.jsx'
 import ForgeView from './views/ForgeView.jsx'
 import SettingsView from './views/SettingsView.jsx'
 import AuthView from './views/AuthView.jsx'
 import AccountView from './views/AccountView.jsx'
+import WorkflowsView from './views/WorkflowsView.jsx'
 import { supabase } from './config/supabase.js'
 import { PROVIDERS } from './config/providers.js'
 import { BLUEPRINT_PRODUCTS } from './config/products.js'
@@ -302,20 +303,22 @@ export default function App() {
     }
   }
 
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
   // ── Gate: show auth if no session ───────────────────────────────────────────
   if (authLoading) return null
   if (!session) return <AuthView />
 
   return (
     <div className="app">
-      <Sidebar
+      <TopNav
         currentView={currentView}
         setCurrentView={setCurrentView}
         providerKey={providerKey}
         model={model}
         usageToday={usageToday}
-        enrichUsage={enrichUsage}
-        hasPlacesKey={!!googlePlacesKey.trim()}
+        onOpenSettings={() => setSettingsOpen(true)}
+        session={session}
       />
 
       <main className="main">
@@ -330,27 +333,31 @@ export default function App() {
             blueprintProduct={blueprintProduct} setBlueprintProduct={setBlueprintProduct}
             phase={phase} nodes={nodes} logs={logs} leads={leads}
             error={error} runMeta={runMeta} run={run}
+            providerKey={providerKey} model={model}
           />
         )}
 
-        {currentView === 'plan' && (
-          <iframe src="/plan.html" className="plan-frame" title="Curcible Sequential Plan" />
-        )}
-
-        {currentView === 'settings' && (
-          <SettingsView
-            providerKey={providerKey} setProviderKey={setProviderKey}
-            model={model} setModel={setModel}
-            apiKey={apiKey} setApiKey={setApiKey}
-            abstractEmailKey={abstractEmailKey} setAbstractEmailKey={setAbstractEmailKey}
-            abstractPhoneKey={abstractPhoneKey} setAbstractPhoneKey={setAbstractPhoneKey}
-            hunterApiKey={hunterApiKey} setHunterApiKey={setHunterApiKey}
-            googlePlacesKey={googlePlacesKey} setGooglePlacesKey={setGooglePlacesKey}
-            enrichUsage={enrichUsage}
-            onLogout={handleLogout}
-          />
-        )}
+        {currentView === 'workflows' && <WorkflowsView />}
       </main>
+
+      {settingsOpen && (
+        <div className="slide-over-backdrop" onClick={() => setSettingsOpen(false)}>
+          <div className="slide-over" onClick={e => e.stopPropagation()}>
+            <SettingsView
+              providerKey={providerKey} setProviderKey={setProviderKey}
+              model={model} setModel={setModel}
+              apiKey={apiKey} setApiKey={setApiKey}
+              abstractEmailKey={abstractEmailKey} setAbstractEmailKey={setAbstractEmailKey}
+              abstractPhoneKey={abstractPhoneKey} setAbstractPhoneKey={setAbstractPhoneKey}
+              hunterApiKey={hunterApiKey} setHunterApiKey={setHunterApiKey}
+              googlePlacesKey={googlePlacesKey} setGooglePlacesKey={setGooglePlacesKey}
+              enrichUsage={enrichUsage}
+              onLogout={handleLogout}
+              onClose={() => setSettingsOpen(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

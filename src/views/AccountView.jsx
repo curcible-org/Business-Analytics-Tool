@@ -3,13 +3,65 @@ import { supabase } from '../config/supabase.js'
 
 const API_ENDPOINT = '/api/v1/leads'
 
+function IconCheck() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  )
+}
+
+function IconKey() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5l3 3L22 7l-3-3"/>
+    </svg>
+  )
+}
+
+function IconCopy() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+    </svg>
+  )
+}
+
+const PLANS = [
+  {
+    id: 'free',
+    name: 'Free',
+    price: '$0',
+    quota: '50 runs / mo',
+    rate: '6 / min',
+    features: ['Forge access', 'API key management', 'Community support'],
+  },
+  {
+    id: 'starter',
+    name: 'Starter',
+    price: '$29',
+    quota: '500 runs / mo',
+    rate: '30 / min',
+    features: ['Everything in Free', '10× run quota', 'Priority support'],
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: '$99',
+    quota: '5,000 runs / mo',
+    rate: '120 / min',
+    features: ['Everything in Starter', '100× run quota', 'SLA + dedicated support'],
+  },
+]
+
 export default function AccountView({ session }) {
-  const [usage, setUsage]   = useState(null)
-  const [keys, setKeys]     = useState([])
+  const [usage, setUsage]     = useState(null)
+  const [keys, setKeys]       = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError]   = useState('')
-  const [newKey, setNewKey] = useState('')   // plaintext shown once
-  const [busy, setBusy]     = useState(false)
+  const [error, setError]     = useState('')
+  const [newKey, setNewKey]   = useState('')
+  const [busy, setBusy]       = useState(false)
+  const [copied, setCopied]   = useState(false)
 
   const load = useCallback(async () => {
     setError('')
@@ -77,95 +129,185 @@ export default function AccountView({ session }) {
     }
   }
 
+  function copyKey() {
+    if (!newKey) return
+    navigator.clipboard.writeText(newKey).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
   const pct = usage ? Math.min(100, Math.round((usage.used_this_month / usage.monthly_quota) * 100)) : 0
+  const currentPlan = usage?.plan || 'free'
+
+  const curlSnippet = `curl -s https://forge-lead-intelligence.netlify.app${API_ENDPOINT} \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"state":"Texas","country":"United States","product":"P08"}'`
 
   return (
-    <>
-      <div className="main-head">
-        <h1>Account<em> &mdash; API &amp; Usage</em></h1>
-        <p>Your hosted Forge API keys, monthly quota, and usage. Keys authenticate calls to <code>{API_ENDPOINT}</code>; provider keys stay server-side.</p>
+    <div className="acct-root">
+      {/* ── Page header ── */}
+      <div className="acct-header">
+        <div className="acct-header-left">
+          <span className="acct-eyebrow">Account</span>
+          <h1 className="acct-title">API &amp; Usage</h1>
+          <p className="acct-sub">Manage your API keys, track quota, and upgrade your plan.</p>
+        </div>
+        <div className="acct-header-right">
+          <span className="acct-plan-badge">{currentPlan.toUpperCase()}</span>
+        </div>
       </div>
 
-      <div className="content">
-        {error && <div className="err-banner">{error}</div>}
-        {loading ? (
-          <p style={{ color: 'var(--stone)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>Loading&hellip;</p>
-        ) : (
-          <>
-            <div className="settings-section">
-              <div className="settings-section-title">Plan &amp; usage</div>
-              <div className="rate-box">
-                <div className="rate-row"><span>Plan</span><b style={{ textTransform: 'uppercase' }}>{usage?.plan}</b></div>
-                <div className="rate-row"><span>Runs this month</span><b>{usage?.used_this_month} / {usage?.monthly_quota}</b></div>
-                <div className="rate-row"><span>Rate limit</span><b>{usage?.rate_per_min} / min</b></div>
-              </div>
-              <div style={{ height: 3, background: 'var(--parchment)', borderRadius: 2, overflow: 'hidden', marginTop: 10 }}>
-                <div style={{ width: `${pct}%`, height: '100%', background: pct >= 90 ? '#c0392b' : 'var(--plum)' }} />
+      {error && (
+        <div className="acct-error">{error}</div>
+      )}
+
+      {loading ? (
+        <div className="acct-loading">Loading&hellip;</div>
+      ) : (
+        <div className="acct-body">
+
+          {/* ── Top stat strip ── */}
+          <div className="acct-stats">
+            <div className="acct-stat">
+              <span className="acct-stat-label">Plan</span>
+              <span className="acct-stat-value">{currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)}</span>
+            </div>
+            <div className="acct-stat-div" />
+            <div className="acct-stat">
+              <span className="acct-stat-label">Runs this month</span>
+              <span className="acct-stat-value">{usage?.used_this_month} <span className="acct-stat-of">/ {usage?.monthly_quota}</span></span>
+            </div>
+            <div className="acct-stat-div" />
+            <div className="acct-stat">
+              <span className="acct-stat-label">Rate limit</span>
+              <span className="acct-stat-value">{usage?.rate_per_min} <span className="acct-stat-of">/ min</span></span>
+            </div>
+            <div className="acct-stat-div" />
+            <div className="acct-stat acct-stat--meter">
+              <span className="acct-stat-label">Quota used</span>
+              <span className="acct-stat-value">{pct}%</span>
+              <div className="acct-meter-track">
+                <div
+                  className="acct-meter-fill"
+                  style={{ width: `${pct}%`, background: pct >= 90 ? '#a03030' : 'var(--plum)' }}
+                />
               </div>
             </div>
+          </div>
 
-            <div className="settings-section">
-              <div className="settings-section-title">Plans</div>
-              <div className="rate-box">
-                <div className="rate-row"><span>Starter &mdash; 500 runs/mo</span>
-                  <button className="link-btn" style={{ margin: 0 }} disabled={busy || usage?.plan === 'starter'} onClick={() => upgrade('starter')}>
-                    {usage?.plan === 'starter' ? 'Current' : 'Upgrade'}
-                  </button>
+          {/* ── Two-column body ── */}
+          <div className="acct-cols">
+
+            {/* LEFT — API keys */}
+            <div className="acct-col acct-col--left">
+              <div className="acct-section-head">
+                <div className="acct-section-label">
+                  <IconKey />
+                  API Keys
                 </div>
-                <div className="rate-row"><span>Pro &mdash; 5,000 runs/mo</span>
-                  <button className="link-btn" style={{ margin: 0 }} disabled={busy || usage?.plan === 'pro'} onClick={() => upgrade('pro')}>
-                    {usage?.plan === 'pro' ? 'Current' : 'Upgrade'}
-                  </button>
-                </div>
+                <button className="acct-create-btn" onClick={createKey} disabled={busy}>
+                  {busy ? 'Creating…' : '+ New Key'}
+                </button>
               </div>
-              <p style={{ color: 'var(--stone)', fontSize: 11, marginTop: 8 }}>
-                Checkout opens Stripe. Your plan, quota, and rate limit update automatically when payment succeeds.
-              </p>
-            </div>
-
-            <div className="settings-section">
-              <div className="settings-section-title">API keys</div>
-              <p style={{ color: 'var(--stone)', fontSize: 12, marginBottom: 12 }}>
-                Keys are shown once at creation and stored only as a hash. Treat them like passwords.
+              <p className="acct-section-note">
+                Shown once at creation. Stored as a hash — treat them like passwords. Pass as <code className="acct-code">Bearer YOUR_KEY</code> in requests to <code className="acct-code">{API_ENDPOINT}</code>.
               </p>
 
               {newKey && (
-                <div className="login-notice" style={{ marginBottom: 12, wordBreak: 'break-all', fontFamily: 'var(--font-mono)', fontSize: 12 }}>
-                  New key (copy now, shown once): <strong>{newKey}</strong>
+                <div className="acct-new-key">
+                  <div className="acct-new-key-label">
+                    New key — copy now, shown once
+                  </div>
+                  <div className="acct-new-key-row">
+                    <code className="acct-new-key-val">{newKey}</code>
+                    <button className="acct-copy-btn" onClick={copyKey}>
+                      {copied ? <IconCheck /> : <IconCopy />}
+                      {copied ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
                 </div>
               )}
 
-              <button className="run-btn" onClick={createKey} disabled={busy} style={{ marginBottom: 14 }}>
-                Create new key
-              </button>
+              <div className="acct-keys-list">
+                {keys.length === 0 ? (
+                  <div className="acct-keys-empty">No keys yet. Create one to start making API calls.</div>
+                ) : (
+                  keys.map(k => (
+                    <div className={`acct-key-row ${k.revoked ? 'acct-key-row--revoked' : ''}`} key={k.id}>
+                      <div className="acct-key-info">
+                        <span className="acct-key-prefix">{k.key_prefix}&hellip;</span>
+                        {k.revoked && <span className="acct-key-tag">Revoked</span>}
+                      </div>
+                      {!k.revoked && (
+                        <button className="acct-revoke-btn" onClick={() => revokeKey(k.id)} disabled={busy}>
+                          Revoke
+                        </button>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
 
-              <div className="rate-box">
-                {keys.length === 0 && <div className="rate-row"><span>No keys yet</span></div>}
-                {keys.map(k => (
-                  <div className="rate-row" key={k.id}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>
-                      {k.key_prefix}&hellip; {k.revoked && <em style={{ color: '#c0392b' }}>(revoked)</em>}
-                    </span>
-                    {!k.revoked && (
-                      <button className="link-btn" style={{ margin: 0 }} onClick={() => revokeKey(k.id)} disabled={busy}>
-                        Revoke
-                      </button>
-                    )}
-                  </div>
-                ))}
+              {/* Quick start */}
+              <div className="acct-qs">
+                <div className="acct-section-label" style={{ marginBottom: 10 }}>Quick Start</div>
+                <pre className="acct-pre">{curlSnippet}</pre>
               </div>
             </div>
 
-            <div className="settings-section">
-              <div className="settings-section-title">Quick start</div>
-              <pre style={{ background: 'var(--parchment)', padding: 14, borderRadius: 3, fontSize: 11, overflowX: 'auto' }}>{`curl -s https://forge-lead-intelligence.netlify.app${API_ENDPOINT} \\
-  -H "Authorization: Bearer YOUR_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{"state":"Texas","country":"United States","product":"P08"}'`}</pre>
+            {/* RIGHT — Plans */}
+            <div className="acct-col acct-col--right">
+              <div className="acct-section-head">
+                <div className="acct-section-label">Plans</div>
+              </div>
+              <p className="acct-section-note">
+                Checkout opens Stripe. Plan, quota, and rate limit update automatically on payment.
+              </p>
+
+              <div className="acct-plans">
+                {PLANS.map(plan => {
+                  const isCurrent = currentPlan === plan.id
+                  return (
+                    <div className={`acct-plan-card ${isCurrent ? 'acct-plan-card--current' : ''}`} key={plan.id}>
+                      <div className="acct-plan-top">
+                        <div>
+                          <div className="acct-plan-name">{plan.name}</div>
+                          <div className="acct-plan-quota">{plan.quota}</div>
+                        </div>
+                        <div className="acct-plan-price">{plan.price}<span>/mo</span></div>
+                      </div>
+                      <ul className="acct-plan-features">
+                        {plan.features.map(f => (
+                          <li key={f}>
+                            <span className="acct-plan-check"><IconCheck /></span>
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="acct-plan-footer">
+                        {isCurrent ? (
+                          <span className="acct-plan-current-label">Current plan</span>
+                        ) : (
+                          <button
+                            className="acct-upgrade-btn"
+                            disabled={busy}
+                            onClick={() => upgrade(plan.id)}
+                          >
+                            Upgrade to {plan.name}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-          </>
-        )}
-      </div>
-    </>
+
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

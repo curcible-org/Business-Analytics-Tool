@@ -24,7 +24,23 @@
       "Bash(Get-ChildItem -Path . -Force)",
       "Bash(Select-Object Name, PSIsContainer)",
       "Bash(dir \"d:\\\\Business Analytics tool\" /b)",
-      "Bash(claude mcp *)"
+      "Bash(claude mcp *)",
+      "mcp__stitch__list_projects",
+      "mcp__stitch__create_project",
+      "mcp__stitch__create_design_system",
+      "mcp__stitch__generate_screen_from_text",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(curl -s http://localhost:5174/src/App.jsx)",
+      "Bash(curl -s \"http://localhost:5174/src/components/TopNav.jsx\")",
+      "Bash(curl -s \"http://localhost:5174/src/App.jsx\")",
+      "Bash(curl -s \"http://localhost:5174/\")",
+      "Bash(python3 -c \"import sys; content = sys.stdin.read\\(\\); print\\('Has root div:', '<div id=\\\\\"root\\\\\">' in content\\)\")",
+      "Bash(curl -s \"http://localhost:5174/src/views/ForgeView.jsx\")",
+      "Bash(curl -s http://localhost:62881)",
+      "Bash(curl -sv http://localhost:5174/)",
+      "Bash(cat vite.config.js)",
+      "Bash(cat vite.config.ts)"
     ]
   }
 }

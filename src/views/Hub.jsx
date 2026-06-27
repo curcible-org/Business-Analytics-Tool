@@ -1,113 +1,131 @@
-const PRODUCTS = [
-  {
-    id: 'forge',
-    tag: 'Lead Intelligence',
-    name: 'Forge',
-    desc: 'Find local businesses that need your product. Enriched with AI intelligence and scored Hot / Warm / Low / Skip.',
-    status: 'active',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        <path d="M11 8v3l2 2"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'plan',
-    tag: 'Strategy',
-    name: 'Blueprint',
-    desc: '8-product sequential implementation roadmap. Phase-by-phase build plan with priorities, timelines, and dependencies.',
-    status: 'active',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-        <line x1="16" y1="13" x2="8" y2="13"/>
-        <line x1="16" y1="17" x2="8" y2="17"/>
-        <polyline points="10 9 9 9 8 9"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'soon-1',
-    tag: 'Coming Soon',
-    name: 'Pulse',
-    desc: 'Client health and retention tracker. Monitor engagement signals, flag at-risk accounts, automate check-ins.',
-    status: 'soon',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'soon-2',
-    tag: 'Coming Soon',
-    name: 'Broadcast',
-    desc: 'Campaign builder and outreach sequencer. Write, schedule, and track cold outreach across email and WhatsApp.',
-    status: 'soon',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.5 19.79 19.79 0 0 1 1.63 5 2 2 0 0 1 3.6 3h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.83-.83a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 17.18v-.26"/>
-        <path d="M16 2a4 4 0 0 1 4 4"/>
-        <path d="M16 6a0 0 0 0 1 0 0"/>
-      </svg>
-    ),
-  },
-]
-
-function ArrowRight() {
+function IconArrow() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <line x1="5" y1="12" x2="19" y2="12"/>
       <polyline points="12 5 19 12 12 19"/>
     </svg>
   )
 }
 
+const TOOLS = [
+  {
+    id: 'forge',
+    type: 'Lead Intelligence',
+    name: 'Forge',
+    desc: 'Discover and score local business prospects with a 5-stage AI pipeline. Google Places data, LLM scoring, contact enrichment.',
+    stats: ['38 Leads', '11 Hot', '2h Ago'],
+    status: 'active',
+    view: 'forge',
+  },
+  {
+    id: 'workflows',
+    type: 'n8n Automations',
+    name: 'Workflows',
+    desc: 'Eight production-ready automations — email triage, lead scoring, meeting summaries, social publishing, and more. Deployed on your n8n instance.',
+    stats: ['8 Workflows', 'GPT-4o', 'Done-for-you'],
+    status: 'active',
+    view: 'workflows',
+  },
+  {
+    id: 'pulse',
+    type: 'Client Health',
+    name: 'Pulse',
+    desc: 'Client health and retention tracker. Monitor engagement signals, flag at-risk accounts.',
+    stats: null,
+    status: 'soon',
+  },
+  {
+    id: 'broadcast',
+    type: 'Outreach',
+    name: 'Broadcast',
+    desc: 'Campaign builder and outreach sequencer for email and WhatsApp.',
+    stats: null,
+    status: 'soon',
+  },
+]
+
 export default function Hub({ setCurrentView }) {
   return (
     <div className="hub">
-      <div className="hub-header">
-        <div className="hub-eyebrow">Internal Workspace</div>
-        <h1 className="hub-title">Internal tools.</h1>
-        <p className="hub-subtitle">
-          Operational tooling for lead generation, strategy, and business development. Select a product.
-        </p>
+      <div className="hub-hero">
+        <div className="hub-header">
+          <div className="hub-eyebrow">
+            <span className="hub-eyebrow-dot" />
+            Workspace Active
+          </div>
+          <h1 className="hub-title">Your AI studio.</h1>
+          <p className="hub-subtitle">Four automation tools. One operational layer.</p>
+          <div className="hub-ctas">
+            <button className="hub-cta-primary" onClick={() => setCurrentView('forge')}>
+              Launch Forge <IconArrow />
+            </button>
+            <button className="hub-cta-secondary" onClick={() => setCurrentView('workflows')}>
+              View Workflows
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="hub-grid">
-        {PRODUCTS.map(p => (
-          <div
-            key={p.id}
-            className={`hub-card ${p.status === 'soon' ? 'hub-card--soon' : ''}`}
-            onClick={() => p.status === 'active' && setCurrentView(p.id)}
-          >
-            <div className="hub-card-top">
-              <div className="hub-card-icon">{p.icon}</div>
-              <span className="hub-card-tag">{p.tag}</span>
-            </div>
-            <div className="hub-card-body">
-              <div className="hub-card-name">{p.name}</div>
-              <div className="hub-card-desc">{p.desc}</div>
-            </div>
-            <div className="hub-card-footer">
-              {p.status === 'active' ? (
-                <button className="hub-launch-btn" onClick={() => setCurrentView(p.id)}>
-                  Launch <ArrowRight />
-                </button>
-              ) : (
-                <span className="hub-soon-label">In development</span>
+      <div className="hub-tools-section">
+        <div className="hub-tools-label-row">
+          <span className="hub-tools-label">Available Tools</span>
+          <span className="hub-tools-label">2 Active · 2 Coming Soon</span>
+        </div>
+
+        <div className="hub-grid">
+          {TOOLS.map(tool => (
+            <div
+              key={tool.id}
+              className={`hub-card ${tool.status === 'soon' ? 'hub-card--soon' : ''} ${tool.id === 'forge' ? 'hub-card--active-feature' : ''}`}
+              onClick={() => tool.status === 'active' && setCurrentView(tool.view)}
+            >
+              <div className="hub-card-top">
+                <span className="hub-card-type">{tool.type}</span>
+                {tool.status === 'active' ? (
+                  <span className="hub-card-status">
+                    <span className="hub-card-status-dot" />
+                    Active
+                  </span>
+                ) : (
+                  <span className="hub-card-status hub-card-status--soon">Coming Soon</span>
+                )}
+              </div>
+
+              <div className="hub-card-name">{tool.name}</div>
+              <div className="hub-card-desc">{tool.desc}</div>
+
+              {tool.stats && (
+                <div className="hub-card-stats">
+                  {tool.stats.map((s, i) => (
+                    <span key={s}>
+                      {s}
+                      {i < tool.stats.length - 1 && <span className="hub-stat-sep">·</span>}
+                    </span>
+                  ))}
+                </div>
               )}
+
+              <div className="hub-card-footer">
+                {tool.status === 'active' ? (
+                  <button
+                    className={`hub-launch-btn ${tool.id === 'forge' ? '' : 'hub-launch-btn--ghost'}`}
+                    onClick={() => setCurrentView(tool.view)}
+                  >
+                    {tool.id === 'forge' ? 'Launch Forge' : 'View Workflows'} <IconArrow />
+                  </button>
+                ) : (
+                  <span className="hub-soon-label">In Development</span>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       <div className="hub-footer">
-        <span className="hub-footer-mono">CURCIBLE</span>
+        <span className="hub-footer-mono">Curcible</span>
         <span className="hub-footer-sep">·</span>
-        <span className="hub-footer-text">Internal workspace</span>
+        <span className="hub-footer-text">AI Automation Studio</span>
       </div>
     </div>
   )

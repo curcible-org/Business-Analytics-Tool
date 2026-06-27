@@ -13,10 +13,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <Routes>
         <Route element={<SiteLayout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/site" element={<Home />} />
           <Route path="/products/:slug" element={<ProductPage />} />
         </Route>
-        <Route path="/app/*" element={<App />} />
+        <Route path="/*" element={<App />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
