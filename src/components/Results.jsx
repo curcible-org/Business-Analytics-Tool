@@ -62,8 +62,8 @@ function IconMapPin() {
 function WebVerifiedBadge({ status }) {
   // Browser check confirms the server answered (DNS/TCP/TLS), not an HTTP 200 —
   // so the honest label is "RESOLVES", never "LIVE".
-  if (status === true)  return <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: '#2D6A4F', letterSpacing: '0.06em' }}>● RESOLVES</span>
-  if (status === false) return <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: '#c0392b', letterSpacing: '0.06em' }}>✕ UNREACHABLE</span>
+  if (status === true)  return <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--ok)', letterSpacing: '0.06em' }}>● RESOLVES</span>
+  if (status === false) return <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--danger)', letterSpacing: '0.06em' }}>✕ UNREACHABLE</span>
   return null
 }
 
@@ -76,7 +76,7 @@ function ConfidenceBar({ value }) {
         <span key={i} style={{
           width: 6, height: 6, borderRadius: '50%',
           background: i < value
-            ? (value >= 4 ? '#2D6A4F' : value >= 2 ? 'var(--plum)' : 'var(--stone)')
+            ? (value >= 4 ? 'var(--ok)' : value >= 2 ? 'var(--plum)' : 'var(--stone)')
             : 'var(--ghost)',
           flexShrink: 0,
           display: 'inline-block',
@@ -89,7 +89,7 @@ function ConfidenceBar({ value }) {
 
 function PhoneChip({ type, carrier }) {
   if (!type || type === 'UNKNOWN') return null
-  const color = type === 'MOBILE' ? '#2D6A4F' : type === 'VOIP' ? '#c0392b' : 'var(--stone)'
+  const color = type === 'MOBILE' ? 'var(--ok)' : type === 'VOIP' ? 'var(--danger)' : 'var(--stone)'
   return (
     <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
       {type}{carrier ? ` · ${carrier}` : ''}
@@ -105,10 +105,10 @@ function EmailSourceBadge({ source, deliverable }) {
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--plum)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Hunter</span>
       )}
       {deliverable === true && (
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: '#2D6A4F', letterSpacing: '0.06em' }}>✓ SMTP</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--ok)', letterSpacing: '0.06em' }}>✓ SMTP</span>
       )}
       {deliverable === false && (
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: '#c0392b', letterSpacing: '0.06em' }}>✕ SMTP</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--danger)', letterSpacing: '0.06em' }}>✕ SMTP</span>
       )}
     </span>
   )
@@ -133,7 +133,7 @@ function CopyButton({ text }) {
 function ProbabilityBar({ value }) {
   if (value == null) return null
   const pct = Math.max(0, Math.min(100, value))
-  const color = pct >= 70 ? '#2D6A4F' : pct >= 40 ? 'var(--plum)' : 'var(--stone)'
+  const color = pct >= 70 ? 'var(--ok)' : pct >= 40 ? 'var(--plum)' : 'var(--stone)'
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
       <div style={{ flex: 1, height: 2, background: 'var(--parchment)', borderRadius: 2, overflow: 'hidden' }}>
@@ -156,7 +156,7 @@ function LeadCard({ lead, targetProduct, onClick }) {
           <ScoreBadge score={lead.score} />
           {lead.buy_probability != null && (
             <span className="lcard-prob" style={{
-              color: lead.buy_probability >= 70 ? '#2D6A4F' : lead.buy_probability >= 40 ? 'var(--plum)' : 'var(--stone)'
+              color: lead.buy_probability >= 70 ? 'var(--ok)' : lead.buy_probability >= 40 ? 'var(--plum)' : 'var(--stone)'
             }}>{lead.buy_probability}%</span>
           )}
         </div>

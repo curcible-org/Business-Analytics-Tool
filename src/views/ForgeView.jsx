@@ -189,7 +189,7 @@ export default function ForgeView({
           <div style={{
             fontFamily: 'var(--font-mono)',
             fontSize: 9,
-            color: 'var(--stone)',
+            color: 'var(--d-muted)',
             letterSpacing: '0.16em',
             textTransform: 'uppercase',
             marginBottom: 8,

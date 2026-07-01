@@ -23,6 +23,7 @@
   --low:      #847278;
   --low-dim:  rgba(132,114,120,0.07);
   --ok:       #2D6A4F;
+  --danger:   #A03030;
 
   --font-serif: 'DM Serif Display', Georgia, serif;
   --font-mono:  'DM Mono', monospace;
@@ -3101,3 +3102,96 @@ html, body {
   color: var(--stone);
   line-height: 1.65;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DARK-SHELL CONTRAST FIXES (readability)
+   The dark app shell reused the light-theme greys (--stone / --ghost /
+   --ink-mid) for muted text, which sit too dim on the dark surfaces. These
+   scoped overrides raise contrast on the shell chrome ONLY — the light lead
+   cards and drawer are intentionally untouched.
+   ═══════════════════════════════════════════════════════════════════════ */
+:root {
+  --d-text:  rgba(255, 255, 255, 0.92);
+  --d-muted: rgba(255, 255, 255, 0.64);
+  --d-faint: rgba(255, 255, 255, 0.46);
+}
+
+/* Top nav */
+.topnav-link,
+.topnav-provider,
+.topnav-provider-sep,
+.topnav-provider-model,
+.topnav-usage,
+.topnav-tag,
+.topnav-icon-btn { color: var(--d-muted); }
+.topnav-provider-name { color: var(--d-text); }
+
+/* Forge search panel (sidebar) */
+.forge-panel-head,
+.fp-label,
+.fp-last-run,
+.fp-provider-model { color: var(--d-muted); }
+
+/* Dark settings + form control labels */
+.field label,
+.s-label,
+.key-eye,
+.rate-row { color: var(--d-muted); }
+.rate-row b { color: var(--d-text); }
+
+/* Pipeline stepper */
+.hpipe-label { color: var(--d-faint); }
+.hpipe-status { color: var(--d-muted); }
+.hpipe-stage--done .hpipe-label,
+.hpipe-stage--active .hpipe-label { color: var(--d-text); }
+
+/* Metrics captions */
+.metric-l { color: var(--d-muted); }
+
+/* Results header (on dark surface) */
+.res-meta { color: var(--d-muted); }
+.export-btn { color: var(--d-muted); border-color: var(--d-border); }
+.export-btn:hover { color: var(--d-text); border-color: var(--d-border-s); }
+
+/* Primary CTA — was --ink on --surface-1 (dark-on-dark, near-invisible).
+   Brand allows a single plum CTA per surface. */
+.forge-run-btn { background: var(--plum); }
+.forge-run-btn:hover:not(:disabled) { background: var(--plum-mid); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   UNIFIED DARK — dark lead cards + drawer
+   The cards were the one light surface on the dark shell. Rather than edit
+   every card rule + inline style, we remap the color tokens *within the card
+   scope*: CSS custom properties cascade to descendants, so both the class
+   rules and inline `var(--…)` styles resolve to these dark values. Status
+   colors are brightened for contrast on the dark surface.
+   ═══════════════════════════════════════════════════════════════════════ */
+.lcard-grid,
+.drawer {
+  --warm-paper: #241d20;   /* card / drawer surface */
+  --paper:      #2b2226;   /* hover / raised surface */
+  --parchment:  #322830;   /* chips, tags, subtle fills */
+  --ink:        #F5F0F2;   /* primary text */
+  --ink-mid:    #D9CED2;   /* secondary text */
+  --stone:      #AB9EA3;   /* muted text */
+  --ghost:      #6B6065;   /* faint / empty dots */
+  --border:        rgba(255, 255, 255, 0.10);
+  --border-strong: rgba(255, 255, 255, 0.20);
+  --rule:          rgba(255, 255, 255, 0.07);
+
+  /* status — tuned for dark */
+  --hot:      #FF7A7A;  --hot-dim:  rgba(255, 122, 122, 0.14);
+  --warm-c:   #E6B455;  --warm-dim: rgba(230, 180, 85, 0.14);
+  --low:      #AB9EA3;  --low-dim:  rgba(255, 255, 255, 0.06);
+  --ok:       #58C98A;
+  --danger:   #FF7A7A;
+
+  /* accent — lighter plum reads better on dark */
+  --plum:       #C99CB2;
+  --plum-mid:   #D6AEC1;
+  --plum-pale:  rgba(201, 156, 178, 0.16);
+  --plum-pale2: rgba(201, 156, 178, 0.30);
+}
+
+/* keep the card grid seams subtle on dark */
+.lcard-grid { background: var(--border); border-color: var(--border); }
