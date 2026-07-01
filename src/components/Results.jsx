@@ -135,9 +135,9 @@ function ProbabilityBar({ value }) {
   const pct = Math.max(0, Math.min(100, value))
   const color = pct >= 70 ? 'var(--ok)' : pct >= 40 ? 'var(--plum)' : 'var(--stone)'
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <div style={{ flex: 1, height: 2, background: 'var(--parchment)', borderRadius: 2, overflow: 'hidden' }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 2 }} />
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ flex: 1, height: 6, background: 'rgba(255,255,255,0.07)', borderRadius: 6, overflow: 'hidden' }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, var(--plum-mid), var(--plum))', borderRadius: 6 }} />
       </div>
       <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color, flexShrink: 0 }}>{pct}%</span>
     </div>
@@ -169,7 +169,7 @@ function LeadCard({ lead, targetProduct, onClick }) {
       {lead.address && <div className="lcard-addr">{lead.address}</div>}
       {lead.rating != null && (
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--stone)', marginTop: 3 }}>
-          {lead.rating}★ · {lead.review_count || 0} review{lead.review_count === 1 ? '' : 's'}
+          <span style={{ color: 'var(--warm-c)' }}>{lead.rating}★</span> · {lead.review_count || 0} review{lead.review_count === 1 ? '' : 's'}
         </div>
       )}
 

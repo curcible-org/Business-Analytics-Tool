@@ -27,6 +27,35 @@ function IconCheck() {
   )
 }
 
+function IconTarget() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>
+    </svg>
+  )
+}
+function IconFlame() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2c1 3.5 4 5.5 4 9a4 4 0 0 1-8 0c0-1.2.6-2.2 1.2-2.8C9 11 9.5 8.5 12 2z"/>
+    </svg>
+  )
+}
+function IconTemp() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 14.76V5a2 2 0 0 0-4 0v9.76a4 4 0 1 0 4 0z"/>
+    </svg>
+  )
+}
+function IconGlobe() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/>
+    </svg>
+  )
+}
+
 const STAGE_LABELS = ['Places', 'Score', 'Validate', 'Enrich', 'Reachability']
 
 function HorizontalPipeline({ nodes, logs, phase, progressPct }) {
@@ -247,21 +276,21 @@ export default function ForgeView({
           <div className="metrics-row">
             <div className="metric-card">
               <div className="metric-n">{leads.length}</div>
-              <div className="metric-l">Leads found</div>
+              <div className="metric-l"><span className="metric-icon" style={{ color: '#C99CB2' }}><IconTarget /></span>Leads found</div>
             </div>
             <div className="metric-card">
               <div className={`metric-n ${hotCount > 0 ? 'metric-n--plum' : ''}`}>{hotCount}</div>
-              <div className="metric-l">Hot leads</div>
+              <div className="metric-l"><span className="metric-icon" style={{ color: '#FF7A7A' }}><IconFlame /></span>Hot leads</div>
             </div>
             <div className="metric-card">
               <div className="metric-n">{warmCount}</div>
-              <div className="metric-l">Warm leads</div>
+              <div className="metric-l"><span className="metric-icon" style={{ color: '#E6B455' }}><IconTemp /></span>Warm leads</div>
             </div>
             <div className="metric-card">
               <div className="metric-n">
                 {leads.length > 0 ? Math.round((webResolving / leads.length) * 100) : 0}%
               </div>
-              <div className="metric-l">Web resolving</div>
+              <div className="metric-l"><span className="metric-icon" style={{ color: '#58C98A' }}><IconGlobe /></span>Web resolving</div>
             </div>
           </div>
         )}

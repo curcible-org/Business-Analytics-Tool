@@ -3195,3 +3195,76 @@ html, body {
 
 /* keep the card grid seams subtle on dark */
 .lcard-grid { background: var(--border); border-color: var(--border); }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MODERN DASHBOARD REDESIGN
+   Elevated rounded cards with real gaps + hover lift, pill badges, rounded
+   chips, gradient CTAs, spaced stat cards. (Later source order → overrides
+   the base flat rules above.)
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Card grid — gapped instead of 1px seams */
+.lcard-grid {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  padding: 4px 0;
+}
+
+/* Elevated cards with hover lift */
+.lcard {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.40);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.lcard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  border-color: var(--plum-pale2);
+}
+.lcard:focus-visible { box-shadow: 0 0 0 2px var(--plum); }
+
+/* Pill score badge */
+.badge { padding: 4px 10px; border-radius: 20px; }
+
+/* Rounded tags + chips */
+.lcard-industry { border-radius: 8px; padding: 3px 9px; max-width: 170px; }
+.chip, .ttag { border-radius: 8px; padding: 3px 8px; }
+
+/* Gradient "View details" CTA */
+.lcard-cta {
+  color: #fff;
+  background: linear-gradient(135deg, #8A5C72, #6A4858);
+  padding: 6px 12px;
+  border-radius: 9px;
+}
+
+/* Stat cards — spaced, rounded, with room for icons */
+.metrics-row {
+  gap: 12px;
+  background: transparent;
+  border-bottom: none;
+  padding: 20px 28px 6px;
+}
+.metric-card {
+  border: 1px solid var(--d-border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  gap: 6px;
+}
+.metric-l { display: flex; align-items: center; gap: 7px; }
+.metric-icon { display: inline-flex; }
+.metric-icon svg { display: block; }
+.metric-n--plum { color: #C99CB2; }
+
+/* Gradient primary CTAs */
+.forge-run-btn { background: linear-gradient(135deg, #7D5569, #6A4858); border-radius: 10px; }
+.forge-run-btn:hover:not(:disabled) { background: linear-gradient(135deg, #8A5C72, #7D5569); }
+
+/* Export button — pill */
+.export-btn { border-radius: 9px; }
