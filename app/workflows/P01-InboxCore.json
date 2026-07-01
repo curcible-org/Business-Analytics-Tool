@@ -3,12 +3,73 @@
   "nodes": [
     {
       "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "inboxProvider",
+              "value": "gmail",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "config",
+      "name": "⚙️ Config — Set Inbox Provider",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [0, 300],
+      "notes": "Set inboxProvider to 'gmail' or 'outlook'. That's the only change needed to switch providers."
+    },
+    {
+      "parameters": {
         "rule": { "interval": [{ "field": "minutes", "minutesInterval": 15 }] }
       },
       "id": "trigger-schedule",
       "name": "Every 15 Minutes",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "position": [0, 300]
+      "typeVersion": 1,
+      "position": [0, 500]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Config — Set Inbox Provider').item.json.inboxProvider }}",
+                    "rightValue": "gmail",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Gmail"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Config — Set Inbox Provider').item.json.inboxProvider }}",
+                    "rightValue": "outlook",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Outlook"
+            }
+          ]
+        },
+        "fallbackOutput": "extra"
+      },
+      "id": "inbox-switch",
+      "name": "Inbox Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [220, 500]
     },
     {
       "parameters": {
@@ -19,8 +80,54 @@
       "id": "gmail-fetch",
       "name": "Gmail — Fetch Unread",
       "type": "n8n-nodes-base.gmail",
-      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
-      "position": [200, 300]
+      "typeVersion": 2,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "{{CLIENT_GOOGLE_CRED_ID}}",
+          "name": "Google OAuth2"
+        }
+      },
+      "position": [460, 400]
+    },
+    {
+      "parameters": {
+        "operation": "message:getAll",
+        "filters": {
+          "custom": "isRead eq false AND NOT categories/any(c:c eq 'Curcible-Processed')"
+        },
+        "returnAll": false,
+        "limit": 50
+      },
+      "id": "outlook-fetch",
+      "name": "Outlook — Fetch Unread",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "{{CLIENT_OUTLOOK_CRED_ID}}",
+          "name": "Microsoft Outlook OAuth2"
+        }
+      },
+      "position": [460, 600]
+    },
+    {
+      "parameters": { "mode": "append" },
+      "id": "merge-fetch",
+      "name": "Merge Inboxes",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [700, 500]
+    },
+    {
+      "parameters": {
+        "language": "javaScript",
+        "jsCode": "const provider = $('⚙️ Config — Set Inbox Provider').item.json.inboxProvider;\nconst raw = $input.item.json;\n\nif (provider === 'gmail') {\n  return {\n    json: {\n      provider: 'gmail',\n      messageId:  raw.id,\n      threadId:   raw.threadId,\n      from:       raw.from || raw.payload?.headers?.find(h => h.name === 'From')?.value || '',\n      subject:    raw.subject || raw.payload?.headers?.find(h => h.name === 'Subject')?.value || '(no subject)',\n      date:       raw.date || raw.internalDate,\n      snippet:    raw.snippet || '',\n    }\n  };\n} else {\n  // Outlook\n  return {\n    json: {\n      provider:   'outlook',\n      messageId:  raw.id,\n      threadId:   raw.conversationId,\n      from:       raw.from?.emailAddress?.address || '',\n      subject:    raw.subject || '(no subject)',\n      date:       raw.receivedDateTime,\n      snippet:    raw.bodyPreview || '',\n    }\n  };\n}"
+      },
+      "id": "normalize-email",
+      "name": "Normalize Email Schema",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 500]
     },
     {
       "parameters": {
@@ -29,21 +136,26 @@
           "values": [
             {
               "role": "system",
-              "content": "You are an email triage system. Classify the email and, if appropriate, generate a reply draft.\n\nClassifications:\n- URGENT: Requires immediate human response (complaints, legal, time-sensitive)\n- ROUTINE: Standard inquiry answerable from FAQ/knowledge base\n- NEWSLETTER: Marketing, newsletters, no-reply\n- SPAM: Junk, phishing, irrelevant\n\nReturn JSON:\n{\n  \"classification\": \"URGENT|ROUTINE|NEWSLETTER|SPAM\",\n  \"confidence\": 0.0-1.0,\n  \"subject_summary\": \"one-line summary\",\n  \"draft_reply\": \"string|null (only for ROUTINE with answer from KB)\",\n  \"reason\": \"brief explanation\"\n}"
+              "content": "You are an email triage system. Classify the email and, if appropriate, generate a reply draft.\n\nClassifications:\n- URGENT: Requires immediate human response (complaints, legal, time-sensitive)\n- ROUTINE: Standard inquiry answerable from the knowledge base\n- NEWSLETTER: Marketing, newsletters, no-reply senders\n- SPAM: Junk, phishing, irrelevant\n\nReturn JSON only:\n{\n  \"classification\": \"URGENT|ROUTINE|NEWSLETTER|SPAM\",\n  \"confidence\": 0.0,\n  \"subject_summary\": \"one-line summary\",\n  \"draft_reply\": \"string or null (only for ROUTINE where an answer exists in the KB)\",\n  \"reason\": \"brief explanation\"\n}"
             },
             {
               "role": "user",
-              "content": "=From: {{ $json.from }}\nSubject: {{ $json.subject }}\nDate: {{ $json.date }}\n\nBody:\n{{ $json.snippet }}\n\nKnowledge base context:\n{{CLIENT_KB_CONTEXT}}"
+              "content": "=From: {{ $json.from }}\nSubject: {{ $json.subject }}\nDate: {{ $json.date }}\n\nBody preview:\n{{ $json.snippet }}\n\nKnowledge base context:\n{{CLIENT_KB_CONTEXT}}"
             }
           ]
         },
-        "options": { "response": { "response": { "responseFormat": "json" } } }
+        "options": {
+          "response": { "response": { "responseFormat": "json_object" } }
+        }
       },
       "id": "gpt-classify",
       "name": "GPT-4o — Classify Email",
       "type": "@n8n/n8n-nodes-langchain.openAi",
-      "credentials": { "openAiApi": { "id": "{{CLIENT_OPENAI_CRED_ID}}", "name": "OpenAI API" } },
-      "position": [400, 300]
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": { "id": "{{CLIENT_OPENAI_CRED_ID}}", "name": "OpenAI API" }
+      },
+      "position": [1140, 500]
     },
     {
       "parameters": {
@@ -60,54 +172,321 @@
       "id": "if-routine",
       "name": "Is Routine?",
       "type": "n8n-nodes-base.if",
-      "position": [600, 300]
+      "typeVersion": 2,
+      "position": [1360, 500]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Normalize Email Schema').item.json.provider }}",
+                    "rightValue": "gmail",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Gmail"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Normalize Email Schema').item.json.provider }}",
+                    "rightValue": "outlook",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Outlook"
+            }
+          ]
+        },
+        "fallbackOutput": "extra"
+      },
+      "id": "draft-switch",
+      "name": "Draft — Provider Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1580, 380]
     },
     {
       "parameters": {
         "operation": "create",
-        "threadId": "={{ $('Gmail — Fetch Unread').item.json.threadId }}",
-        "subject": "=Re: {{ $('Gmail — Fetch Unread').item.json.subject }}",
-        "message": "={{ $json.message.content.draft_reply }}",
+        "threadId": "={{ $('Normalize Email Schema').item.json.threadId }}",
+        "subject": "=Re: {{ $('Normalize Email Schema').item.json.subject }}",
+        "message": "={{ $('GPT-4o — Classify Email').item.json.message.content.draft_reply }}",
         "options": { "sendAsLabel": "DRAFT" }
       },
       "id": "gmail-create-draft",
       "name": "Gmail — Save as Draft",
       "type": "n8n-nodes-base.gmail",
-      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
-      "position": [800, 200]
+      "typeVersion": 2,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "{{CLIENT_GOOGLE_CRED_ID}}",
+          "name": "Google OAuth2"
+        }
+      },
+      "position": [1800, 280]
+    },
+    {
+      "parameters": {
+        "operation": "draft:create",
+        "subject": "=Re: {{ $('Normalize Email Schema').item.json.subject }}",
+        "bodyContent": "={{ $('GPT-4o — Classify Email').item.json.message.content.draft_reply }}",
+        "bodyContentType": "text",
+        "toRecipients": "={{ $('Normalize Email Schema').item.json.from }}",
+        "additionalFields": {
+          "replyTo": "={{ $('Normalize Email Schema').item.json.messageId }}"
+        }
+      },
+      "id": "outlook-create-draft",
+      "name": "Outlook — Save as Draft",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "{{CLIENT_OUTLOOK_CRED_ID}}",
+          "name": "Microsoft Outlook OAuth2"
+        }
+      },
+      "position": [1800, 440]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.message.content.classification }}",
+              "rightValue": "URGENT",
+              "operator": { "type": "string", "operation": "equals" }
+            }
+          ]
+        }
+      },
+      "id": "if-urgent",
+      "name": "Is Urgent?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [1580, 620]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Normalize Email Schema').item.json.provider }}",
+                    "rightValue": "gmail",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Gmail"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Normalize Email Schema').item.json.provider }}",
+                    "rightValue": "outlook",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Outlook"
+            }
+          ]
+        },
+        "fallbackOutput": "extra"
+      },
+      "id": "flag-switch",
+      "name": "Flag — Provider Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1800, 620]
     },
     {
       "parameters": {
         "operation": "addLabels",
-        "messageId": "={{ $('Gmail — Fetch Unread').item.json.id }}",
+        "messageId": "={{ $('Normalize Email Schema').item.json.messageId }}",
         "labelIds": ["Label_URGENT_CURCIBLE"]
       },
       "id": "gmail-label-urgent",
       "name": "Gmail — Flag Urgent",
       "type": "n8n-nodes-base.gmail",
-      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
-      "position": [800, 400]
+      "typeVersion": 2,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "{{CLIENT_GOOGLE_CRED_ID}}",
+          "name": "Google OAuth2"
+        }
+      },
+      "position": [2020, 560]
+    },
+    {
+      "parameters": {
+        "operation": "message:update",
+        "messageId": "={{ $('Normalize Email Schema').item.json.messageId }}",
+        "updateFields": {
+          "flag": { "flagStatus": "flagged" },
+          "categories": ["Curcible-Urgent"]
+        }
+      },
+      "id": "outlook-flag-urgent",
+      "name": "Outlook — Flag Urgent",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "{{CLIENT_OUTLOOK_CRED_ID}}",
+          "name": "Microsoft Outlook OAuth2"
+        }
+      },
+      "position": [2020, 700]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Normalize Email Schema').item.json.provider }}",
+                    "rightValue": "gmail",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Gmail"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Normalize Email Schema').item.json.provider }}",
+                    "rightValue": "outlook",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Outlook"
+            }
+          ]
+        },
+        "fallbackOutput": "extra"
+      },
+      "id": "processed-switch",
+      "name": "Mark Processed — Provider Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [2240, 500]
     },
     {
       "parameters": {
         "operation": "addLabels",
-        "messageId": "={{ $('Gmail — Fetch Unread').item.json.id }}",
+        "messageId": "={{ $('Normalize Email Schema').item.json.messageId }}",
         "labelIds": ["Label_CURCIBLE_PROCESSED"]
       },
       "id": "gmail-label-processed",
       "name": "Gmail — Mark Processed",
       "type": "n8n-nodes-base.gmail",
-      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
-      "position": [1000, 300]
+      "typeVersion": 2,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "{{CLIENT_GOOGLE_CRED_ID}}",
+          "name": "Google OAuth2"
+        }
+      },
+      "position": [2460, 420]
     },
     {
       "parameters": {
-        "rule": { "interval": [{ "field": "cronExpression", "expression": "0 17 * * *" }] }
+        "operation": "message:update",
+        "messageId": "={{ $('Normalize Email Schema').item.json.messageId }}",
+        "updateFields": {
+          "isRead": true,
+          "categories": ["Curcible-Processed"]
+        }
+      },
+      "id": "outlook-mark-processed",
+      "name": "Outlook — Mark Processed",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "{{CLIENT_OUTLOOK_CRED_ID}}",
+          "name": "Microsoft Outlook OAuth2"
+        }
+      },
+      "position": [2460, 580]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "cronExpression", "expression": "0 17 * * *" }
+          ]
+        }
       },
       "id": "trigger-digest",
       "name": "Daily Digest Trigger (5pm)",
       "type": "n8n-nodes-base.scheduleTrigger",
-      "position": [0, 600]
+      "typeVersion": 1,
+      "position": [0, 900]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Config — Set Inbox Provider').item.json.inboxProvider }}",
+                    "rightValue": "gmail",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Gmail"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Config — Set Inbox Provider').item.json.inboxProvider }}",
+                    "rightValue": "outlook",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Outlook"
+            }
+          ]
+        },
+        "fallbackOutput": "extra"
+      },
+      "id": "digest-inbox-switch",
+      "name": "Digest — Inbox Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [220, 900]
     },
     {
       "parameters": {
@@ -118,8 +497,42 @@
       "id": "gmail-fetch-today",
       "name": "Gmail — Today's Processed",
       "type": "n8n-nodes-base.gmail",
-      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
-      "position": [200, 600]
+      "typeVersion": 2,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "{{CLIENT_GOOGLE_CRED_ID}}",
+          "name": "Google OAuth2"
+        }
+      },
+      "position": [460, 820]
+    },
+    {
+      "parameters": {
+        "operation": "message:getAll",
+        "filters": {
+          "custom": "categories/any(c:c eq 'Curcible-Processed') and receivedDateTime ge {{TODAY}}T00:00:00Z"
+        },
+        "returnAll": true
+      },
+      "id": "outlook-fetch-today",
+      "name": "Outlook — Today's Processed",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "{{CLIENT_OUTLOOK_CRED_ID}}",
+          "name": "Microsoft Outlook OAuth2"
+        }
+      },
+      "position": [460, 980]
+    },
+    {
+      "parameters": { "mode": "append" },
+      "id": "merge-digest",
+      "name": "Merge Digest Emails",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [700, 900]
     },
     {
       "parameters": {
@@ -128,11 +541,11 @@
           "values": [
             {
               "role": "system",
-              "content": "Write a concise daily inbox digest email. Summarize what came in, highlight anything still needing attention, and list draft replies saved for review. Keep it under 200 words. Use plain language, no bullet overkill."
+              "content": "Write a concise daily inbox digest email. Summarize what came in, highlight anything still needing attention, and list draft replies saved for review. Keep it under 200 words. Use plain language — no bullet overkill. Do not pad."
             },
             {
               "role": "user",
-              "content": "=Today's email data (JSON):\n{{ JSON.stringify($json) }}"
+              "content": "=Today's processed email data (JSON):\n{{ JSON.stringify($json) }}"
             }
           ]
         }
@@ -140,8 +553,51 @@
       "id": "gpt-digest",
       "name": "GPT-4o — Write Digest",
       "type": "@n8n/n8n-nodes-langchain.openAi",
-      "credentials": { "openAiApi": { "id": "{{CLIENT_OPENAI_CRED_ID}}", "name": "OpenAI API" } },
-      "position": [400, 600]
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": { "id": "{{CLIENT_OPENAI_CRED_ID}}", "name": "OpenAI API" }
+      },
+      "position": [920, 900]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Config — Set Inbox Provider').item.json.inboxProvider }}",
+                    "rightValue": "gmail",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Gmail"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('⚙️ Config — Set Inbox Provider').item.json.inboxProvider }}",
+                    "rightValue": "outlook",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Outlook"
+            }
+          ]
+        },
+        "fallbackOutput": "extra"
+      },
+      "id": "digest-send-switch",
+      "name": "Digest Send — Provider Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [1140, 900]
     },
     {
       "parameters": {
@@ -150,42 +606,219 @@
         "message": "={{ $json.message.content }}",
         "options": {}
       },
-      "id": "send-digest",
+      "id": "gmail-send-digest",
       "name": "Gmail — Send Digest",
       "type": "n8n-nodes-base.gmail",
-      "credentials": { "gmailOAuth2": { "id": "{{CLIENT_GOOGLE_CRED_ID}}", "name": "Google OAuth2" } },
-      "position": [600, 600]
+      "typeVersion": 2,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "{{CLIENT_GOOGLE_CRED_ID}}",
+          "name": "Google OAuth2"
+        }
+      },
+      "position": [1360, 820]
+    },
+    {
+      "parameters": {
+        "operation": "message:send",
+        "toRecipients": "={{CLIENT_EMAIL}}",
+        "subject": "=Your inbox digest — {{ $now.toFormat('MMMM d') }}",
+        "bodyContent": "={{ $json.message.content }}",
+        "bodyContentType": "text",
+        "additionalFields": {}
+      },
+      "id": "outlook-send-digest",
+      "name": "Outlook — Send Digest",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "{{CLIENT_OUTLOOK_CRED_ID}}",
+          "name": "Microsoft Outlook OAuth2"
+        }
+      },
+      "position": [1360, 980]
     }
   ],
+
   "connections": {
-    "Every 15 Minutes": { "main": [[{ "node": "Gmail — Fetch Unread", "type": "main", "index": 0 }]] },
-    "Gmail — Fetch Unread": { "main": [[{ "node": "GPT-4o — Classify Email", "type": "main", "index": 0 }]] },
-    "GPT-4o — Classify Email": { "main": [[{ "node": "Is Routine?", "type": "main", "index": 0 }]] },
-    "Is Routine?": {
+    "Every 15 Minutes": {
+      "main": [[{ "node": "Inbox Switch", "type": "main", "index": 0 }]]
+    },
+    "Inbox Switch": {
       "main": [
-        [{ "node": "Gmail — Save as Draft", "type": "main", "index": 0 }],
-        [{ "node": "Gmail — Flag Urgent", "type": "main", "index": 0 }]
+        [{ "node": "Gmail — Fetch Unread", "type": "main", "index": 0 }],
+        [{ "node": "Outlook — Fetch Unread", "type": "main", "index": 0 }]
       ]
     },
-    "Gmail — Save as Draft": { "main": [[{ "node": "Gmail — Mark Processed", "type": "main", "index": 0 }]] },
-    "Gmail — Flag Urgent": { "main": [[{ "node": "Gmail — Mark Processed", "type": "main", "index": 0 }]] },
-    "Daily Digest Trigger (5pm)": { "main": [[{ "node": "Gmail — Today's Processed", "type": "main", "index": 0 }]] },
-    "Gmail — Today's Processed": { "main": [[{ "node": "GPT-4o — Write Digest", "type": "main", "index": 0 }]] },
-    "GPT-4o — Write Digest": { "main": [[{ "node": "Gmail — Send Digest", "type": "main", "index": 0 }]] }
+    "Gmail — Fetch Unread": {
+      "main": [[{ "node": "Merge Inboxes", "type": "main", "index": 0 }]]
+    },
+    "Outlook — Fetch Unread": {
+      "main": [[{ "node": "Merge Inboxes", "type": "main", "index": 1 }]]
+    },
+    "Merge Inboxes": {
+      "main": [
+        [{ "node": "Normalize Email Schema", "type": "main", "index": 0 }]
+      ]
+    },
+    "Normalize Email Schema": {
+      "main": [
+        [{ "node": "GPT-4o — Classify Email", "type": "main", "index": 0 }]
+      ]
+    },
+    "GPT-4o — Classify Email": {
+      "main": [[{ "node": "Is Routine?", "type": "main", "index": 0 }]]
+    },
+    "Is Routine?": {
+      "main": [
+        [{ "node": "Draft — Provider Switch", "type": "main", "index": 0 }],
+        [{ "node": "Is Urgent?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Draft — Provider Switch": {
+      "main": [
+        [{ "node": "Gmail — Save as Draft", "type": "main", "index": 0 }],
+        [{ "node": "Outlook — Save as Draft", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gmail — Save as Draft": {
+      "main": [
+        [
+          {
+            "node": "Mark Processed — Provider Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Outlook — Save as Draft": {
+      "main": [
+        [
+          {
+            "node": "Mark Processed — Provider Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+
+    "Is Urgent?": {
+      "main": [
+        [{ "node": "Flag — Provider Switch", "type": "main", "index": 0 }],
+        [
+          {
+            "node": "Mark Processed — Provider Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flag — Provider Switch": {
+      "main": [
+        [{ "node": "Gmail — Flag Urgent", "type": "main", "index": 0 }],
+        [{ "node": "Outlook — Flag Urgent", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gmail — Flag Urgent": {
+      "main": [
+        [
+          {
+            "node": "Mark Processed — Provider Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Outlook — Flag Urgent": {
+      "main": [
+        [
+          {
+            "node": "Mark Processed — Provider Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+
+    "Mark Processed — Provider Switch": {
+      "main": [
+        [{ "node": "Gmail — Mark Processed", "type": "main", "index": 0 }],
+        [{ "node": "Outlook — Mark Processed", "type": "main", "index": 0 }]
+      ]
+    },
+
+    "Daily Digest Trigger (5pm)": {
+      "main": [
+        [{ "node": "Digest — Inbox Switch", "type": "main", "index": 0 }]
+      ]
+    },
+    "Digest — Inbox Switch": {
+      "main": [
+        [{ "node": "Gmail — Today's Processed", "type": "main", "index": 0 }],
+        [{ "node": "Outlook — Today's Processed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Gmail — Today's Processed": {
+      "main": [[{ "node": "Merge Digest Emails", "type": "main", "index": 0 }]]
+    },
+    "Outlook — Today's Processed": {
+      "main": [[{ "node": "Merge Digest Emails", "type": "main", "index": 1 }]]
+    },
+    "Merge Digest Emails": {
+      "main": [
+        [{ "node": "GPT-4o — Write Digest", "type": "main", "index": 0 }]
+      ]
+    },
+    "GPT-4o — Write Digest": {
+      "main": [
+        [
+          {
+            "node": "Digest Send — Provider Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Digest Send — Provider Switch": {
+      "main": [
+        [{ "node": "Gmail — Send Digest", "type": "main", "index": 0 }],
+        [{ "node": "Outlook — Send Digest", "type": "main", "index": 0 }]
+      ]
+    }
   },
+
   "settings": { "executionOrder": "v1" },
-  "meta": { "curcible_product": "P01", "curcible_tier": "starter", "version": "1.0.0" },
+  "meta": {
+    "curcible_product": "P01",
+    "curcible_tier": "starter",
+    "version": "2.0.0",
+    "inbox_providers": ["gmail", "outlook"]
+  },
   "_SETUP_NOTES": {
+    "INBOX_PROVIDER": "Set inboxProvider in the '⚙️ Config — Set Inbox Provider' node to 'gmail' or 'outlook'. That single value controls all branching — no other node needs editing.",
     "REPLACE": [
-      "{{CLIENT_GOOGLE_CRED_ID}} — n8n credential ID for this client's Google OAuth2",
-      "{{CLIENT_OPENAI_CRED_ID}} — n8n credential ID for this client's OpenAI key",
-      "{{CLIENT_EMAIL}} — client's email address for digest delivery",
-      "{{CLIENT_KB_CONTEXT}} — inject client's FAQ text into the GPT system prompt, OR replace with Qdrant vector search node"
+      "{{CLIENT_GOOGLE_CRED_ID}}  — n8n credential ID for Google OAuth2 (required for Gmail)",
+      "{{CLIENT_OUTLOOK_CRED_ID}} — n8n credential ID for Microsoft Outlook OAuth2 (required for Outlook)",
+      "{{CLIENT_OPENAI_CRED_ID}}  — n8n credential ID for OpenAI API",
+      "{{CLIENT_EMAIL}}           — client's email address for digest delivery",
+      "{{CLIENT_KB_CONTEXT}}      — paste client's FAQ/SOP text, or swap node for Qdrant vector search",
+      "{{TODAY}}                  — replaced at runtime by a Set node or n8n expression: {{ $now.toFormat('yyyy-MM-dd') }}"
     ],
-    "LABELS_TO_CREATE_IN_GMAIL": [
-      "curcible-processed",
-      "curcible-urgent"
+    "GMAIL_SETUP": [
+      "Create Gmail labels: 'curcible-processed', 'curcible-urgent'",
+      "Copy the label IDs from Gmail Settings > Labels and paste into Label_CURCIBLE_PROCESSED and Label_URGENT_CURCIBLE fields"
     ],
-    "QDRANT_UPGRADE": "Replace {{CLIENT_KB_CONTEXT}} with: HTTP Request node to Qdrant /collections/{{client_id}}/points/search with embedded query vector from the email body"
+    "OUTLOOK_SETUP": [
+      "Categories 'Curcible-Processed' and 'Curcible-Urgent' are created automatically on first use",
+      "Ensure the Microsoft Outlook OAuth2 credential has Mail.ReadWrite and Mail.Send scopes"
+    ],
+    "QDRANT_UPGRADE": "Replace {{CLIENT_KB_CONTEXT}} with an HTTP Request node to Qdrant /collections/{{client_id}}/points/search using an embedded query vector from the email snippet"
   }
 }

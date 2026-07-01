@@ -2,10 +2,10 @@ const WORKFLOWS = [
   {
     id: 'P01',
     name: 'InboxCore',
-    tagline: 'AI email triage that replies, routes, and digests — automatically.',
+    tagline: 'AI email triage that replies, routes, and digests — Gmail or Outlook.',
     description:
-      'Reads every incoming email, classifies it as Urgent, Routine, Newsletter, or Spam using GPT-4o, and drafts context-aware replies for routine mail. Urgent threads are flagged for immediate review. Every evening a concise narrative digest of the day\'s email activity lands in your inbox.',
-    integrations: ['Gmail', 'GPT-4o', 'Google Sheets'],
+      'Connects to Gmail or Microsoft Outlook (your choice, one config value). Classifies every incoming email as Urgent, Routine, Newsletter, or Spam using GPT-4o, drafts context-aware replies for routine mail, and flags urgent threads for immediate attention. Every evening a concise narrative digest lands in your inbox.',
+    integrations: ['Gmail', 'Outlook', 'GPT-4o', 'Microsoft 365'],
     setupTime: '2–3 hrs',
     category: 'Communication',
     highlight: 'Saves ~45 min/day on email triage',
