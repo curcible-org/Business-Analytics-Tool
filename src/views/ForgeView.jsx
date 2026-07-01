@@ -118,7 +118,7 @@ export default function ForgeView({
   const modelName  = provider?.models.find(m => m.id === model)?.name || model
   const hotCount   = leads.filter(l => l.score === 'hot').length
   const warmCount  = leads.filter(l => l.score === 'warm').length
-  const phoneVerified = leads.filter(l => l.phone_valid).length
+  const webResolving = leads.filter(l => l.web_verified === true).length
   const progressPct = (phase === 'running' || phase === 'done')
     ? Math.round((nodes.filter(n => n.status === 'done').length / nodes.length) * 100)
     : 0
@@ -238,7 +238,7 @@ export default function ForgeView({
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
             </svg>
-            Sample data — add a Google Places key in Settings to run on real prospects.
+            Sample data — sign in and run a search to fetch real, server-sourced leads.
           </div>
         )}
 
@@ -259,9 +259,9 @@ export default function ForgeView({
             </div>
             <div className="metric-card">
               <div className="metric-n">
-                {leads.length > 0 ? Math.round((phoneVerified / leads.length) * 100) : 0}%
+                {leads.length > 0 ? Math.round((webResolving / leads.length) * 100) : 0}%
               </div>
-              <div className="metric-l">Phone verified</div>
+              <div className="metric-l">Web resolving</div>
             </div>
           </div>
         )}

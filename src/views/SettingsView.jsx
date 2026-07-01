@@ -133,49 +133,24 @@ export default function SettingsView({
       <div className="settings-section">
         <div className="settings-section-title">
           Data Sources
-          <span style={{ marginLeft: 4, fontFamily: 'var(--font-mono)', fontSize: 8, color: 'var(--ghost)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>optional</span>
+          <span style={{ marginLeft: 4, fontFamily: 'var(--font-mono)', fontSize: 8, color: 'var(--ghost)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>managed server-side</span>
         </div>
         <p style={{ fontSize: 12, color: 'var(--stone)', marginBottom: 14, lineHeight: 1.6 }}>
-          Without a Places key, Forge generates leads via LLM (fast, synthetic). With a key, Stage 0 fetches <b>real businesses from Google Places</b> — the LLM then scores them instead of inventing them.
+          Google Places (the lead source), the scoring LLM, and enrichment all run <b>server-side</b>. The provider keys are held as Netlify secrets and never touch the browser — no key entry needed here. Each run authenticates with your per-tenant Forge API key (see the Account tab).
         </p>
-
-        <div className="settings-grid">
-          <div className="field settings-grid-full">
-            <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span>Google Places API Key</span>
-              {googlePlacesKey.trim()
-                ? <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: '#2D6A4F', textTransform: 'uppercase', letterSpacing: '0.08em' }}>● Real mode active</span>
-                : <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--ghost)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>○ Synthetic mode</span>
-              }
-            </label>
-            <div className="key-wrap">
-              <input
-                type={showPlacesKey ? 'text' : 'password'}
-                value={googlePlacesKey}
-                onChange={e => setGooglePlacesKey(e.target.value)}
-                placeholder="AIza… (GCP Places API key)"
-                autoComplete="off"
-                spellCheck={false}
-              />
-              <button className="key-eye" onClick={() => setShowPlacesKey(v => !v)}>
-                {showPlacesKey ? 'hide' : 'show'}
-              </button>
-            </div>
-          </div>
-        </div>
 
         <div className="rate-box" style={{ marginTop: 10 }}>
           <div className="rate-row">
-            <span>Text Search (New)</span>
-            <b>$0.032 / request</b>
+            <span>Lead source</span>
+            <b style={{ color: '#2D6A4F' }}>Google Places (New) · live</b>
           </div>
           <div className="rate-row">
-            <span>Monthly free credit</span>
-            <b style={{ color: '#2D6A4F' }}>$200 ≈ 6,250 searches</b>
+            <span>Key location</span>
+            <b>Netlify env · secret</b>
           </div>
           <div className="rate-row">
-            <span>Setup</span>
-            <b>GCP → APIs → Places API (New)</b>
+            <span>Output</span>
+            <b>ToS-safe · place_id + intelligence</b>
           </div>
         </div>
       </div>

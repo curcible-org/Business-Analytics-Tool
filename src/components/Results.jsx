@@ -160,13 +160,15 @@ function LeadCard({ lead, targetProduct, onClick }) {
             }}>{lead.buy_probability}%</span>
           )}
         </div>
-        {lead.industry && (
-          <span className="lcard-industry">{lead.industry}</span>
+        {lead.recommended_products?.[0] && (
+          <span className="lcard-industry">{lead.recommended_products[0]}</span>
         )}
       </div>
 
-      <div className="lcard-name">{lead.name}</div>
-      <div className="lcard-addr">{lead.address}</div>
+      <div className="lcard-name">{lead.industry || 'Local business'}</div>
+      <div className="lcard-addr" style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.04em', color: 'var(--stone)' }}>
+        {lead.places_id ? `place_id · ${String(lead.places_id).slice(0, 16)}…` : 'Google Places listing'}
+      </div>
 
       {lead.buy_probability != null && (
         <div style={{ marginTop: 10 }}>
@@ -193,12 +195,19 @@ function LeadCard({ lead, targetProduct, onClick }) {
 
       <div className="lcard-footer">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {lead.website ? (
-            <span className="lcard-web">{lead.website.replace(/^https?:\/\//, '')}</span>
-          ) : lead.social_only ? (
-            <span className="soc-tag">Social only</span>
+          {lead.maps_url ? (
+            <a
+              href={lead.maps_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="lcard-web"
+              style={{ color: 'var(--plum)', textDecoration: 'none' }}
+              onClick={e => e.stopPropagation()}
+            >
+              Google Maps ↗
+            </a>
           ) : (
-            <span className="no-web">No website</span>
+            <span className="no-web">No map link</span>
           )}
           <WebVerifiedBadge status={lead.web_verified} />
         </div>
@@ -226,9 +235,11 @@ function LeadDrawer({ lead, targetProduct, onClose }) {
       <div className="drawer" role="dialog" aria-modal="true">
         <div className="drawer-head">
           <div>
-            <div className="drawer-name">{lead.name}</div>
+            <div className="drawer-name">{lead.industry || 'Local business'}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <div className="drawer-addr">{lead.address}</div>
+              <div className="drawer-addr" style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--stone)' }}>
+                {lead.places_id ? `place_id: ${lead.places_id}` : ''}
+              </div>
               {lead.maps_url && (
                 <a
                   href={lead.maps_url}
@@ -290,18 +301,11 @@ function LeadDrawer({ lead, targetProduct, onClose }) {
             </DetailSection>
           )}
 
-          {/* Contact */}
-          {(lead.phone || lead.email || lead.website) && (
-            <DetailSection label="Contact">
+          {/* Signals — independently-sourced email + site assessment. No raw Places
+              contact fields (name/address/phone/website) are shipped to the browser. */}
+          {(lead.email || lead.website_quality || lead.maps_url) && (
+            <DetailSection label="Signals">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-                {lead.phone && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>
-                      {lead.phone_formatted || lead.phone}
-                    </span>
-                    <PhoneChip type={lead.phone_type} carrier={lead.phone_carrier} />
-                  </div>
-                )}
                 {lead.email && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <a href={`mailto:${lead.email}`} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--plum)', textDecoration: 'none' }}>
@@ -310,18 +314,14 @@ function LeadDrawer({ lead, targetProduct, onClose }) {
                     <EmailSourceBadge source={lead.email_source} deliverable={lead.email_deliverable} />
                   </div>
                 )}
-                {lead.website && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <a href={lead.website} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--plum)', textDecoration: 'none' }}>
-                        {lead.website.replace(/^https?:\/\//, '')}
-                        <IconExternalLink />
-                      </a>
-                    </div>
-                    {lead.website_quality && (
-                      <span style={{ fontSize: 11, color: 'var(--stone)' }}>{lead.website_quality}</span>
-                    )}
-                  </div>
+                {lead.website_quality && (
+                  <span style={{ fontSize: 11, color: 'var(--stone)' }}>{lead.website_quality}</span>
+                )}
+                {lead.maps_url && (
+                  <a href={lead.maps_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--plum)', textDecoration: 'none' }}>
+                    Resolve live details on Google Maps
+                    <IconExternalLink />
+                  </a>
                 )}
               </div>
             </DetailSection>

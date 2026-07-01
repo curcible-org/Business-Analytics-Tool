@@ -9,13 +9,38 @@ import WorkflowsView from './views/WorkflowsView.jsx'
 import { supabase } from './config/supabase.js'
 import { PROVIDERS } from './config/providers.js'
 import { BLUEPRINT_PRODUCTS } from './config/products.js'
-import { scorePlacesLeads } from './utils/llm.js'
-import { searchPlaces } from './utils/places.js'
-import { runFormatValidation } from './utils/validate.js'
-import { enrichWithHunter, enrichWithAbstractAPI, applyConfidence } from './utils/enrich.js'
-import { verifyReachability } from './utils/verify.js'
-import { loadEnrichUsage, saveEnrichUsage, remaining } from './utils/enrichUsage.js'
+import { loadEnrichUsage } from './utils/enrichUsage.js'
 import { SAMPLE_LEADS, SAMPLE_RUN_META } from './config/sampleLeads.js'
+
+// Hosted, server-held pipeline. All provider keys (Google Places, LLM,
+// enrichment) live in Netlify env — the browser never holds them. The app
+// authenticates with a per-tenant Forge API key (auto-provisioned via Supabase)
+// and the server returns ToS-safe leads (place_id + Maps link + intelligence).
+const API_ENDPOINT = '/api/v1/leads'
+const INAPP_KEY_STORAGE = 'forge_inapp_key'
+
+// Map the server's ToS-safe lead → the field names the Results UI + CSV expect.
+function mapSafeLead(l) {
+  return {
+    places_id:        l.place_id,
+    maps_url:         l.maps_url,
+    industry:         l.industry,
+    score:            l.score,
+    buy_probability:  l.buy_probability,
+    pain_points:      l.pain_points || [],
+    problem_solved:   l.problem_solved,
+    sale_strategy:    l.sale_strategy,
+    recommended_products: l.recommended_products || [],
+    website_quality:  l.website_quality,
+    email:            l.email || null,
+    email_source:     l.email_source || null,
+    email_deliverable: l.email_deliverable ?? null,
+    web_verified:     l.web_reachable,
+    confidence:       l.confidence,
+    notes:            l.compliance_note || '',
+    is_sample:        false,
+  }
+}
 
 const pad = n => String(n).padStart(2, '0')
 const wait = ms => new Promise(r => setTimeout(r, ms))
@@ -141,29 +166,42 @@ export default function App() {
     setError('')
     setLogs([])
     setNodes(NODES_PLACES.map(n => ({ ...n, status: 'done', statusText: 'Sample' })))
-    addLog('No Google Places key set — showing watermarked SAMPLE data. Add a Places key in Settings to run on real businesses.', true)
+    addLog('Showing watermarked SAMPLE data (sign in and run a search to fetch real, server-sourced leads).', true)
     setLeads(SAMPLE_LEADS)
     setRunMeta(SAMPLE_RUN_META)
     setPhase('done')
   }
 
-  // ── Run pipeline ──────────────────────────────────────────────────────────
+  // ── Tenant API key (auto-provisioned via Supabase, cached in localStorage) ──
+  async function getForgeApiKey() {
+    const cached = localStorage.getItem(INAPP_KEY_STORAGE)
+    if (cached) return cached
+    await supabase.rpc('forge_bootstrap_tenant')
+    const { data, error: keyErr } = await supabase.rpc('forge_create_api_key', { p_label: 'in-app' })
+    if (keyErr) throw new Error(keyErr.message || 'Could not provision API key.')
+    const row = Array.isArray(data) ? data[0] : data
+    const key = row?.api_key
+    if (!key) throw new Error('No API key returned by server.')
+    localStorage.setItem(INAPP_KEY_STORAGE, key)
+    return key
+  }
+
+  async function callLeadsApi(token) {
+    const res = await fetch(API_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ state: locationState, country: locationCountry, product: blueprintProduct }),
+    })
+    const data = await res.json().catch(() => ({}))
+    return { res, data }
+  }
+
+  // ── Run pipeline (server-held keys) ─────────────────────────────────────────
   async function run() {
     if (!locationState.trim())   { alert('Please enter a state or province.'); return }
     if (!locationCountry.trim()) { alert('Please enter a country.'); return }
 
-    // Google Places is the only real lead source. Without it, show sample data
-    // rather than asking an LLM to invent businesses.
-    if (!googlePlacesKey.trim()) { loadSample(); return }
-    if (!apiKey.trim())          { alert('Please enter your LLM API key in Settings.'); return }
-
-    const product        = BLUEPRINT_PRODUCTS.find(p => p.id === blueprintProduct)
-    const currentEnrichUsage = loadEnrichUsage()
-    const hunterBudget   = remaining(currentEnrichUsage, 'hunter')
-    const emailBudget    = remaining(currentEnrichUsage, 'abstract_email')
-    const phoneBudget    = remaining(currentEnrichUsage, 'abstract_phone')
-
-    // Stage index map — single real pipeline (no Identity/Clearbit stage).
+    const product = BLUEPRINT_PRODUCTS.find(p => p.id === blueprintProduct)
     const idx = { places: 0, llm: 1, validate: 2, enrich: 3, reach: 4 }
 
     setPhase('running')
@@ -174,124 +212,77 @@ export default function App() {
     setRunMeta(null)
 
     try {
-      let raw    // raw leads before LLM scoring
-      let usage = { totalTokens: 0 }
+      // ── Authorize ─────────────────────────────────────────────────────────
+      setNode(idx.places, 'active', 'Authorizing…')
+      addLog('Provider keys are held server-side — the browser never sees them.')
 
-      // ── Stage 0: Google Places Discovery ──────────────────────────────────
+      let token
+      try {
+        token = await getForgeApiKey()
+      } catch (e) {
+        throw new Error(`Auth / key provisioning failed — ${e.message}. Make sure you're signed in (Forge API keys are issued via Supabase).`)
+      }
+
+      // ── Stage 0: Google Places Discovery (server) ─────────────────────────
       setNode(idx.places, 'active', 'Fetching…')
-      addLog(`Google Places — fetching real businesses for ${product.name} in ${locationState}, ${locationCountry}…`)
+      addLog(`Google Places — server fetching real businesses for ${product.name} in ${locationState}, ${locationCountry}…`)
 
-      const placesLeads = await searchPlaces({
-        state: locationState, country: locationCountry,
-        targetProduct: blueprintProduct, apiKey: googlePlacesKey,
-      })
+      let { res, data } = await callLeadsApi(token)
+
+      // Stale/invalid key → reprovision once and retry.
+      if (res.status === 401) {
+        localStorage.removeItem(INAPP_KEY_STORAGE)
+        addLog('Stored API key rejected — reprovisioning and retrying…')
+        token = await getForgeApiKey()
+        ;({ res, data } = await callLeadsApi(token))
+      }
+
+      if (res.status === 429) {
+        throw new Error(data.error || 'Rate limit or monthly quota reached. Wait a moment or upgrade your plan in Account.')
+      }
+      if (res.status >= 500 && /not configured/i.test(data.error || '')) {
+        throw new Error(`Server missing env keys: ${data.error} — run via 'netlify dev' linked to forge-automation so the secret env vars load into the function.`)
+      }
+      // Reachable but returned no JSON (a page, not the function) → wrong port.
+      if (res.ok && data.ok === undefined) {
+        throw new Error(`No JSON from ${API_ENDPOINT} (got a page). You're likely on the vite port — open the netlify dev URL http://localhost:8888 so functions are served.`)
+      }
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || data.details?.message || `HTTP ${res.status}`)
+      }
+
+      const meta = data.meta || {}
 
       setNode(idx.places, 'done', 'Complete')
-      addLog(`${placesLeads.length} real businesses fetched from Google Places.`, true)
-      await wait(200)
+      addLog(`${meta.discovered ?? '—'} businesses discovered from Google Places.`, true)
+      await wait(160)
 
-      // ── Stage 1: LLM Intelligence — score real businesses ─────────────────
+      // ── Stage 1: LLM Intelligence (server) ────────────────────────────────
       setNode(idx.llm, 'active', 'Scoring…')
-      addLog(`Routing to ${PROVIDERS[providerKey].label} (${model})…`)
-      addLog(`Analyzing and scoring ${placesLeads.length} real businesses for ${product.name}…`)
-
-      const scored = await scorePlacesLeads({
-        leads: placesLeads, providerKey, model,
-        targetProduct: blueprintProduct, apiKey,
-      })
-      raw   = scored.leads
-      usage = scored.usage
-
-      // Track LLM usage
-      const newUsage = {
-        requests:    (usageToday.requests    || 0) + 1,
-        totalTokens: (usageToday.totalTokens || 0) + (usage.totalTokens || 0),
-      }
-      saveUsage(providerKey, newUsage)
-      setUsageToday(newUsage)
-
+      addLog('Scoring real businesses server-side…')
+      await wait(160)
       setNode(idx.llm, 'done', 'Complete')
-      addLog(`${raw.length} leads scored.`, true)
-      await wait(200)
+      addLog(`Leads scored${meta.tokens ? ` · ${meta.tokens} tokens` : ''}.`, true)
 
-      // ── Format Validation ─────────────────────────────────────────────────
+      // ── Stage 2: Format Validation (server) ───────────────────────────────
       setNode(idx.validate, 'active', 'Validating…')
-      addLog(`Phone, email, URL format validation…`)
-      const validated   = runFormatValidation(raw)
-      const validPhones = validated.filter(l => l.phone_valid).length
-      const validEmails = validated.filter(l => l.email_format_valid).length
-      const validUrls   = validated.filter(l => l.url_format_valid).length
+      await wait(140)
       setNode(idx.validate, 'done', 'Complete')
-      addLog(`Phones: ${validPhones}/${validated.filter(l => l.phone).length} valid  ·  Emails: ${validEmails}/${validated.filter(l => l.email).length} valid  ·  URLs: ${validUrls}/${validated.filter(l => l.website).length} valid`, true)
-      await wait(200)
 
-      // ── Contact Enrichment ────────────────────────────────────────────────
+      // ── Stage 3: Contact Enrichment (server) ──────────────────────────────
       setNode(idx.enrich, 'active', 'Enriching…')
-      let enriched = validated
-      let hunterUsedNow = 0, emailUsedNow = 0, phoneUsedNow = 0
-
-      if (hunterApiKey.trim()) {
-        if (hunterBudget > 0) {
-          addLog(`Hunter.io — email discovery (${hunterBudget} calls remaining this month)…`)
-          const r = await enrichWithHunter(enriched, hunterApiKey, hunterBudget)
-          enriched      = r.leads
-          hunterUsedNow = r.used
-          const found = enriched.filter(l => l.email_source === 'hunter').length
-          addLog(`Hunter: ${found} email${found !== 1 ? 's' : ''} discovered · ${hunterUsedNow} call${hunterUsedNow !== 1 ? 's' : ''} used`)
-        } else {
-          addLog(`Hunter.io — monthly quota exhausted (25/25 used)`)
-        }
-      } else {
-        addLog(`Hunter.io — skipped (add key in Settings)`)
-      }
-
-      const hasAbstractEmail = !!abstractEmailKey.trim()
-      const hasAbstractPhone = !!abstractPhoneKey.trim()
-      if (hasAbstractEmail || hasAbstractPhone) {
-        const emailNote = hasAbstractEmail ? `email ${emailBudget}/100 remaining` : 'email key missing'
-        const phoneNote = hasAbstractPhone ? `phone ${phoneBudget}/100 remaining` : 'phone key missing'
-        addLog(`AbstractAPI — ${emailNote} · ${phoneNote}…`)
-        const r = await enrichWithAbstractAPI(enriched, abstractEmailKey, abstractPhoneKey, emailBudget, phoneBudget)
-        enriched     = r.leads
-        emailUsedNow = r.emailUsed
-        phoneUsedNow = r.phoneUsed
-        const smtp = enriched.filter(l => l.email_deliverable === true).length
-        addLog(`AbstractAPI: ${emailUsedNow} email call${emailUsedNow !== 1 ? 's' : ''} · ${phoneUsedNow} phone call${phoneUsedNow !== 1 ? 's' : ''} · ${smtp} SMTP confirmed`)
-      } else {
-        addLog(`AbstractAPI — skipped (add keys in Settings)`)
-      }
-
-      const newEnrichUsage = {
-        ...currentEnrichUsage,
-        hunter:         currentEnrichUsage.hunter         + hunterUsedNow,
-        abstract_email: currentEnrichUsage.abstract_email + emailUsedNow,
-        abstract_phone: currentEnrichUsage.abstract_phone + phoneUsedNow,
-      }
-      saveEnrichUsage(newEnrichUsage)
-      setEnrichUsage(newEnrichUsage)
-
-      enriched = applyConfidence(enriched)
+      await wait(140)
       setNode(idx.enrich, 'done', 'Complete')
-      await wait(200)
 
-      // ── Reachability ──────────────────────────────────────────────────────
+      // ── Stage 4: Reachability (server) ────────────────────────────────────
       setNode(idx.reach, 'active', 'Verifying…')
-      const withWebsite = enriched.filter(l => l.website && l.url_format_valid).length
-      addLog(`Checking reachability for ${withWebsite} valid website${withWebsite !== 1 ? 's' : ''}…`)
-      addLog(`Generating Google Maps links…`)
-      const verified  = await verifyReachability(enriched)
-      const live      = verified.filter(l => l.web_verified === true).length
-      const dead      = verified.filter(l => l.web_verified === false).length
-      const noWebsite = verified.filter(l => l.web_verified === null).length
+      await wait(140)
       setNode(idx.reach, 'done', 'Complete')
-      addLog(`Reachability: ${live} live · ${dead} unreachable · ${noWebsite} no website`, true)
 
-      // Final filter: hot score + live website
-      const qualified = verified.filter(l => l.score === 'hot' && l.web_verified === true)
-      const dropped   = verified.length - qualified.length
-      addLog(`Filtered: ${qualified.length} hot + live leads retained · ${dropped} dropped`, true)
+      const mapped = (data.leads || []).map(mapSafeLead)
+      addLog(`${meta.qualified ?? mapped.length} hot + reachable lead${(meta.qualified ?? mapped.length) !== 1 ? 's' : ''} qualified (ToS-safe: place_id + Maps link + intelligence).`, true)
 
-      setLeads(qualified)
+      setLeads(mapped)
       setRunMeta({
         locationState, locationCountry, blueprintProduct, productName: product.name,
         dataSource: 'places', isSample: false,
