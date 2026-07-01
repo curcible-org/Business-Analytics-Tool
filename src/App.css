@@ -3236,12 +3236,18 @@ html, body {
 .lcard-industry { border-radius: 8px; padding: 3px 9px; max-width: 170px; }
 .chip, .ttag { border-radius: 8px; padding: 3px 8px; }
 
-/* Gradient "View details" CTA */
+/* Gradient "View details" CTA — compact filled pill, never wraps */
 .lcard-cta {
   color: #fff;
   background: linear-gradient(135deg, #8A5C72, #6A4858);
-  padding: 6px 12px;
+  padding: 7px 13px;
   border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: none;
 }
 
 /* Stat cards — spaced, rounded, with room for icons */
@@ -3268,3 +3274,96 @@ html, body {
 
 /* Export button — pill */
 .export-btn { border-radius: 9px; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   APP-WIDE MODERN PASS
+   Extends the modern dashboard language to Hub, Workflows, Account,
+   Settings, and Auth — gapped card grids, elevated rounded cards + hover
+   lift, gradient primary CTAs, pill badges, rounded controls.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Card grids — gapped instead of 1px seams */
+.hub-grid,
+.wf-grid {
+  gap: 16px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+}
+
+/* Elevated cards + hover lift (across views) */
+.hub-card,
+.wf-card {
+  border: 1px solid var(--d-border);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.40);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.hub-card:not(.hub-card--soon):hover,
+.wf-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  border-color: rgba(201, 156, 178, 0.30);
+}
+.acct-plan-card,
+.acct-new-key,
+.acct-pre,
+.rate-box,
+.login-box,
+.login-card { border-radius: 14px; }
+.acct-plan-card { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
+
+/* Gradient primary CTAs */
+.hub-cta-primary,
+.hub-launch-btn,
+.wf-cta-primary,
+.login-btn,
+.acct-create-btn,
+.acct-upgrade-btn,
+.so-save-btn {
+  background: linear-gradient(135deg, #7D5569, #6A4858);
+  border-radius: 10px;
+}
+.hub-cta-primary:hover,
+.hub-launch-btn:hover,
+.wf-cta-primary:hover,
+.login-btn:hover,
+.acct-create-btn:hover:not(:disabled),
+.acct-upgrade-btn:hover,
+.so-save-btn:hover {
+  background: linear-gradient(135deg, #8A5C72, #7D5569);
+}
+
+/* Secondary / ghost / icon buttons — rounded */
+.hub-cta-secondary,
+.hub-launch-btn--ghost,
+.wf-card-cta,
+.acct-copy-btn,
+.acct-revoke-btn,
+.settings-logout-btn,
+.export-btn { border-radius: 10px; }
+.topnav-icon-btn,
+.so-close,
+.drawer-close { border-radius: 9px; }
+
+/* Pills / badges */
+.acct-plan-badge,
+.acct-key-tag,
+.wf-badge,
+.wf-meta-pill,
+.hub-card-type,
+.hub-card-status,
+.wf-card-category,
+.wf-card-setup { border-radius: 20px; }
+
+/* Rounded inputs */
+.login-input,
+.fp-input,
+.fp-select,
+.field input,
+.field select { border-radius: 10px; }
+
+/* Rounded meter */
+.acct-meter-track,
+.acct-meter-fill { border-radius: 20px; }

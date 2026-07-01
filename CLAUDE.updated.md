@@ -63,7 +63,7 @@ Body: line-height:1.7
 
 Two design contexts
 - Marketing site: restrained, editorial, flat, sparse (original brand).
-- Product app (Forge dashboard): modern dashboard system — depth, spacing, rounded geometry. The rules below split by context.
+- Product app (ALL views — Hub, Forge, Workflows, Account, Settings, Auth): modern dashboard system — depth, spacing, rounded geometry. The rules below split by context.
 
 Layout — radius scale
 Marketing: radius ≤3px.
