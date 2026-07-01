@@ -111,6 +111,10 @@ async function searchPlaces({ state, country, product, placesKey }) {
     website: p.websiteUri ? p.websiteUri.replace(/\/$/, '') : null,
     email: null,
     industry: inferIndustry(p.types || []),
+    rating: p.rating ?? null,
+    review_count: p.userRatingCount ?? 0,
+    business_status: p.businessStatus || 'OPERATIONAL',
+    places_types: (p.types || []).slice(0, 5),
     places_id: p.id,
     notes: p.rating ? `Google Places: ${p.rating}★ (${p.userRatingCount || 0} reviews)` : 'Google Places listing',
   }))
@@ -173,7 +177,9 @@ Scoring: hot=no/broken site+strong match (70-95), warm=basic site (40-69), low=m
       scored.forEach((s, i) => { if (s.ref != null) byRef.set(String(s.ref), s); byRef.set(`__idx_${i}`, s) })
       const merged = leads.map((place, i) => {
         const match = byRef.get(String(place.places_id)) || byRef.get(`__idx_${i}`) || {}
-        const { ref, name, address, phone, website, ...sf } = match
+        // Drop LLM-provided identity/contact fields (place data is authoritative);
+        // also drop LLM industry so the Places-derived industry wins.
+        const { ref, name, address, phone, website, industry, ...sf } = match
         return { ...place, ...sf }
       })
       return { leads: merged, usage }
@@ -282,24 +288,43 @@ function computeConfidence(l) {
   return s
 }
 
-// ToS-safe serialization — no raw Places content beyond place_id + maps link.
+// Full serialization — returns the business detail + intelligence for on-screen
+// display. NOTE: Google Places terms allow displaying this in-session but restrict
+// caching/redistributing raw Places content (only place_id may be persisted). Keep
+// that in mind before storing/exporting these fields.
 function toSafeLead(l) {
   return {
     place_id: l.places_id,
     maps_url: l.maps_url,
+    // Business detail (from Google Places)
+    name: l.name || null,
+    address: l.address || null,
+    phone: l.phone || null,
+    phone_formatted: l.phone_formatted || l.phone || null,
+    phone_type: l.phone_type || null,
+    phone_valid: l.phone_valid ?? null,
+    website: l.website || null,
+    web_reachable: l.web_verified,
+    rating: l.rating ?? null,
+    review_count: l.review_count ?? 0,
+    business_status: l.business_status || null,
     industry: l.industry,
+    // Intelligence (operator-generated)
     score: l.score,
     buy_probability: l.buy_probability,
     pain_points: l.pain_points || [],
     problem_solved: l.problem_solved,
     sale_strategy: l.sale_strategy,
     recommended_products: l.recommended_products || [],
+    services: l.services || [],
+    tech_stack: l.tech_stack || [],
     website_quality: l.website_quality,
-    email: l.email_source === 'hunter' ? l.email : null,
-    email_source: l.email_source === 'hunter' ? 'hunter' : null,
+    // Independently-sourced contact (Hunter), never Places
+    email: l.email_source === 'hunter' ? l.email : (l.email || null),
+    email_source: l.email_source || null,
     email_deliverable: l.email_deliverable ?? null,
-    web_reachable: l.web_verified,
     confidence: l.confidence,
+    notes: l.notes || null,
     compliance_note: 'Outreach must include sender identity + a working opt-out (CAN-SPAM / GDPR).',
   }
 }
@@ -358,7 +383,7 @@ export const handler = async (event) => {
 
     return json(200, {
       ok: true,
-      meta: { state, country, product, discovered: places.length, qualified: qualified.length, tokens: usage.totalTokens, source: 'google_places', note: 'ToS-safe: place_id + intelligence only; resolve live business details via maps_url.' },
+      meta: { state, country, product, discovered: places.length, qualified: qualified.length, tokens: usage.totalTokens, source: 'google_places', note: 'Full business detail + intelligence. Display in-session; do not cache/redistribute raw Places content beyond place_id.' },
       leads: qualified,
     }, origin)
   } catch (e) {

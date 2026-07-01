@@ -160,15 +160,18 @@ function LeadCard({ lead, targetProduct, onClick }) {
             }}>{lead.buy_probability}%</span>
           )}
         </div>
-        {lead.recommended_products?.[0] && (
-          <span className="lcard-industry">{lead.recommended_products[0]}</span>
+        {lead.industry && (
+          <span className="lcard-industry">{lead.industry}</span>
         )}
       </div>
 
-      <div className="lcard-name">{lead.industry || 'Local business'}</div>
-      <div className="lcard-addr" style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.04em', color: 'var(--stone)' }}>
-        {lead.places_id ? `place_id · ${String(lead.places_id).slice(0, 16)}…` : 'Google Places listing'}
-      </div>
+      <div className="lcard-name">{lead.name || lead.industry || 'Local business'}</div>
+      {lead.address && <div className="lcard-addr">{lead.address}</div>}
+      {lead.rating != null && (
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--stone)', marginTop: 3 }}>
+          {lead.rating}★ · {lead.review_count || 0} review{lead.review_count === 1 ? '' : 's'}
+        </div>
+      )}
 
       {lead.buy_probability != null && (
         <div style={{ marginTop: 10 }}>
@@ -195,21 +198,25 @@ function LeadCard({ lead, targetProduct, onClick }) {
 
       <div className="lcard-footer">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {lead.maps_url ? (
-            <a
-              href={lead.maps_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="lcard-web"
-              style={{ color: 'var(--plum)', textDecoration: 'none' }}
-              onClick={e => e.stopPropagation()}
-            >
-              Google Maps ↗
-            </a>
+          {lead.website ? (
+            <span className="lcard-web">{lead.website.replace(/^https?:\/\//, '')}</span>
           ) : (
-            <span className="no-web">No map link</span>
+            <span className="no-web">No website</span>
           )}
-          <WebVerifiedBadge status={lead.web_verified} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <WebVerifiedBadge status={lead.web_verified} />
+            {lead.maps_url && (
+              <a
+                href={lead.maps_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--plum)', textDecoration: 'none', letterSpacing: '0.06em' }}
+              >
+                MAPS ↗
+              </a>
+            )}
+          </div>
         </div>
         <span className="lcard-cta">View details →</span>
       </div>
@@ -235,11 +242,14 @@ function LeadDrawer({ lead, targetProduct, onClose }) {
       <div className="drawer" role="dialog" aria-modal="true">
         <div className="drawer-head">
           <div>
-            <div className="drawer-name">{lead.industry || 'Local business'}</div>
+            <div className="drawer-name">{lead.name || lead.industry || 'Local business'}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              <div className="drawer-addr" style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--stone)' }}>
-                {lead.places_id ? `place_id: ${lead.places_id}` : ''}
-              </div>
+              {lead.address && <div className="drawer-addr">{lead.address}</div>}
+              {lead.rating != null && (
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--stone)', letterSpacing: '0.04em' }}>
+                  {lead.rating}★ · {lead.review_count || 0} reviews
+                </span>
+              )}
               {lead.maps_url && (
                 <a
                   href={lead.maps_url}
@@ -301,11 +311,18 @@ function LeadDrawer({ lead, targetProduct, onClose }) {
             </DetailSection>
           )}
 
-          {/* Signals — independently-sourced email + site assessment. No raw Places
-              contact fields (name/address/phone/website) are shipped to the browser. */}
-          {(lead.email || lead.website_quality || lead.maps_url) && (
-            <DetailSection label="Signals">
+          {/* Contact */}
+          {(lead.phone || lead.email || lead.website) && (
+            <DetailSection label="Contact">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                {lead.phone && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <a href={`tel:${lead.phone}`} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink)', textDecoration: 'none' }}>
+                      {lead.phone_formatted || lead.phone}
+                    </a>
+                    <PhoneChip type={lead.phone_type} carrier={lead.phone_carrier} />
+                  </div>
+                )}
                 {lead.email && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <a href={`mailto:${lead.email}`} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--plum)', textDecoration: 'none' }}>
@@ -314,15 +331,32 @@ function LeadDrawer({ lead, targetProduct, onClose }) {
                     <EmailSourceBadge source={lead.email_source} deliverable={lead.email_deliverable} />
                   </div>
                 )}
-                {lead.website_quality && (
-                  <span style={{ fontSize: 11, color: 'var(--stone)' }}>{lead.website_quality}</span>
+                {lead.website && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <a href={lead.website} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--plum)', textDecoration: 'none' }}>
+                      {lead.website.replace(/^https?:\/\//, '')}
+                      <IconExternalLink />
+                    </a>
+                    {lead.website_quality && (
+                      <span style={{ fontSize: 11, color: 'var(--stone)' }}>{lead.website_quality}</span>
+                    )}
+                  </div>
                 )}
                 {lead.maps_url && (
                   <a href={lead.maps_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--plum)', textDecoration: 'none' }}>
-                    Resolve live details on Google Maps
+                    Open in Google Maps
                     <IconExternalLink />
                   </a>
                 )}
+              </div>
+            </DetailSection>
+          )}
+
+          {/* Services (from intelligence) */}
+          {lead.services?.length > 0 && (
+            <DetailSection label="Services">
+              <div className="chips" style={{ flexWrap: 'wrap' }}>
+                {lead.services.map((s, i) => <span key={i} className="chip">{s}</span>)}
               </div>
             </DetailSection>
           )}
